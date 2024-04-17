@@ -8,13 +8,13 @@ services:
   test:
     image: ghcr.io/datakaveri/rs-test:latest
     env_file:
-      - /home/ubuntu/configs/.rs.env
+      - /home/ubuntu/configs/5.5.0/.rs.env
     volumes:
       - ./src/:/usr/share/app/src
       - ./iudx-pmd-ruleset.xml:/usr/share/app/iudx-pmd-ruleset.xml
       - ./google_checks.xml:/usr/share/app/google_checks.xml
-      - /home/ubuntu/configs/rs-config-test.json:/usr/share/app/configs/config-test.json
-      - /home/ubuntu/configs/keystore.jks:/usr/share/app/configs/keystore.jks
+      - /home/ubuntu/configs/5.5.0/rs-config-test.json:/usr/share/app/configs/config-test.json
+      - /home/ubuntu/configs/5.5.0/keystore.jks:/usr/share/app/configs/keystore.jks
       - ./docker/runTests.sh:/usr/share/app/docker/runTests.sh
       - ${WORKSPACE}:/tmp/test
       - /var/run/docker.sock:/var/run/docker.sock
@@ -32,10 +32,10 @@ services:
   perfTest:
     image: ghcr.io/datakaveri/rs-depl:latest
     env_file:
-      - /home/ubuntu/configs/.rs.env
+      - /home/ubuntu/configs/5.5.0/.rs.env
     volumes:
-      - /home/ubuntu/configs/rs-config-dev.json:/usr/share/app/configs/config.json
-      - /home/ubuntu/configs/keystore-rs.jks:/usr/share/app/configs/keystore.jks
+      - /home/ubuntu/configs/5.5.0/rs-config-dev.json:/usr/share/app/configs/config.json
+      - /home/ubuntu/configs/5.5.0/keystore-rs.jks:/usr/share/app/configs/keystore.jks
       - type: volume
         source: rs-volume
         target: /usr/share/app/storage/temp-dir
