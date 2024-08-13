@@ -394,7 +394,7 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
                   promise.fail(response.toString());
                 }
               } catch (RuntimeException e) {
-                LOGGER.error("Authorization error: yeh wala {}", e.getMessage());
+                LOGGER.error("Authorization error: {}", e.getMessage());
                 promise.fail(e.getMessage());
               }
             } else {

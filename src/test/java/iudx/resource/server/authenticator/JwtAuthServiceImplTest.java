@@ -790,7 +790,7 @@ public class JwtAuthServiceImplTest {
     meteringCountRequest.put("endTime", "startDateTim");
     meteringCountRequest.put("userid", "userid");
     meteringCountRequest.put("resourceId", "resourceId");
-    meteringCountRequest.put("accessType", "api");
+    meteringCountRequest.put("accessType", "sub");
 
     doAnswer(invocation -> {
       Handler<AsyncResult<JsonObject>> handler = invocation.getArgument(1);
