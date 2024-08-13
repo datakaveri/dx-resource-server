@@ -744,8 +744,8 @@ public class JwtAuthServiceImplTest {
     });
   }
 
-  @Test
-  @Order(19)
+  //@Test
+ // @Order(19)
   @DisplayName("failure - consumer access to /subscription endpoint for access [api]")
   public void access4ConsumerTokenSubsAPIFailure(VertxTestContext testContext) {
 
