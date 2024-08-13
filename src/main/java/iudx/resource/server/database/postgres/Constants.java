@@ -17,18 +17,18 @@ public class Constants {
       "DELETE FROM unique_attributes WHERE resource_id = '$1'";
 
   public static String INSERT_S3_PENDING_SQL =
-      "INSERT INTO s3_upload_url(_id, search_id, request_id, user_id, status, progress,query) "
-          + "values('$1','$2','$3','$4','$5', $6, '$7'::JSON)";
+      "INSERT INTO s3_upload_url(_id, search_id, request_id, user_id, status, progress,query,isaudited) "
+          + "values('$1','$2','$3','$4','$5', $6, '$7'::JSON,false)";
 
   public static String UPDATE_S3_URL_SQL =
       "UPDATE s3_upload_url SET s3_url='$1', expiry='$2', status='$3', object_id='$4', "
-          + "progress=$5, size='$6' WHERE search_id='$7' and progress<$5";
+          + "progress=$5, size='$6',isaudited = false WHERE search_id='$7' and progress<$5";
 
   public static String UPDATE_STATUS_SQL =
       "UPDATE s3_upload_url SET status='$1' WHERE search_id='$2'";
 
   public static String SELECT_S3_STATUS_SQL =
-      "SELECT status,s3_url,search_id,user_id,progress FROM s3_upload_url WHERE search_id='$1';";
+      "SELECT status,s3_url,search_id,user_id,expiry,progress,isaudited,size FROM s3_upload_url WHERE search_id='$1'";
 
   public static String SELECT_S3_SEARCH_SQL =
       "SELECT search_id, status, s3_url, expiry, user_id, object_id,size "
@@ -36,4 +36,7 @@ public class Constants {
 
   public static String UPDATE_S3_PROGRESS_SQL =
       "UPDATE s3_upload_url SET progress=$1 WHERE search_id='$2'";
+
+  public static String UPDATE_ISAUDITED_SQL =
+      "UPDATE s3_upload_url SET isaudited=true WHERE search_id='$1'";
 }

@@ -6,11 +6,13 @@ import static iudx.resource.server.authenticator.authorization.Method.GET;
 import static iudx.resource.server.authenticator.authorization.Method.PATCH;
 import static iudx.resource.server.authenticator.authorization.Method.POST;
 import static iudx.resource.server.authenticator.authorization.Method.PUT;
+import static iudx.resource.server.common.ResponseUrn.*;
 
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.common.Api;
+import iudx.resource.server.common.Response;
+import iudx.resource.server.common.ResponseUrn;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +52,6 @@ public class ConsumerAuthStrategy implements AuthorizationStrategy {
     apiAccessList.add(new AuthorizationRequest(POST, api.getPostEntitiesQueryPath()));
     apiAccessList.add(new AuthorizationRequest(POST, api.getPostTemporalQueryPath()));
     apiAccessList.add(new AuthorizationRequest(GET, api.getIudxConsumerAuditUrl()));
-    apiAccessList.add(new AuthorizationRequest(GET, api.getIudxAsyncSearchApi()));
     apiAccessList.add(new AuthorizationRequest(GET, api.getMonthlyOverview()));
     apiAccessList.add(new AuthorizationRequest(GET, api.getSummaryPath()));
     consumerAuthorizationRules.put(IudxAccess.API.getAccess(), apiAccessList);
@@ -71,27 +72,28 @@ public class ConsumerAuthStrategy implements AuthorizationStrategy {
 
     // async access list
     List<AuthorizationRequest> asyncAccessList = new ArrayList<>();
-    asyncAccessList.add(new AuthorizationRequest(POST, api.getIudxAsyncSearchApi()));
+    asyncAccessList.add(new AuthorizationRequest(GET, api.getIudxAsyncSearchApi()));
+    asyncAccessList.add(new AuthorizationRequest(GET, api.getIudxAsyncStatusApi()));
     consumerAuthorizationRules.put(IudxAccess.ASYNC.getAccess(), asyncAccessList);
   }
 
   @Override
   public boolean isAuthorized(AuthorizationRequest authRequest, JwtData jwtData) {
-    JsonArray access = jwtData.getCons() != null ? jwtData.getCons().getJsonArray("access") : null;
-    boolean result = false;
-    LOGGER.debug(access);
+    JsonObject access =
+        jwtData.getCons() != null ? jwtData.getCons().getJsonObject("access") : null;
+
     if (access == null) {
-      return result;
+      return false;
     }
     String endpoint = authRequest.getApi();
     Method method = authRequest.getMethod();
     LOGGER.info("authorization request for : " + endpoint + " with method : " + method.name());
     LOGGER.info("allowed access : " + access);
-
-    if (!result && access.contains(IudxAccess.API.getAccess())) {
+    boolean result = false;
+    if (!result && access.containsKey(IudxAccess.API.getAccess())) {
       result = consumerAuthorizationRules.get(IudxAccess.API.getAccess()).contains(authRequest);
     }
-    if (!result && access.contains(IudxAccess.SUBSCRIPTION.getAccess())) {
+    if (!result && access.containsKey(IudxAccess.SUBSCRIPTION.getAccess())) {
       result =
           consumerAuthorizationRules.get(IudxAccess.SUBSCRIPTION.getAccess()).contains(authRequest);
     }
@@ -108,24 +110,77 @@ public class ConsumerAuthStrategy implements AuthorizationStrategy {
   @Override
   public boolean isAuthorized(
       AuthorizationRequest authRequest, JwtData jwtData, JsonObject quotaConsumed) {
-    JsonArray limitsArray =
-        jwtData.getCons() != null ? jwtData.getCons().getJsonArray("limits") : null;
-    boolean isUsageWithinLimits = true;
-    if (isLimitsEnabled) {
-      isUsageWithinLimits = false;
-      // TODO: evaluate allowed vs what consumed
-      for (Object jsonObject : limitsArray) {
-        JsonObject json = (JsonObject) jsonObject;
-        if (json.containsKey("api")) {
-          int consumed = quotaConsumed.getInteger("api");
-          if (consumed < json.getInteger("api")) {
-            isUsageWithinLimits = true;
-          }
-        }
+    JsonObject access =
+        jwtData.getCons() != null ? jwtData.getCons().getJsonObject("access") : null;
+
+    if (access == null) {
+      return false;
+    }
+    String endpoint = authRequest.getApi();
+    Method method = authRequest.getMethod();
+    LOGGER.info("authorization request for : " + endpoint + " with method : " + method.name());
+    LOGGER.info("allowed access : " + access);
+    boolean result = false;
+    if (!result && access.containsKey(IudxAccess.API.getAccess())) {
+      result =
+          consumerAuthorizationRules.get(IudxAccess.API.getAccess()).contains(authRequest)
+              && isUsageWithinLimits(access.getJsonObject("api"), quotaConsumed, "api");
+    }
+    if (!result && access.containsKey(IudxAccess.SUBSCRIPTION.getAccess())) {
+      result =
+          consumerAuthorizationRules.get(IudxAccess.SUBSCRIPTION.getAccess()).contains(authRequest)
+              && isUsageWithinLimits(access.getJsonObject("sub"), quotaConsumed, "sub");
+    }
+    if (!result) {
+      result =
+          consumerAuthorizationRules.get(IudxAccess.MANAGEMENT.getAccess()).contains(authRequest);
+    }
+    if (!result) {
+      result =
+          consumerAuthorizationRules.get(IudxAccess.ASYNC.getAccess()).contains(authRequest)
+              && isUsageWithinLimits(access.getJsonObject("async"), quotaConsumed, "async");
+    }
+    return result;
+  }
+
+  private boolean isUsageWithinLimits(JsonObject access, JsonObject quotaConsumed, String type) {
+    LOGGER.info("access: {} type: {} ", access, type);
+    boolean isUsageWithinLimits = false;
+    LOGGER.info("quotaConsumed: {} ", quotaConsumed);
+    int allowedLimit = access.getInteger("limit");
+
+    int consumedData = quotaConsumed.getInteger("consumed_data");
+    int apiCount = quotaConsumed.getInteger("api_count");
+
+    if (type.equalsIgnoreCase("api")) {
+      if (apiCount < allowedLimit) {
+        isUsageWithinLimits = true;
+      } else {
+        Response response =
+            new Response.Builder()
+                .withUrn(ResponseUrn.LIMIT_EXCEED_URN.getUrn())
+                .withStatus(429)
+                .withTitle("Too Many Requests")
+                .withDetail(LIMIT_EXCEED_URN.getMessage())
+                .build();
+        throw new RuntimeException(response.toString());
       }
     }
-    String withinAllowedLimits = isUsageWithinLimits ? "within" : "exceeds";
-    LOGGER.info("usage limits {} defined limits", withinAllowedLimits);
-    return isAuthorized(authRequest, jwtData) && isUsageWithinLimits;
+    if (type.equalsIgnoreCase("sub") || type.equalsIgnoreCase("async")) {
+      if (consumedData < allowedLimit) {
+        isUsageWithinLimits = true;
+      } else {
+        Response response =
+            new Response.Builder()
+                .withUrn(ResponseUrn.LIMIT_EXCEED_URN.getUrn())
+                .withStatus(429)
+                .withTitle("Too Many Requests")
+                .withDetail(LIMIT_EXCEED_URN.getMessage())
+                .build();
+        throw new RuntimeException(response.toString());
+      }
+    }
+    LOGGER.info("usage limits {} defined limits", isUsageWithinLimits ? "within" : "exceeds");
+    return isUsageWithinLimits;
   }
 }

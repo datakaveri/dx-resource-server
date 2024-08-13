@@ -123,7 +123,7 @@ public class TestAsyncQueryListener {
     asyncQueryListener.start();
     verify(voidFuture, times(1)).onComplete(any());
     verify(clientStartAsyncResult).succeeded();
-    verify(asyncService).asyncSearch(anyString(), anyString(), anyString(), any(),anyString(),anyString(),anyString(),anyString());
+    verify(asyncService).asyncSearch(anyString(), anyString(), any(),anyString());
     verify(message).body();
     assertEquals(buffer, message.body());
     vertxTestContext.completeNow();
@@ -253,7 +253,7 @@ public class TestAsyncQueryListener {
     asyncQueryListener.start();
     verify(voidFuture, times(1)).onComplete(any());
     verify(clientStartAsyncResult).succeeded();
-    verify(asyncService).asyncSearch(anyString(), anyString(), anyString(), any(),anyString(),anyString(),anyString(),anyString());
+    verify(asyncService).asyncSearch(anyString(), anyString(), any(),anyString());
     verify(message).body();
     assertEquals(buffer, message.body());
     vertxTestContext.completeNow();

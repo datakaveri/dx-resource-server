@@ -30,7 +30,7 @@ class ResponseUtilTest {
         JsonObject response = responseUtil.generateResponse(HttpStatusCode.SUCCESS, ResponseUrn.SUCCESS_URN);
         assertEquals("urn:dx:rs:success", response.getString("type"));
         assertEquals("Success", response.getString("title"));
-        assertEquals("Success", response.getString("detail"));
+        assertEquals("urn:dx:rs:Success", response.getString("detail"));
         vertxTestContext.completeNow();
     }
 

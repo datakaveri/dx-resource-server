@@ -2,16 +2,22 @@ package iudx.resource.server.apiserver;
 
 import static iudx.resource.server.apiserver.response.ResponseUtil.generateResponse;
 import static iudx.resource.server.apiserver.util.Constants.*;
+import static iudx.resource.server.apiserver.util.Constants.DID;
+import static iudx.resource.server.apiserver.util.Constants.DRL;
 import static iudx.resource.server.apiserver.util.Constants.ENCRYPTED_DATA;
+import static iudx.resource.server.apiserver.util.Constants.STATUS;
+import static iudx.resource.server.apiserver.util.Constants.USER_ID;
 import static iudx.resource.server.apiserver.util.RequestType.ASYNC_SEARCH;
 import static iudx.resource.server.apiserver.util.RequestType.ASYNC_STATUS;
-import static iudx.resource.server.authenticator.Constants.ROLE;
+import static iudx.resource.server.authenticator.Constants.*;
+import static iudx.resource.server.authenticator.Constants.ACCESSIBLE_ATTRS;
+import static iudx.resource.server.cache.cachelmpl.CacheType.CATALOGUE_CACHE;
 import static iudx.resource.server.common.Constants.*;
 import static iudx.resource.server.common.HttpStatusCode.BAD_REQUEST;
-import static iudx.resource.server.common.ResponseUrn.BACKING_SERVICE_FORMAT_URN;
-import static iudx.resource.server.common.ResponseUrn.INVALID_PARAM_URN;
+import static iudx.resource.server.common.ResponseUrn.*;
 import static iudx.resource.server.database.archives.Constants.ITEM_TYPES;
 import static iudx.resource.server.database.postgres.Constants.INSERT_S3_PENDING_SQL;
+import static iudx.resource.server.metering.util.Constants.*;
 
 import com.google.common.hash.Hashing;
 import io.netty.handler.codec.http.HttpConstants;
@@ -36,7 +42,6 @@ import iudx.resource.server.apiserver.query.QueryMapper;
 import iudx.resource.server.apiserver.response.ResponseType;
 import iudx.resource.server.apiserver.service.CatalogueService;
 import iudx.resource.server.cache.CacheService;
-import iudx.resource.server.cache.cachelmpl.CacheType;
 import iudx.resource.server.common.Api;
 import iudx.resource.server.common.HttpStatusCode;
 import iudx.resource.server.common.ResponseUrn;
@@ -114,13 +119,12 @@ public class AsyncRestApi {
 
     if (containsTemporalParams(params) && !isValidTemporalQuery(params)) {
       routingContext.fail(
-          400, new DxRuntimeException(400, ResponseUrn.BAD_REQUEST_URN, "Invalid temporal query"));
+          400, new DxRuntimeException(400, BAD_REQUEST_URN, "Invalid temporal query"));
       return;
     }
 
     if (containsGeoParams(params) && !isValidGeoQuery(params)) {
-      routingContext.fail(
-          400, new DxRuntimeException(400, ResponseUrn.BAD_REQUEST_URN, "Invalid geo query"));
+      routingContext.fail(400, new DxRuntimeException(400, BAD_REQUEST_URN, "Invalid geo query"));
       return;
     }
 
@@ -181,7 +185,7 @@ public class AsyncRestApi {
 
     String resourceId = json.getJsonArray("id").getString(0);
     JsonObject cacheRequest = new JsonObject();
-    cacheRequest.put("type", CacheType.CATALOGUE_CACHE);
+    cacheRequest.put("type", CATALOGUE_CACHE);
     cacheRequest.put("key", resourceId);
     cacheService
         .get(cacheRequest)
@@ -199,6 +203,8 @@ public class AsyncRestApi {
                 groupId = successHandler.getString("resourceGroup");
               }
               json.put("resourceGroup", groupId);
+              JsonArray accessibleAttrs = authInfo.getJsonArray(ACCESSIBLE_ATTRS, new JsonArray());
+              json.put(ACCESSIBLE_ATTRS, accessibleAttrs);
               JsonObject rmqQueryMessage =
                   new JsonObject()
                       .put("searchId", searchId)
@@ -221,7 +227,7 @@ public class AsyncRestApi {
                           rmqPublishHandler -> {
                             if (rmqPublishHandler.succeeded()) {
                               JsonObject response = new JsonObject();
-                              response.put(JSON_TYPE, ResponseUrn.SUCCESS_URN.getUrn());
+                              response.put(JSON_TYPE, SUCCESS_URN.getUrn());
                               response.put(JSON_TITLE, "query submitted successfully");
                               JsonArray resultArray = new JsonArray();
                               resultArray.add(new JsonObject().put("searchId", searchId));
@@ -272,16 +278,15 @@ public class AsyncRestApi {
   }
 
   private void handleAsyncStatusRequest(RoutingContext routingContext) {
-    LOGGER.trace("starting async status");
-
-    String sub = ((JsonObject) routingContext.data().get("authInfo")).getString(USER_ID);
+    LOGGER.trace("handleAsyncStatusRequest() started");
+    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
     HttpServerRequest request = routingContext.request();
     HttpServerResponse response = routingContext.response();
 
     String searchId = request.getParam("searchID");
 
     asyncService.asyncStatus(
-        sub,
+        authInfo,
         searchId,
         handler -> {
           if (handler.succeeded()) {
@@ -359,9 +364,9 @@ public class AsyncRestApi {
       String detail = json.getString(JSON_DETAIL);
       ResponseUrn urn;
       if (urnTitle != null) {
-        urn = ResponseUrn.fromCode(urnTitle);
+        urn = fromCode(urnTitle);
       } else {
-        urn = ResponseUrn.fromCode(type + "");
+        urn = fromCode(type + "");
       }
       // return urn in body
       response
@@ -397,7 +402,7 @@ public class AsyncRestApi {
   }
 
   private void handleResponse(HttpServerResponse response, HttpStatusCode code, ResponseUrn urn) {
-    handleResponse(response, code, urn, code.getDescription());
+    handleResponse(response, code, urn, urn.getMessage());
   }
 
   private void handleResponse(

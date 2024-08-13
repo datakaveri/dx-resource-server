@@ -4,6 +4,7 @@ import static iudx.resource.server.apiserver.util.Constants.ENDT;
 import static iudx.resource.server.apiserver.util.Constants.STARTT;
 import static iudx.resource.server.authenticator.Constants.ROLE;
 import static iudx.resource.server.metering.util.Constants.*;
+import static iudx.resource.server.metering.util.Constants.DATA_CONSUMATION_DETAIL_QUERY;
 
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDateTime;
@@ -214,5 +215,19 @@ public class QueryBuilder {
     }
     summaryQuery.append(GROUPBY_RESOURCEID);
     return summaryQuery.toString();
+  }
+
+  public String getConsumedDataQuery(JsonObject request) {
+
+    StringBuilder query =
+        new StringBuilder(
+            DATA_CONSUMATION_DETAIL_QUERY
+                .replace("$1", request.getString("userid"))
+                .replace("$2", request.getString("resourceId"))
+                .replace("$3", request.getString("accessType"))
+                .replace("$4", request.getString("startTime"))
+                .replace("$5", request.getString("endTime")));
+
+    return query.toString();
   }
 }

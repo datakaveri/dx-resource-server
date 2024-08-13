@@ -42,24 +42,13 @@ public interface AsyncService {
    * The asyncSearch performs asynchronous search for a resource.
    *
    * @param requestId which is a String
-   * @param sub which is a String
    * @param searchId which is a String
    * @param query which is a Json
-   * @param role which is a String
-   * @param drl which is a String
-   * @param did which is a String
+   * @param format which is a String
    * @return AsyncService which is a service
    */
   @Fluent
-  AsyncService asyncSearch(
-      String requestId,
-      String sub,
-      String searchId,
-      JsonObject query,
-      String format,
-      String role,
-      String drl,
-      String did);
+  AsyncService asyncSearch(String requestId, String searchId, JsonObject query, String format);
 
   /**
    * The asyncStatus checks on the status of the corresponding async search
@@ -68,5 +57,6 @@ public interface AsyncService {
    * @return AsyncService which is a service
    */
   @Fluent
-  AsyncService asyncStatus(String sub, String searchId, Handler<AsyncResult<JsonObject>> handler);
+  AsyncService asyncStatus(
+      JsonObject authInfo, String searchId, Handler<AsyncResult<JsonObject>> handler);
 }

@@ -11,6 +11,8 @@ import static org.mockito.Mockito.lenient;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import iudx.resource.server.cache.CacheService;
 import org.apache.logging.log4j.LogManager;
@@ -97,7 +99,7 @@ public class AsyncServiceTest {
     cacheSer = mock(CacheService.class);
 
     asyncService =
-        new AsyncServiceImpl(vertx, client, pgService, fileOpsHelper, filePath, tenantPrefix,cacheSer);
+            new AsyncServiceImpl(vertx, client, pgService, fileOpsHelper, filePath, tenantPrefix,cacheSer);
     asyncServiceSpy = spy(asyncService);
     asyncService2 = spy(asyncService);
 
@@ -109,40 +111,40 @@ public class AsyncServiceTest {
     when(fileOpsHelper.generatePreSignedUrl(anyLong(), any())).thenReturn(url);
 
     Mockito.doAnswer(
-            new Answer<AsyncResult<JsonObject>>() {
-              @SuppressWarnings("unchecked")
-              @Override
-              public AsyncResult<JsonObject> answer(InvocationOnMock arg0) throws Throwable {
-                ((Handler<AsyncResult<JsonObject>>) arg0.getArgument(1)).handle(asyncResult1);
-                return null;
-              }
-            })
-        .when(pgService)
-        .executeQuery(any(), any());
+                    new Answer<AsyncResult<JsonObject>>() {
+                      @SuppressWarnings("unchecked")
+                      @Override
+                      public AsyncResult<JsonObject> answer(InvocationOnMock arg0) throws Throwable {
+                        ((Handler<AsyncResult<JsonObject>>) arg0.getArgument(1)).handle(asyncResult1);
+                        return null;
+                      }
+                    })
+            .when(pgService)
+            .executeQuery(any(), any());
 
     Mockito.doAnswer(
-            new Answer<AsyncResult<JsonObject>>() {
-              @SuppressWarnings("unchecked")
-              @Override
-              public AsyncResult<JsonObject> answer(InvocationOnMock arg0) throws Throwable {
-                ((Handler<AsyncResult<JsonObject>>) arg0.getArgument(5)).handle(asyncResult1);
-                return null;
-              }
-            })
-        .when(client)
-        .asyncScroll(any(File.class), any(), any(),any(), any(), any(), anyString(), anyString());
+                    new Answer<AsyncResult<JsonObject>>() {
+                      @SuppressWarnings("unchecked")
+                      @Override
+                      public AsyncResult<JsonObject> answer(InvocationOnMock arg0) throws Throwable {
+                        ((Handler<AsyncResult<JsonObject>>) arg0.getArgument(5)).handle(asyncResult1);
+                        return null;
+                      }
+                    })
+            .when(client)
+            .asyncScroll(any(File.class), any(), any(),any(), any(), any(), anyString(), anyString());
 
     Mockito.doAnswer(
-            new Answer<AsyncResult<JsonObject>>() {
-              @SuppressWarnings("unchecked")
-              @Override
-              public AsyncResult<JsonObject> answer(InvocationOnMock arg0) throws Throwable {
-                ((Handler<AsyncResult<JsonObject>>) arg0.getArgument(2)).handle(asyncResult2);
-                return null;
-              }
-            })
-        .when(fileOpsHelper)
-        .s3Upload(any(File.class), any(), any());
+                    new Answer<AsyncResult<JsonObject>>() {
+                      @SuppressWarnings("unchecked")
+                      @Override
+                      public AsyncResult<JsonObject> answer(InvocationOnMock arg0) throws Throwable {
+                        ((Handler<AsyncResult<JsonObject>>) arg0.getArgument(2)).handle(asyncResult2);
+                        return null;
+                      }
+                    })
+            .when(fileOpsHelper)
+            .s3Upload(any(File.class), any(), any());
 
     LOGGER.info("Async Test steup complete");
     testContext.completeNow();
@@ -157,35 +159,36 @@ public class AsyncServiceTest {
 
   public JsonObject query() {
     JsonObject query =
-        new JsonObject()
-            .put(
-                "id",
-                new JsonArray()
-                    .add(
-                        "83c2e5c2-3574-4e11-9530-2b1fbdfce832"))
-            .put("time", "2020-10-10T14:20:00Z")
-            .put("endtime", "2020-10-20T14:20:00Z")
-            .put("timerel", "during")
-            .put("searchType", "temporalSearch").put("resourceGroup","83c2e5c2-3574-4e11-9530-2b1fbdfce83")
-                .put(RESPONSE_ATTRS,new JsonArray().add("attrs"))
-            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            new JsonObject()
+                    .put(
+                            "id",
+                            new JsonArray()
+                                    .add(
+                                            "83c2e5c2-3574-4e11-9530-2b1fbdfce832"))
+                    .put("time", "2020-10-10T14:20:00Z")
+                    .put("endtime", "2020-10-20T14:20:00Z")
+                    .put("timerel", "during")
+                    .put("searchType", "temporalSearch").put("resourceGroup","83c2e5c2-3574-4e11-9530-2b1fbdfce83")
+                    .put(RESPONSE_ATTRS,new JsonArray().add("attrs"))
+                    .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     return query;
   }
 
   public JsonArray record() {
     JsonArray record = new JsonArray();
+
     record.add(
-        new JsonObject()
-            .put("_id", "4c030b19-4954-4e56-868a-c36d80a77902")
-                .put("search_id", "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe")
-                .put("request_id", "efb0b92cd5b50d0a75a939ffa997c6e4fccdc62414ad0177a020eec98f69144e")
-                .put("status", "COMPLETE")
-                .put("s3_url", "https://example.com")
-                .put("expiry", "2022-03-02T16:08:38.495665")
-                .put("user_id", "15c7506f-c800-48d6-adeb-0542b03947c6")
-                .put("object_id", "b8a47206-364c-4580-8885-45205118db57")
-                .put("size", 0));
+            new JsonObject()
+                    .put("_id", "4c030b19-4954-4e56-868a-c36d80a77902")
+                    .put("search_id", "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe")
+                    .put("request_id", "efb0b92cd5b50d0a75a939ffa997c6e4fccdc62414ad0177a020eec98f69144e")
+                    .put("status", "COMPLETE")
+                    .put("s3_url", "https://example.com")
+                    .put("expiry", "2022-03-02T16:08:38.495665")
+                    .put("user_id", "15c7506f-c800-48d6-adeb-0542b03947c6")
+                    .put("object_id", "b8a47206-364c-4580-8885-45205118db57")
+                    .put("size", 0));
 
     return record;
   }
@@ -201,8 +204,8 @@ public class AsyncServiceTest {
     JsonObject query = query();
 
     doAnswer(Answer -> Future.succeededFuture(record))
-        .when(asyncServiceSpy)
-        .getRecord4RequestId(any());
+            .when(asyncServiceSpy)
+            .getRecord4RequestId(any());
     doAnswer(Answer -> Future.succeededFuture()).when(asyncServiceSpy).executePgQuery(any());
 
     JsonObject providerJson =
@@ -212,7 +215,7 @@ public class AsyncServiceTest {
                     .put("resourceGroup", "dummy_resource");
 
     when(cacheSer.get(any())).thenReturn(Future.succeededFuture(providerJson));
-    asyncServiceSpy.asyncSearch(requestId, sub, searchId, query, "csv","consumer","","");
+    asyncServiceSpy.asyncSearch(requestId, searchId, query, "csv");
     testContext.completeNow();
   }
   //@Test
@@ -234,7 +237,7 @@ public class AsyncServiceTest {
 
     when(client.asyncScroll(any(),anyString(),any(),any(),anyString(),any(),anyString(),anyString())).thenReturn(Future.failedFuture(""));
 
-    asyncServiceSpy.asyncSearch(requestId, sub, searchId, query, "csv","consumer","","");
+    asyncServiceSpy.asyncSearch(requestId, searchId, query, "csv");
 
     testContext.completeNow();
   }
@@ -270,7 +273,7 @@ public class AsyncServiceTest {
     when(asyncResult2.result()).thenReturn(jsonObject2);
     when(client.asyncScroll(any(),anyString(),any(),any(),anyString(),any(),anyString(),anyString())).thenReturn(Future.succeededFuture(jsonObject2));
 
-    asyncServiceSpy.asyncSearch(requestId, sub, searchId, query, "csv","consumer","","");
+    asyncServiceSpy.asyncSearch(requestId, searchId, query, "csv");
 
     verify(asyncServiceSpy, times(1)).executePgQuery(any());
     testContext.completeNow();
@@ -285,11 +288,11 @@ public class AsyncServiceTest {
     JsonObject query = query();
 
     doAnswer(Answer -> Future.succeededFuture(record))
-        .when(asyncServiceSpy)
-        .getRecord4RequestId(any());
+            .when(asyncServiceSpy)
+            .getRecord4RequestId(any());
     doAnswer(Answer -> Future.failedFuture("fail")).when(asyncServiceSpy).executePgQuery(any());
 
-    asyncServiceSpy.asyncSearch(requestId, sub, searchId, query, "csv","consumer","","");
+    asyncServiceSpy.asyncSearch(requestId, searchId, query, "csv");
     testContext.completeNow();
   }
 
@@ -302,12 +305,12 @@ public class AsyncServiceTest {
     JsonObject query = query();
 
     doAnswer(Answer -> Future.failedFuture("record doesn't exist"))
-        .when(asyncServiceSpy)
-        .getRecord4RequestId(any());
+            .when(asyncServiceSpy)
+            .getRecord4RequestId(any());
 
     when(asyncResult1.succeeded()).thenReturn(false);
 
-    asyncServiceSpy.asyncSearch(requestId, sub, searchId, query, "csv","consumer","","");
+    asyncServiceSpy.asyncSearch(requestId, searchId, query, "csv");
     testContext.completeNow();
   }
 
@@ -335,23 +338,42 @@ public class AsyncServiceTest {
   @DisplayName("success - async status")
   public void successfulAsyncStatus(VertxTestContext testContext) {
 
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime nowPlusOne = now.plusHours(1);
     String sub = "15c7506f-c800-48d6-adeb-0542b03947c6";
     String searchId = "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe";
-    JsonArray record = record();
+
+    JsonArray record = new JsonArray();
+
+    record.add(
+            new JsonObject()
+                    .put("_id", "4c030b19-4954-4e56-868a-c36d80a77902")
+                    .put("search_id", "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe")
+                    .put("request_id", "efb0b92cd5b50d0a75a939ffa997c6e4fccdc62414ad0177a020eec98f69144e")
+                    .put("status", "COMPLETE")
+                    .put("s3_url", "https://example.com")
+                    .put("expiry", nowPlusOne.toString())
+                    .put("user_id", "15c7506f-c800-48d6-adeb-0542b03947c6")
+                    .put("object_id", "b8a47206-364c-4580-8885-45205118db57")
+                    .put("isaudited",false)
+                    .put("size", 0));
 
     when(asyncResult1.succeeded()).thenReturn(true);
     when(asyncResult1.result()).thenReturn(new JsonObject().put("result", record));
+    JsonObject query = new JsonObject();
+    query.put("userid",sub);
+    query.put("role","admin");
 
     asyncService.asyncStatus(
-        sub,
-        searchId,
-        handler -> {
-          if (handler.succeeded()) {
-            testContext.completeNow();
-          } else {
-            testContext.failNow("fail");
-          }
-        });
+            query,
+            searchId,
+            handler -> {
+              if (handler.succeeded()) {
+                testContext.completeNow();
+              } else {
+                testContext.failNow("fail");
+              }
+            });
   }
 
   @Test
@@ -363,17 +385,17 @@ public class AsyncServiceTest {
 
     when(asyncResult1.succeeded()).thenReturn(true);
     when(asyncResult1.result()).thenReturn(new JsonObject().put("result", new JsonArray()));
-
+    JsonObject query = new JsonObject();
     asyncService.asyncStatus(
-        sub,
-        searchId,
-        handler -> {
-          if (handler.failed()) {
-            testContext.completeNow();
-          } else {
-            testContext.failNow("fail");
-          }
-        });
+            query,
+            searchId,
+            handler -> {
+              if (handler.failed()) {
+                testContext.completeNow();
+              } else {
+                testContext.failNow("fail");
+              }
+            });
   }
 
   @Test
@@ -386,17 +408,18 @@ public class AsyncServiceTest {
 
     when(asyncResult1.succeeded()).thenReturn(true);
     when(asyncResult1.result()).thenReturn(new JsonObject().put("result", record));
-
+    JsonObject request = new JsonObject();
+    request.put("userid",sub);
     asyncService.asyncStatus(
-        sub,
-        searchId,
-        handler -> {
-          if (handler.failed()) {
-            testContext.completeNow();
-          } else {
-            testContext.failNow("fail");
-          }
-        });
+            request,
+            searchId,
+            handler -> {
+              if (handler.failed()) {
+                testContext.completeNow();
+              } else {
+                testContext.failNow("fail");
+              }
+            });
   }
 
   @Test
@@ -409,15 +432,15 @@ public class AsyncServiceTest {
     when(asyncResult1.result()).thenReturn(new JsonObject().put("result", record));
 
     asyncService
-        .getRecord4RequestId(requestId)
-        .onComplete(
-            handler -> {
-              if (handler.succeeded()) {
-                testContext.completeNow();
-              } else {
-                testContext.failNow("fail");
-              }
-            });
+            .getRecord4RequestId(requestId)
+            .onComplete(
+                    handler -> {
+                      if (handler.succeeded()) {
+                        testContext.completeNow();
+                      } else {
+                        testContext.failNow("fail");
+                      }
+                    });
   }
 
   @Test
@@ -428,15 +451,15 @@ public class AsyncServiceTest {
     when(asyncResult1.succeeded()).thenReturn(true);
 
     asyncService
-        .executePgQuery(query)
-        .onComplete(
-            handler -> {
-              if (handler.succeeded()) {
-                testContext.completeNow();
-              } else {
-                testContext.failNow("fail");
-              }
-            });
+            .executePgQuery(query)
+            .onComplete(
+                    handler -> {
+                      if (handler.succeeded()) {
+                        testContext.completeNow();
+                      } else {
+                        testContext.failNow("fail");
+                      }
+                    });
   }
 
   @Test
@@ -454,7 +477,7 @@ public class AsyncServiceTest {
     }).when(postgresService).executeQuery(anyString(), any());
     when(jsonArray.isEmpty()).thenReturn(true);
     asyncService2 = new AsyncServiceImpl(Vertx.vertx(), client, postgresService, fileOpsHelper,
-        filePath, tenantPrefix,cacheService);
+            filePath, tenantPrefix,cacheService);
     asyncService2.getRecord4RequestId("Dummy ID").onComplete(handler -> {
       if (handler.failed()) {
         assertEquals("Record doesn't exist in db for requestId.", handler.cause().getMessage());
@@ -470,7 +493,7 @@ public class AsyncServiceTest {
   @DisplayName("Test executePGQuery method : failure")
   public void testExecutePgQueryFailure(VertxTestContext vertxTestContext) {
     asyncService2 = new AsyncServiceImpl(Vertx.vertx(), client, postgresService, fileOpsHelper,
-        filePath, tenantPrefix,cacheService);
+            filePath, tenantPrefix,cacheService);
     when(asyncResult2.succeeded()).thenReturn(false);
     when(asyncResult2.cause()).thenReturn(throwable);
     doAnswer(new Answer<AsyncResult<JsonObject>>() {
@@ -496,7 +519,7 @@ public class AsyncServiceTest {
   public void testScrollQueryWithInvalidQuery(VertxTestContext vertxTestContext) {
     ProgressListener progressListener = mock(ProgressListener.class);
     asyncService2 = new AsyncServiceImpl(Vertx.vertx(), client, postgresService, fileOpsHelper,
-        filePath, tenantPrefix,cacheService);
+            filePath, tenantPrefix,cacheService);
     when(jsonObject.put(anyString(), anyBoolean())).thenReturn(jsonObject);
     asyncService2.scrollQuery(file, jsonObject, "Dummy SearchID", progressListener, "csv", handler -> {
       if (handler.succeeded()) {
@@ -528,7 +551,7 @@ public class AsyncServiceTest {
     listener.updateProgress(0.55);
     vertxTestContext.completeNow();
   }
-//@Test
+  //@Test
 //@DisplayName("s3Upload upload successfully")
 //public void failDownloadForNewRequestI(Vertx vertx, VertxTestContext testContext) {
 //  String requestId = "efb0b92cd5b50d0a75a939ffa997c6e4fccdc62414ad0177a020eec98f69144e";
@@ -561,29 +584,255 @@ public class AsyncServiceTest {
 //  asyncServiceSpy.asyncSearch(requestId, sub, searchId, query);
 //  testContext.completeNow();
 //}
-@Test
-@DisplayName("success - async search for existing request id")
-public void successfulAsyncSearchForExistingRecordTest2(VertxTestContext testContext) {
+  @Test
+  @DisplayName("success - async search for existing request id")
+  public void successfulAsyncSearchForExistingRecordTest2(VertxTestContext testContext) {
 
-  String requestId = "682a3a42aaa1c8adadea4cc9ea16d968993fc8eee4edfc299d00bccf28117965";
-  String sub = "15c7506f-c800-48d6-adeb-0542b03947c6";
-  String searchId = "18cc743b-59a4-4c26-9f54-e243986ed709";
-  JsonArray record = record();
-  JsonObject query = query();
+    String requestId = "682a3a42aaa1c8adadea4cc9ea16d968993fc8eee4edfc299d00bccf28117965";
+    String sub = "15c7506f-c800-48d6-adeb-0542b03947c6";
+    String searchId = "18cc743b-59a4-4c26-9f54-e243986ed709";
+    JsonArray record = record();
+    JsonObject query = query();
 
-  doAnswer(Answer -> Future.succeededFuture(record))
-          .when(asyncServiceSpy)
-          .getRecord4RequestId(any());
-  doAnswer(Answer -> Future.succeededFuture()).when(asyncServiceSpy).executePgQuery(any());
+    doAnswer(Answer -> Future.succeededFuture(record))
+            .when(asyncServiceSpy)
+            .getRecord4RequestId(any());
+    doAnswer(Answer -> Future.succeededFuture()).when(asyncServiceSpy).executePgQuery(any());
 
-  JsonObject providerJson =
-          new JsonObject()
-                  .put("provider", "8b95ab80-2aaf-4636-a65e-7f2563d0d371")
-                  .put("id", "5b7556b5-0779-4c47-9cf2-3f209779aa22")
-                  .put("resourceGroup", "dummy_resource");
+    JsonObject providerJson =
+            new JsonObject()
+                    .put("provider", "8b95ab80-2aaf-4636-a65e-7f2563d0d371")
+                    .put("id", "5b7556b5-0779-4c47-9cf2-3f209779aa22")
+                    .put("resourceGroup", "dummy_resource");
 
-  when(cacheSer.get(any())).thenReturn(Future.succeededFuture(providerJson));
-  asyncServiceSpy.asyncSearch(requestId, sub, searchId, query, "csv","delegate","dummy","dummy");
-  testContext.completeNow();
-}
+    when(cacheSer.get(any())).thenReturn(Future.succeededFuture(providerJson));
+    asyncServiceSpy.asyncSearch(requestId, searchId, query, "csv");
+    testContext.completeNow();
+  }
+
+  @Test
+  @DisplayName("success - async status")
+  public void successfulAsyncStatus2(VertxTestContext testContext) {
+
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime nowPlusOne = now.plusHours(1);
+    String sub = "15c7506f-c800-48d6-adeb-0542b03947c6";
+    String searchId = "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe";
+
+    JsonArray record = new JsonArray();
+
+    record.add(
+            new JsonObject()
+                    .put("_id", "4c030b19-4954-4e56-868a-c36d80a77902")
+                    .put("search_id", "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe")
+                    .put("request_id", "efb0b92cd5b50d0a75a939ffa997c6e4fccdc62414ad0177a020eec98f69144e")
+                    .put("status", "COMPLETE")
+                    .put("s3_url", "https://example.com")
+                    .put("expiry", nowPlusOne.toString())
+                    .put("user_id", "15c7506f-c800-48d6-adeb-0542b03947c6")
+                    .put("object_id", "b8a47206-364c-4580-8885-45205118db57")
+                    .put("isaudited",false)
+                    .put("size", 0));
+
+    when(asyncResult1.succeeded()).thenReturn(true);
+    when(asyncResult1.result()).thenReturn(new JsonObject().put("result", record));
+    JsonObject query = new JsonObject();
+    query.put("userid",sub);
+    query.put("role","consumer");
+    query.put("accessPolicy", "CLOSE");
+    query.put("enableLimits",true);
+    query.put("access", new JsonObject().put("async",new JsonObject().put("limit",1000)));
+    query.put("meteringData", new JsonObject().put("consumed_data",100));
+    asyncService.asyncStatus(
+            query,
+            searchId,
+            handler -> {
+              if (handler.succeeded()) {
+                testContext.completeNow();
+              } else {
+                testContext.failNow("fail");
+              }
+            });
+  }
+
+  @Test
+  @DisplayName("failed - async status")
+  public void successfulAsyncStatus3(VertxTestContext testContext) {
+
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime nowPlusOne = now.plusHours(1);
+    String sub = "15c7506f-c800-48d6-adeb-0542b03947c6";
+    String searchId = "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe";
+
+    JsonArray record = new JsonArray();
+
+    record.add(
+            new JsonObject()
+                    .put("_id", "4c030b19-4954-4e56-868a-c36d80a77902")
+                    .put("search_id", "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe")
+                    .put("request_id", "efb0b92cd5b50d0a75a939ffa997c6e4fccdc62414ad0177a020eec98f69144e")
+                    .put("status", "COMPLETE")
+                    .put("s3_url", "https://example.com")
+                    .put("expiry", nowPlusOne.toString())
+                    .put("user_id", "15c7506f-c800-48d6-adeb-0542b03947c6")
+                    .put("object_id", "b8a47206-364c-4580-8885-45205118db57")
+                    .put("isaudited",false)
+                    .put("size", 0));
+
+    when(asyncResult1.succeeded()).thenReturn(true);
+    when(asyncResult1.result()).thenReturn(new JsonObject().put("result", record));
+    JsonObject query = new JsonObject();
+    query.put("userid",sub);
+    query.put("role","consumer");
+    query.put("accessPolicy", "CLOSE");
+    query.put("enableLimits",true);
+    query.put("access", new JsonObject().put("async",new JsonObject().put("limit",1000)));
+    query.put("meteringData", new JsonObject().put("consumed_data",100000));
+    asyncService.asyncStatus(
+            query,
+            searchId,
+            handler -> {
+              if (!handler.succeeded()) {
+                testContext.completeNow();
+              } else {
+                testContext.failNow("fail");
+              }
+            });
+  }
+
+  @Test
+  @DisplayName("success - async status")
+  public void successfulAsyncStatus4(VertxTestContext testContext) {
+
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime nowPlusOne = now.plusHours(1);
+    String sub = "15c7506f-c800-48d6-adeb-0542b03947c6";
+    String searchId = "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe";
+
+    JsonArray record = new JsonArray();
+
+    record.add(
+            new JsonObject()
+                    .put("_id", "4c030b19-4954-4e56-868a-c36d80a77902")
+                    .put("search_id", "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe")
+                    .put("request_id", "efb0b92cd5b50d0a75a939ffa997c6e4fccdc62414ad0177a020eec98f69144e")
+                    .put("status", "COMPLETE")
+                    .put("s3_url", "https://example.com")
+                    .put("expiry", nowPlusOne.toString())
+                    .put("user_id", "15c7506f-c800-48d6-adeb-0542b03947c6")
+                    .put("object_id", "b8a47206-364c-4580-8885-45205118db57")
+                    .put("isaudited",true)
+                    .put("size", 0));
+
+    when(asyncResult1.succeeded()).thenReturn(true);
+    when(asyncResult1.result()).thenReturn(new JsonObject().put("result", record));
+    JsonObject query = new JsonObject();
+    query.put("userid",sub);
+    query.put("role","consumer");
+    query.put("accessPolicy", "CLOSE");
+    query.put("enableLimits",true);
+    query.put("access", new JsonObject().put("async",new JsonObject().put("limit",1000)));
+    query.put("meteringData", new JsonObject().put("consumed_data",100));
+    asyncService.asyncStatus(
+            query,
+            searchId,
+            handler -> {
+              if (handler.succeeded()) {
+                testContext.completeNow();
+              } else {
+                testContext.failNow("fail");
+              }
+            });
+  }
+
+  @Test
+  @DisplayName("success - async status")
+  public void successfulAsyncStatus5(VertxTestContext testContext) {
+
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime nowPlusOne = now.plusHours(1);
+    String sub = "15c7506f-c800-48d6-adeb-0542b03947c6";
+    String searchId = "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe";
+
+    JsonArray record = new JsonArray();
+
+    record.add(
+            new JsonObject()
+                    .put("_id", "4c030b19-4954-4e56-868a-c36d80a77902")
+                    .put("search_id", "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe")
+                    .put("request_id", "efb0b92cd5b50d0a75a939ffa997c6e4fccdc62414ad0177a020eec98f69144e")
+                    .put("status", "PROGRESS")
+                    .put("s3_url", "https://example.com")
+                    .put("expiry", nowPlusOne.toString())
+                    .put("user_id", "15c7506f-c800-48d6-adeb-0542b03947c6")
+                    .put("object_id", "b8a47206-364c-4580-8885-45205118db57")
+                    .put("isaudited",true)
+                    .put("size", 0));
+
+    when(asyncResult1.succeeded()).thenReturn(true);
+    when(asyncResult1.result()).thenReturn(new JsonObject().put("result", record));
+    JsonObject query = new JsonObject();
+    query.put("userid",sub);
+    query.put("role","consumer");
+    query.put("accessPolicy", "CLOSE");
+    query.put("enableLimits",true);
+    query.put("access", new JsonObject().put("async",new JsonObject().put("limit",1000)));
+    query.put("meteringData", new JsonObject().put("consumed_data",100));
+    asyncService.asyncStatus(
+            query,
+            searchId,
+            handler -> {
+              if (handler.succeeded()) {
+                testContext.completeNow();
+              } else {
+                testContext.failNow("fail");
+              }
+            });
+  }
+
+  @Test
+  @DisplayName("failed - async status")
+  public void successfulAsyncStatus6(VertxTestContext testContext) {
+
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime nowPlusOne = now.plusHours(-1);
+    String sub = "15c7506f-c800-48d6-adeb-0542b03947c6";
+    String searchId = "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe";
+
+    JsonArray record = new JsonArray();
+
+    record.add(
+            new JsonObject()
+                    .put("_id", "4c030b19-4954-4e56-868a-c36d80a77902")
+                    .put("search_id", "4b25aa92-47bb-4c91-98c0-47a1c7a51fbe")
+                    .put("request_id", "efb0b92cd5b50d0a75a939ffa997c6e4fccdc62414ad0177a020eec98f69144e")
+                    .put("status", "COMPLETE")
+                    .put("s3_url", "https://example.com")
+                    .put("expiry", nowPlusOne.toString())
+                    .put("user_id", "15c7506f-c800-48d6-adeb-0542b03947c6")
+                    .put("object_id", "b8a47206-364c-4580-8885-45205118db57")
+                    .put("isaudited",true)
+                    .put("size", 0));
+
+    when(asyncResult1.succeeded()).thenReturn(true);
+    when(asyncResult1.result()).thenReturn(new JsonObject().put("result", record));
+    JsonObject query = new JsonObject();
+    query.put("userid",sub);
+    query.put("role","consumer");
+    query.put("accessPolicy", "CLOSE");
+    query.put("enableLimits",true);
+    query.put("access", new JsonObject().put("async",new JsonObject().put("limit",1000)));
+    query.put("meteringData", new JsonObject().put("consumed_data",100));
+    asyncService.asyncStatus(
+            query,
+            searchId,
+            handler -> {
+              if (!handler.succeeded()) {
+                testContext.completeNow();
+              } else {
+                testContext.failNow("fail");
+              }
+            });
+  }
+
 }

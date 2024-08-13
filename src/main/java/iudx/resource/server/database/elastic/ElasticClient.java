@@ -69,7 +69,7 @@ public class ElasticClient {
       File file,
       String index,
       Query query,
-      String[] source,
+      SourceConfig sourceConfig,
       String searchId,
       ProgressListener progressListener,
       String format,
@@ -77,7 +77,12 @@ public class ElasticClient {
     Promise<JsonObject> promise = Promise.promise();
     SearchRequest searchRequest =
         SearchRequest.of(
-            e -> e.index(index).query(query).size(10000).scroll(scr -> scr.time("5m")));
+            e ->
+                e.index(index)
+                    .query(query)
+                    .source(sourceConfig)
+                    .size(10000)
+                    .scroll(scr -> scr.time("5m")));
 
     asyncClient
         .search(searchRequest, ObjectNode.class)

@@ -13,6 +13,7 @@ import iudx.resource.server.configuration.Configuration;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -76,4 +77,22 @@ public class TestEsResponseFormatterToJson {
         verify(responseFormatterToJson.fileWriter,times(1)).close();
         vertxTestContext.completeNow();
     }
+  @Test
+  public void testAppend(VertxTestContext vertxTestContext) throws IOException {
+
+    ObjectNode node1 = mock(ObjectNode.class);
+    ObjectNode node2 = mock(ObjectNode.class);
+    Hit<ObjectNode> hit1 = mock(Hit.class);
+    Hit<ObjectNode> hit2 = mock(Hit.class);
+
+    when(hit1.source()).thenReturn(node1);
+    when(hit2.source()).thenReturn(node2);
+    when(node1.toString()).thenReturn("node1");
+    when(node2.toString()).thenReturn("node2");
+
+    List<Hit<ObjectNode>> searchHits = Arrays.asList(hit1, hit2);
+
+    responseFormatterToJson.append(searchHits);
+    vertxTestContext.completeNow();
+  }
 }

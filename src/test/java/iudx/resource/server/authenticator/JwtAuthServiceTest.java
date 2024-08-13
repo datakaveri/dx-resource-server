@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import iudx.resource.server.common.Api;
+import iudx.resource.server.database.postgres.PostgresService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,6 +49,8 @@ public class JwtAuthServiceTest {
     Throwable throwable;
     @Mock
     AsyncResult<JsonObject> asyncResult;
+    @Mock
+    PostgresService pgService;
     JwtAuthenticationServiceImpl jwtAuthenticationService;
     private Api apis;
     private String dxApiBasePath;
@@ -76,8 +78,8 @@ public class JwtAuthServiceTest {
 
         JWTAuth jwtAuth = JWTAuth.create(Vertx.vertx(), jwtAuthOptions);
         when(config.getString(anyString())).thenReturn("Dummy String");
-        when(config.getInteger(anyString())).thenReturn(8443);
-        jwtAuthenticationService = new JwtAuthenticationServiceImpl(Vertx.vertx(),jwtAuth,config,cacheService,meteringService,apis);
+        lenient().when(config.getInteger(anyString())).thenReturn(8443);
+        jwtAuthenticationService = new JwtAuthenticationServiceImpl(Vertx.vertx(),jwtAuth,config,cacheService,meteringService,pgService,apis);
         vertxTestContext.completeNow();
     }
 
@@ -91,17 +93,19 @@ public class JwtAuthServiceTest {
         when(jwtData.getIat()).thenReturn(3000);
 
         when(cacheService.get(any())).thenReturn(Future.succeededFuture(jsonObject));
-        jwtAuthenticationService.isRevokedClientToken(jwtData).onComplete(handler -> {
-            if(handler.succeeded())
-            {
-                vertxTestContext.failNow(handler.cause());
-            }
-            else
-            {
-                assertEquals("{\"401\":\"revoked token passes\"}", handler.cause().getMessage());
-                vertxTestContext.completeNow();
-            }
-        });
+        jwtAuthenticationService
+                .isRevokedClientToken(jwtData)
+                .onComplete(
+                        handler -> {
+                            if (handler.succeeded()) {
+                                vertxTestContext.failNow(handler.cause());
+                            } else {
+                                /*assertEquals("{\"401\":\"revoked token passes\"}", handler.cause().getMessage());*/
+                                assertEquals(
+                                        "{\"type\":\"urn:dx:rs:invalidAuthorizationToken\",\"status\":401,\"title\":\"Not Authorized\",\"detail\":\"revoked token passes\"}", handler.cause().getMessage());
+                                vertxTestContext.completeNow();
+                            }
+                        });
     }
 
     @Test

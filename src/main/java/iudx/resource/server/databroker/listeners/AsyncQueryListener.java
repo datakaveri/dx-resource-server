@@ -52,15 +52,10 @@ public class AsyncQueryListener implements RmqListeners {
                             LOGGER.debug("received message from async-query Q :" + asyncQueryJson);
                             String requestId = asyncQueryJson.getString("requestId");
                             String searchId = asyncQueryJson.getString("searchId");
-                            String user = asyncQueryJson.getString("user");
                             String format = asyncQueryJson.getString(HEADER_RESPONSE_FILE_FORMAT);
-                            String role = asyncQueryJson.getString(ROLE);
-                            String drl = asyncQueryJson.getString(DRL);
-                            String did = asyncQueryJson.getString(DID);
                             JsonObject query = asyncQueryJson.getJsonObject("query");
                             LOGGER.debug("query received from RMQ : {}", query);
-                            asyncService.asyncSearch(
-                                requestId, user, searchId, query, format, role, drl, did);
+                            asyncService.asyncSearch(requestId, searchId, query, format);
                           } else {
                             LOGGER.error("Empty json received from async query queue");
                           }

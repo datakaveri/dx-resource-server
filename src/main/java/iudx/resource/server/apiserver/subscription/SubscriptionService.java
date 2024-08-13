@@ -7,6 +7,7 @@ import static iudx.resource.server.cache.cachelmpl.CacheType.CATALOGUE_CACHE;
 import static iudx.resource.server.databroker.util.Constants.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
@@ -118,21 +119,8 @@ public class SubscriptionService {
                                       .put("subscriptionType", json.getString("subscriptionType"));
                                   deleteJson.put("userid", authInfo.getString("userid"));
                                   deleteJson.put("subscriptionID", brokerResponse.getString("id"));
-                                  deleteSubscription(deleteJson, databroker, pgService)
-                                      .onComplete(
-                                          handlers -> {
-                                            if (handlers.succeeded()) {
-                                              LOGGER.info("subscription rolled back successfully");
-                                            } else {
-                                              LOGGER.error("subscription rolled back failed");
-                                            }
-                                            JsonObject res =
-                                                new JsonObject(pgHandler.cause().getMessage());
-                                            LOGGER.debug(
-                                                "pgHandler.cause().getMessage "
-                                                    + pgHandler.cause().getMessage());
-                                            promise.fail(generateResponse(res).toString());
-                                          });
+                                  deleteSubscriptionRmq(
+                                      databroker, pgService, pgHandler, deleteJson, promise);
                                 }
                               });
                         });
@@ -396,21 +384,8 @@ public class SubscriptionService {
                                       .put("subscriptionType", subType);
                                   deleteJson.put("userid", authInfo.getString("userid"));
                                   deleteJson.put("subscriptionID", json.getString(SUBSCRIPTION_ID));
-                                  deleteSubscription(deleteJson, databroker, pgService)
-                                      .onComplete(
-                                          handlers -> {
-                                            if (handlers.succeeded()) {
-                                              LOGGER.info("subscription rolled back successfully");
-                                            } else {
-                                              LOGGER.error("subscription rolled back failed");
-                                            }
-                                            JsonObject res =
-                                                new JsonObject(pgHandler.cause().getMessage());
-                                            LOGGER.debug(
-                                                "pgHandler.cause().getMessage "
-                                                    + pgHandler.cause().getMessage());
-                                            promise.fail(generateResponse(res).toString());
-                                          });
+                                  deleteSubscriptionRmq(
+                                      databroker, pgService, pgHandler, deleteJson, promise);
                                 }
                               });
                         })
@@ -422,6 +397,26 @@ public class SubscriptionService {
             });
 
     return promise.future();
+  }
+
+  private void deleteSubscriptionRmq(
+      DataBrokerService databroker,
+      PostgresService pgService,
+      AsyncResult<JsonObject> pgHandler,
+      JsonObject deleteJson,
+      Promise<JsonObject> promise) {
+    deleteSubscription(deleteJson, databroker, pgService)
+        .onComplete(
+            handlers -> {
+              if (handlers.succeeded()) {
+                LOGGER.info("subscription rolled back successfully");
+              } else {
+                LOGGER.error("subscription rolled back failed");
+              }
+              JsonObject res = new JsonObject(pgHandler.cause().getMessage());
+              LOGGER.debug("pgHandler.cause().getMessage " + pgHandler.cause().getMessage());
+              promise.fail(generateResponse(res).toString());
+            });
   }
 
   private JsonObject generateResponse(JsonObject response) {

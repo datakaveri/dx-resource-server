@@ -1,29 +1,13 @@
 package iudx.resource.server.authenticator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import io.vertx.core.Handler;
-import iudx.resource.server.common.Api;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.joda.time.LocalDateTime;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import io.micrometer.core.ipc.http.HttpSender.Method;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
@@ -39,25 +23,26 @@ import io.vertx.junit5.VertxTestContext;
 import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.cache.cachelmpl.CacheType;
+import iudx.resource.server.common.Api;
 import iudx.resource.server.configuration.Configuration;
 import iudx.resource.server.database.postgres.PostgresService;
 import iudx.resource.server.metering.MeteringService;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.joda.time.LocalDateTime;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
 @ExtendWith({VertxExtension.class, MockitoExtension.class})
 public class JwtAuthServiceImplTest {
-  @Mock
-  HttpRequest<Buffer> httpRequest;
-  @Mock
-  HttpResponse<Buffer> httpResponse;
-
-  @Mock
-  AsyncResult<HttpResponse<Buffer>> asyncResult;
-  @Mock
-  HttpRequest<Buffer> httpRequestMock;
-  @Mock
-  HttpResponse<Buffer> httpResponseMock;
-
   private static final Logger LOGGER = LogManager.getLogger(JwtAuthServiceImplTest.class);
   private static JsonObject authConfig;
   private static JwtAuthenticationServiceImpl jwtAuthenticationService;
@@ -69,6 +54,18 @@ public class JwtAuthServiceImplTest {
   private static CacheService cacheService;
   private static MeteringService meteringService;
   private static Api apis;
+  @Mock
+  HttpRequest<Buffer> httpRequest;
+  @Mock
+  HttpResponse<Buffer> httpResponse;
+  @Mock
+  AsyncResult<HttpResponse<Buffer>> asyncResult;
+  @Mock
+  HttpRequest<Buffer> httpRequestMock;
+  @Mock
+  HttpResponse<Buffer> httpResponseMock;
+  @Mock
+  Vertx ver;
 
   @BeforeAll
   @DisplayName("Initialize Vertx and deploy Auth Verticle")
@@ -80,15 +77,15 @@ public class JwtAuthServiceImplTest {
     authConfig.put("dxAuthBasePath", "/auth/v1");
 
     apis = Api.getInstance("/ngsi-ld/v1");
+    String cert = "-----BEGIN CERTIFICATE-----\n" +
+            "MIIBnDCCAT+gAwIBAgIEAmHF8jAMBggqhkjOPQQDAgUAMEIxCTAHBgNVBAYTADEJMAcGA1UECBMAMQkwBwYDVQQHEwAxCTAHBgNVBAoTADEJMAcGA1UECxMAMQkwBwYDVQQDEwAwHhcNMjQwNjA0MDUwMjUyWhcNMzQwNDEzMDUwMjUyWjBCMQkwBwYDVQQGEwAxCTAHBgNVBAgTADEJMAcGA1UEBxMAMQkwBwYDVQQKEwAxCTAHBgNVBAsTADEJMAcGA1UEAxMAMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEh5f7KjNICeuv7WqbeA7M833XFaPolI8FxZ/aCcqjXOE9RKtiat2MJcW4/OElvLTXmsuJqurYEcf6AWpzjNorxqMhMB8wHQYDVR0OBBYEFKbYNWO6YB6Usl/kc6iTYw855Pm4MAwGCCqGSM49BAMCBQADSQAwRgIhAKpRdMvH23COf7EBm2M1thDE26pT8WL0SfP5u9szo0cdAiEAv/0b4E2sU3gIxtkJDx5KUr+kQWxtY5w2+MPQ32G38ig=\n" +
+            "-----END CERTIFICATE-----";
+
     JWTAuthOptions jwtAuthOptions = new JWTAuthOptions();
     jwtAuthOptions.addPubSecKey(
             new PubSecKeyOptions()
                     .setAlgorithm("ES256")
-                    .setBuffer("-----BEGIN PUBLIC KEY-----\n" +
-                            "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE8BKf2HZ3wt6wNf30SIsbyjYPkkTS\n" +
-                            "GGyyM2/MGF/zYTZV9Z28hHwvZgSfnbsrF36BBKnWszlOYW0AieyAUKaKdg==\n" +
-                            "-----END PUBLIC KEY-----\n" +
-                            ""));
+                    .setBuffer(cert));
     jwtAuthOptions.getJWTOptions().setIgnoreExpiration(true);// ignore token expiration only
     // for
     // test
@@ -96,9 +93,10 @@ public class JwtAuthServiceImplTest {
 
     cacheService = Mockito.mock(CacheService.class);
     meteringService=Mockito.mock(MeteringService.class);
+    pgService = Mockito.mock(PostgresService.class);
     WebClient webClient = AuthenticationVerticle.createWebClient(vertx, authConfig, true);
     jwtAuthenticationService =
-            new JwtAuthenticationServiceImpl(vertx, jwtAuth, authConfig, cacheService,meteringService,apis);
+            new JwtAuthenticationServiceImpl(vertx, jwtAuth, authConfig, cacheService,meteringService,pgService,apis);
 
     // since test token doesn't contains valid id's, so forcibly put some dummy id in cache
     // for
@@ -126,17 +124,17 @@ public class JwtAuthServiceImplTest {
 //    }).when(cacheService).get(any());
 
    /* when(cacheService.get(any())).thenReturn(Future.failedFuture("failed"));
-    
+
     JsonObject openIdJson=new JsonObject();
     openIdJson.put("type", CacheType.CATALOGUE_CACHE);
     openIdJson.put("key", openId);
     when(cacheService.get(openIdJson)).thenReturn(Future.succeededFuture(new JsonObject().put("accessPolicy", "OPEN")));
-    
+
     JsonObject closedIdJson=new JsonObject();
     closedIdJson.put("type", CacheType.CATALOGUE_CACHE);
     closedIdJson.put("key", closeId);
     when(cacheService.get(closedIdJson)).thenReturn(Future.succeededFuture(new JsonObject().put("accessPolicy", "SECURE")));
-    
+
     JsonObject invalidIdJson=new JsonObject();
     invalidIdJson.put("type", CacheType.CATALOGUE_CACHE);
     invalidIdJson.put("key", invalidId);
@@ -169,8 +167,24 @@ public class JwtAuthServiceImplTest {
     jwtData.setIat(1627408865);
     jwtData.setIid("ri:foobar.iudx.io");
     jwtData.setRole("consumer");
-    jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api")));
+    JsonObject access = new JsonObject()
+            .put("api", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("sub", new JsonObject().put("limit", 10000).put("unit", "MB"))
+            .put("file", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("async", new JsonObject().put("limit", 10000).put("unit", "MB"));
 
+    JsonArray attrs = new JsonArray()
+            .add("trip_direction")
+            .add("trip_id")
+            .add("location")
+            .add("id")
+            .add("observationDateTime");
+
+    JsonObject cons = new JsonObject()
+            .put("access", access)
+            .put("attrs", attrs);
+
+    jwtData.setCons(cons);
     jwtAuthenticationService.validateAccess(jwtData, true, authInfo).onComplete(handler -> {
       if (handler.succeeded()) {
         testContext.completeNow();
@@ -192,9 +206,9 @@ public class JwtAuthServiceImplTest {
     authInfo.put("method", Method.GET);
 
     JsonObject request = new JsonObject();
-    
+
     when(cacheService.get(any())).thenReturn(Future.failedFuture(""));
-    
+
     JsonObject closedIdJson=new JsonObject();
     closedIdJson.put("type", CacheType.CATALOGUE_CACHE);
     closedIdJson.put("key", closeId);
@@ -246,13 +260,13 @@ public class JwtAuthServiceImplTest {
     list.add("iudx:TransitManagement");
 
     JsonObject jsonObject =
-        new JsonObject()
-            .put("id", "b58da193-23d9-43eb-b98a-a103d4b6103c")
-            .put("type", list)
-            .put("name", "dummy_name")
-            .put("resourceGroup", "5b7556b5-0779-4c47-9cf2-3f209779aa22")
-            .put("value", "2021-09-09T12:52:37")
-            .put("accessPolicy", "OPEN");
+            new JsonObject()
+                    .put("id", "b58da193-23d9-43eb-b98a-a103d4b6103c")
+                    .put("type", list)
+                    .put("name", "dummy_name")
+                    .put("resourceGroup", "5b7556b5-0779-4c47-9cf2-3f209779aa22")
+                    .put("value", "2021-09-09T12:52:37")
+                    .put("accessPolicy", "OPEN");
 
     JwtData jwtData = new JwtData();
     jwtData.setSub("valid_sub");
@@ -262,8 +276,24 @@ public class JwtAuthServiceImplTest {
     jwtData.setIat(1627408865);
     jwtData.setIid("rg:example.com/79e7bfa62fad6c765bac69154c2f24c94c95220a/resource-group");
     jwtData.setRole("provider");
-    jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api")));
+    JsonObject access = new JsonObject()
+            .put("api", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("sub", new JsonObject().put("limit", 10000).put("unit", "MB"))
+            .put("file", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("async", new JsonObject().put("limit", 10000).put("unit", 122));
 
+    JsonArray attrs = new JsonArray()
+            .add("trip_direction")
+            .add("trip_id")
+            .add("location")
+            .add("id")
+            .add("observationDateTime");
+
+    JsonObject cons = new JsonObject()
+            .put("access", access)
+            .put("attrs", attrs);
+
+    jwtData.setCons(cons);
     JsonObject revokedTokenRequest=new JsonObject();
     revokedTokenRequest.put("type", CacheType.REVOKED_CLIENT);
     revokedTokenRequest.put("key", jwtData.getSub());
@@ -312,7 +342,6 @@ public class JwtAuthServiceImplTest {
     jwtData.setIat(1627408865);
     jwtData.setIid("rg:example.com/79e7bfa62fad6c765bac69154c2f24c94c95220a/resource-group");
     jwtData.setRole("provider");
-    jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api")));
 
     JsonObject revokedTokenRequest=new JsonObject();
     revokedTokenRequest.put("type", CacheType.REVOKED_CLIENT);
@@ -461,7 +490,8 @@ public class JwtAuthServiceImplTest {
     jwtData.setIat(1627408865);
     jwtData.setIid("rg:example.com/79e7bfa62fad6c765bac69154c2f24c94c95220a/resource-group");
     jwtData.setRole("provider");
-    jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api")));
+    jwtData.setCons(new JsonObject().put("access", new JsonArray().add(new JsonObject().put("api",10).put("sub",100))));
+
 
     JsonObject revokedTokenRequest=new JsonObject();
     revokedTokenRequest.put("type", CacheType.REVOKED_CLIENT);
@@ -595,6 +625,8 @@ public class JwtAuthServiceImplTest {
             "datakaveri.org/04a15c9960ffda227e9546f3f46e629e1fe4132b/rs.iudx.io/pune-env-flood/FWR053");
     authInfo.put("apiEndpoint", "/ngsi-ld/v1/entities");
     authInfo.put("method", "GET");
+    authInfo.put("api_count",0);
+    authInfo.put("consumed_data",0);
 
     JwtData jwtData = new JwtData();
     jwtData.setIss("auth.test.com");
@@ -604,8 +636,24 @@ public class JwtAuthServiceImplTest {
     jwtData.setIid(
             "rg:datakaveri.org/04a15c9960ffda227e9546f3f46e629e1fe4132b/rs.iudx.io/pune-env-flood/FWR053");
     jwtData.setRole("consumer");
-    jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api").add("sub")));
+    JsonObject access = new JsonObject()
+            .put("api", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("sub", new JsonObject().put("limit", 10000).put("unit", "MB"))
+            .put("file", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("async", new JsonObject().put("limit", 10000).put("unit", "MB"));
 
+    JsonArray attrs = new JsonArray()
+            .add("trip_direction")
+            .add("trip_id")
+            .add("location")
+            .add("id")
+            .add("observationDateTime");
+
+    JsonObject cons = new JsonObject()
+            .put("access", access)
+            .put("attrs", attrs);
+
+    jwtData.setCons(cons);
 
     jwtAuthenticationService.validateAccess(jwtData, true, authInfo).onComplete(handler -> {
       if (handler.succeeded()) {
@@ -637,7 +685,7 @@ public class JwtAuthServiceImplTest {
     jwtData.setIid(
             "rg:datakaveri.org/04a15c9960ffda227e9546f3f46e629e1fe4132b/rs.iudx.io/pune-env-flood/FWR053");
     jwtData.setRole("consumer");
-    jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api")));
+    jwtData.setCons(new JsonObject().put("access", new JsonArray().add(new JsonObject().put("api",10).put("sub",100))));
     jwtAuthenticationService.validateAccess(jwtData, false, authInfo).onComplete(handler -> {
       if (handler.succeeded()) {
         testContext.failNow("invalid access provided");
@@ -668,8 +716,24 @@ public class JwtAuthServiceImplTest {
     jwtData.setIid(
             "rg:datakaveri.org/04a15c9960ffda227e9546f3f46e629e1fe4132b/rs.iudx.io/pune-env-flood/FWR053");
     jwtData.setRole("consumer");
-    jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api").add("sub")));
+    JsonObject access = new JsonObject()
+            .put("api", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("sub", new JsonObject().put("limit", 10000).put("unit", "MB"))
+            .put("file", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("async", new JsonObject().put("limit", 10000).put("unit", 122));
 
+    JsonArray attrs = new JsonArray()
+            .add("trip_direction")
+            .add("trip_id")
+            .add("location")
+            .add("id")
+            .add("observationDateTime");
+
+    JsonObject cons = new JsonObject()
+            .put("access", access)
+            .put("attrs", attrs);
+
+    jwtData.setCons(cons);
 
     jwtAuthenticationService.validateAccess(jwtData, true, authInfo).onComplete(handler -> {
       if (handler.succeeded()) {
@@ -701,7 +765,41 @@ public class JwtAuthServiceImplTest {
     jwtData.setIid(
             "rg:datakaveri.org/04a15c9960ffda227e9546f3f46e629e1fe4132b/rs.iudx.io/pune-env-flood/FWR053");
     jwtData.setRole("consumer");
-    jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api")));
+    jwtData.setSub("userid");
+    JsonObject access = new JsonObject()
+            .put("api", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("sub", new JsonObject().put("limit", 10000).put("unit", "MB"))
+            .put("file", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("async", new JsonObject().put("limit", 10000).put("unit", 122));
+
+    JsonArray attrs = new JsonArray()
+            .add("trip_direction")
+            .add("trip_id")
+            .add("location")
+            .add("id")
+            .add("observationDateTime");
+
+    JsonObject cons = new JsonObject()
+            .put("access", access)
+            .put("attrs", attrs);
+
+    jwtData.setCons(cons);
+
+    JsonObject meteringCountRequest = new JsonObject();
+    meteringCountRequest.put("startTime", "endDateTime");
+    meteringCountRequest.put("endTime", "startDateTim");
+    meteringCountRequest.put("userid", "userid");
+    meteringCountRequest.put("resourceId", "resourceId");
+    meteringCountRequest.put("accessType", "api");
+
+    doAnswer(invocation -> {
+      Handler<AsyncResult<JsonObject>> handler = invocation.getArgument(1);
+      // Simulate successful metering response
+      JsonObject meteringResponse = new JsonObject().put("result", new JsonArray().add(new JsonObject()));
+      handler.handle(Future.succeededFuture(meteringResponse));
+      return null;
+    }).when(meteringService).getConsumedData(any(JsonObject.class), any());
+
     jwtAuthenticationService.validateAccess(jwtData, false, authInfo).onComplete(handler -> {
       if (handler.succeeded()) {
         testContext.failNow("invalid access provided");
@@ -732,7 +830,7 @@ public class JwtAuthServiceImplTest {
     jwtData.setIid(
             "rg:datakaveri.org/04a15c9960ffda227e9546f3f46e629e1fe4132b/rs.iudx.io/pune-env-flood/FWR053");
     jwtData.setRole("consumer");
-    jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api")));
+    jwtData.setCons(new JsonObject().put("access", new JsonArray().add(new JsonObject().put("api",10).put("sub",100))));
 
     jwtAuthenticationService.validateAccess(jwtData, false, authInfo).onComplete(handler -> {
       if (handler.succeeded()) {
@@ -764,7 +862,42 @@ public class JwtAuthServiceImplTest {
     jwtData.setIat(1627408865);
     jwtData.setIid("rg:example.com/79e7bfa62fad6c765bac69154c2f24c94c95220a/resource-group");
     jwtData.setRole("provider");
-    jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api")));
+    jwtData.setSub("userid");
+    JsonObject access = new JsonObject()
+            .put("api", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("sub", new JsonObject().put("limit", 10000).put("unit", "MB"))
+            .put("file", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("async", new JsonObject().put("limit", 10000).put("unit", 122));
+
+    JsonArray attrs = new JsonArray()
+            .add("trip_direction")
+            .add("trip_id")
+            .add("location")
+            .add("id")
+            .add("observationDateTime");
+
+    JsonObject cons = new JsonObject()
+            .put("access", access)
+            .put("attrs", attrs);
+
+    jwtData.setCons(cons);
+
+    JsonObject meteringCountRequest = new JsonObject();
+    meteringCountRequest.put("startTime", "endDateTime");
+    meteringCountRequest.put("endTime", "startDateTim");
+    meteringCountRequest.put("userid", "userid");
+    meteringCountRequest.put("resourceId", "resourceId");
+    meteringCountRequest.put("accessType", "api");
+
+    doAnswer(invocation -> {
+      Handler<AsyncResult<JsonObject>> handler = invocation.getArgument(1);
+      // Simulate successful metering response
+      JsonObject meteringResponse = new JsonObject().put("result", new JsonArray().add(new JsonObject()));
+      handler.handle(Future.succeededFuture(meteringResponse));
+      return null;
+    }).when(meteringService).getConsumedData(any(JsonObject.class), any());
+
+
     jwtAuthenticationService.validateAccess(jwtData, false, authInfo).onComplete(handler -> {
       if (handler.succeeded()) {
         testContext.completeNow();
@@ -793,7 +926,39 @@ public class JwtAuthServiceImplTest {
     jwtData.setIat(1627408865);
     jwtData.setIid("rg:example.com/79e7bfa62fad6c765bac69154c2f24c94c95220a/resource-group");
     jwtData.setRole("provider");
-    jwtData.setCons(new JsonObject().put("access", new JsonArray().add("ingestion")));
+    JsonObject access = new JsonObject()
+            .put("api", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("sub", new JsonObject().put("limit", 10000).put("unit", "MB"))
+            .put("file", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("async", new JsonObject().put("limit", 10000).put("unit", 122));
+
+    JsonArray attrs = new JsonArray()
+            .add("trip_direction")
+            .add("trip_id")
+            .add("location")
+            .add("id")
+            .add("observationDateTime");
+
+    JsonObject cons = new JsonObject()
+            .put("access", access)
+            .put("attrs", attrs);
+
+    jwtData.setCons(cons);
+
+    JsonObject meteringCountRequest = new JsonObject();
+    meteringCountRequest.put("startTime", "endDateTime");
+    meteringCountRequest.put("endTime", "startDateTim");
+    meteringCountRequest.put("userid", "userid");
+    meteringCountRequest.put("resourceId", "resourceId");
+    meteringCountRequest.put("accessType", "api");
+
+    doAnswer(invocation -> {
+      Handler<AsyncResult<JsonObject>> handler = invocation.getArgument(1);
+      // Simulate successful metering response
+      JsonObject meteringResponse = new JsonObject().put("result", new JsonArray().add(new JsonObject()));
+      handler.handle(Future.succeededFuture(meteringResponse));
+      return null;
+    }).when(meteringService).getConsumedData(any(JsonObject.class), any());
 
 
     jwtAuthenticationService.validateAccess(jwtData, false, authInfo).onComplete(handler -> {
@@ -827,8 +992,58 @@ public class JwtAuthServiceImplTest {
     jwtData.setIat(1627408865);
     jwtData.setIid("rg:example.com/79e7bfa62fad6c765bac69154c2f24c94c95220a/resource-group");
     jwtData.setRole("provider");
-    jwtData.setCons(new JsonObject().put("access", new JsonArray().add("ingestion")));
+    jwtData.setSub("userid");
+    JsonObject access = new JsonObject()
+            .put("api", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("sub", new JsonObject().put("limit", 10000).put("unit", "MB"))
+            .put("file", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("async", new JsonObject().put("limit", 10000).put("unit", 122));
 
+    JsonArray attrs = new JsonArray()
+            .add("trip_direction")
+            .add("trip_id")
+            .add("location")
+            .add("id")
+            .add("observationDateTime");
+
+    JsonObject cons = new JsonObject()
+            .put("access", access)
+            .put("attrs", attrs);
+
+    jwtData.setCons(cons);
+
+    JsonObject meteringCountRequest = new JsonObject();
+    meteringCountRequest.put("startTime", "endDateTime");
+    meteringCountRequest.put("endTime", "startDateTim");
+    meteringCountRequest.put("userid", "userid");
+    meteringCountRequest.put("resourceId", "resourceId");
+    meteringCountRequest.put("accessType", "api");
+
+    doAnswer(invocation -> {
+      Handler<AsyncResult<JsonObject>> handler = invocation.getArgument(1);
+      // Simulate successful metering response
+      JsonObject meteringResponse = new JsonObject().put("result", new JsonArray().add(new JsonObject()));
+      handler.handle(Future.succeededFuture(meteringResponse));
+      return null;
+    }).when(meteringService).getConsumedData(any(JsonObject.class), any());
+
+    String cert = "-----BEGIN CERTIFICATE-----\n" +
+            "MIIBnDCCAT+gAwIBAgIEAmHF8jAMBggqhkjOPQQDAgUAMEIxCTAHBgNVBAYTADEJMAcGA1UECBMAMQkwBwYDVQQHEwAxCTAHBgNVBAoTADEJMAcGA1UECxMAMQkwBwYDVQQDEwAwHhcNMjQwNjA0MDUwMjUyWhcNMzQwNDEzMDUwMjUyWjBCMQkwBwYDVQQGEwAxCTAHBgNVBAgTADEJMAcGA1UEBxMAMQkwBwYDVQQKEwAxCTAHBgNVBAsTADEJMAcGA1UEAxMAMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEh5f7KjNICeuv7WqbeA7M833XFaPolI8FxZ/aCcqjXOE9RKtiat2MJcW4/OElvLTXmsuJqurYEcf6AWpzjNorxqMhMB8wHQYDVR0OBBYEFKbYNWO6YB6Usl/kc6iTYw855Pm4MAwGCCqGSM49BAMCBQADSQAwRgIhAKpRdMvH23COf7EBm2M1thDE26pT8WL0SfP5u9szo0cdAiEAv/0b4E2sU3gIxtkJDx5KUr+kQWxtY5w2+MPQ32G38ig=\n" +
+            "-----END CERTIFICATE-----";
+    JWTAuthOptions jwtAuthOptions = new JWTAuthOptions();
+    jwtAuthOptions.addPubSecKey(
+            new PubSecKeyOptions()
+                    .setAlgorithm("ES256")
+                    .setBuffer(cert));
+    jwtAuthOptions.getJWTOptions().setIgnoreExpiration(true);// ignore token expiration only
+    // for
+    // test
+    JWTAuth jwtAuth = JWTAuth.create(ver, jwtAuthOptions);
+
+    authConfig.put("enableLimits",false);
+
+    jwtAuthenticationService =
+            new JwtAuthenticationServiceImpl(ver, jwtAuth, authConfig, cacheService,meteringService,pgService,apis);
 
     jwtAuthenticationService.validateAccess(jwtData, false, authInfo).onComplete(handler -> {
       if (handler.succeeded()) {
@@ -916,9 +1131,9 @@ public class JwtAuthServiceImplTest {
       }
     });
   }
-  
-  
-  
+
+
+
   @Test
   @Order(0)
   @DisplayName("Revoked token passed")
@@ -932,13 +1147,13 @@ public class JwtAuthServiceImplTest {
     jwtData.setIid("rg:example.com/79e7bfa62fad6c765bac69154c2f24c94c95220a/resource-group");
     jwtData.setRole("provider");
     jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api")));
-    
+
     JsonObject revokedTokenRequest=new JsonObject();
     revokedTokenRequest.put("type", CacheType.REVOKED_CLIENT);
     revokedTokenRequest.put("key", jwtData.getSub());
-    
+
     when(cacheService.get(revokedTokenRequest)).thenReturn(Future.succeededFuture(new JsonObject().put("value", LocalDateTime.now().minusDays(1).toString())));
-    
+
     jwtAuthenticationService.isRevokedClientToken(jwtData).onComplete(handler->{
       if(handler.succeeded()) {
         testContext.failNow("access provided for revoked token");
@@ -946,10 +1161,10 @@ public class JwtAuthServiceImplTest {
         testContext.completeNow();
       }
     });
-    
+
   }
-  
-  
+
+
   @Test
   @Order(28)
   @DisplayName("correct unrevoked token passed")
@@ -963,14 +1178,14 @@ public class JwtAuthServiceImplTest {
     jwtData.setIid("rg:example.com/79e7bfa62fad6c765bac69154c2f24c94c95220a/resource-group");
     jwtData.setRole("provider");
     jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api")));
-    
+
     JsonObject revokedTokenRequest=new JsonObject();
     revokedTokenRequest.put("type", CacheType.REVOKED_CLIENT);
     revokedTokenRequest.put("key", jwtData.getSub());
-    String time="2023-02-08T12:37:26.796"; 
+    String time="2023-02-08T12:37:26.796";
     when(cacheService.get(revokedTokenRequest)).thenReturn(Future.succeededFuture(new JsonObject().put("value", time)));
-    
-    
+
+
     jwtAuthenticationService.isRevokedClientToken(jwtData).onComplete(handler->{
       if(handler.succeeded()) {
         testContext.completeNow();
@@ -978,9 +1193,9 @@ public class JwtAuthServiceImplTest {
         testContext.failNow("no access for correct token");
       }
     });
-    
+
   }
-  
+
   @Test
   @Order(29)
   @DisplayName("Test isOpenResource method for Cache miss for Valid Group ID")
@@ -1001,7 +1216,7 @@ public class JwtAuthServiceImplTest {
     openResourceIdJson.put("type", CacheType.CATALOGUE_CACHE);
     openResourceIdJson.put("key", id);
     when(cacheService.get(openResourceIdJson)).thenReturn(Future.succeededFuture(groupId));
-    
+
     JsonObject openGroupIdJson=openResourceIdJson.copy();
     openGroupIdJson.put("key", "groupId");
     when(cacheService.get(any())).thenReturn(Future.succeededFuture(groupId)).thenReturn(Future.succeededFuture(new JsonObject().put("accessPolicy", "OPEN")));
@@ -1014,8 +1229,8 @@ public class JwtAuthServiceImplTest {
       }
     });
   }
-  
-  
+
+
   @Test
   @Order(30)
   @DisplayName("Test isOpenResource method for Cache miss for Valid Group ID")
@@ -1045,8 +1260,8 @@ public class JwtAuthServiceImplTest {
       }
     });
   }
-  
-  
+
+
   @Test
   @Order(31)
   @DisplayName("Test isOpenResource method for Resource level ACL [No entry for resource Id]")
@@ -1075,8 +1290,8 @@ public class JwtAuthServiceImplTest {
       }
     });
   }
-  
-  
+
+
   @Test
   @Order(32)
   @DisplayName("Test isOpenResource method for Group level ACL, but no resource id")
@@ -1086,12 +1301,12 @@ public class JwtAuthServiceImplTest {
     String id = "datakaveri.org/04a15c9960ffda227e9546f3f46e629e1fe4132b/rs.iudx.io/pune-env-flood/non-existing";
     String[] idComponents = id.split("/");
     String groupId =(idComponents.length == 4)? id:String.join("/", Arrays.copyOfRange(idComponents, 0, 4));
-    
+
     JsonObject openResourceIdJson=new JsonObject();
     openResourceIdJson.put("type", CacheType.CATALOGUE_CACHE);
     openResourceIdJson.put("key", id);
     when(cacheService.get(openResourceIdJson)).thenReturn(Future.failedFuture("failed for resource id"));
-    
+
     JsonObject openGroupIdJson=openResourceIdJson.copy();
     openGroupIdJson.put("key", groupId);
     when(cacheService.get(openGroupIdJson)).thenReturn(Future.succeededFuture(new JsonObject().put("accessPolicy", "OPEN")));
@@ -1104,7 +1319,7 @@ public class JwtAuthServiceImplTest {
       }
     });
   }
-  
+
   @Test
   @Order(33)
   @DisplayName("Test isOpenResource method for Group level ACL")
@@ -1127,7 +1342,7 @@ public class JwtAuthServiceImplTest {
     openResourceIdJson.put("type", CacheType.CATALOGUE_CACHE);
     openResourceIdJson.put("key", id);
     when(cacheService.get(openResourceIdJson)).thenReturn(Future.succeededFuture(new JsonObject()));
-    
+
     JsonObject openGroupIdJson=openResourceIdJson.copy();
     openGroupIdJson.put("key", groupId);
     when(cacheService.get(any())).thenReturn(Future.succeededFuture(groupId)).thenReturn(Future.succeededFuture(new JsonObject().put("accessPolicy", "OPEN")));
@@ -1140,7 +1355,7 @@ public class JwtAuthServiceImplTest {
       }
     });
   }
-  
+
   @Test
   @Order(34)
   @DisplayName("Test No ACL at group and resource level")
@@ -1164,7 +1379,7 @@ public class JwtAuthServiceImplTest {
         vertxTestContext.failNow(handler.cause());
       } else {
         vertxTestContext.completeNow();
-        
+
       }
     });
   }
@@ -1180,6 +1395,7 @@ public class JwtAuthServiceImplTest {
     authInfo.put("id", closeId);
     authInfo.put("apiEndpoint", apis.getIngestionPathEntities());
     authInfo.put("method", Method.POST);
+
     List<String> list = new ArrayList<String>();
     list.add("iudx:Resource");
     list.add("iudx:TransitManagement");
@@ -1205,6 +1421,7 @@ public class JwtAuthServiceImplTest {
     jwtData.setRole("provider");
     jwtData.setDid("b58da193-23d9-43eb-b98a-a103d4b6103c");
     jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api")));
+
 
     JsonObject revokedTokenRequest=new JsonObject();
     revokedTokenRequest.put("type", CacheType.REVOKED_CLIENT);
@@ -1247,6 +1464,281 @@ public class JwtAuthServiceImplTest {
         testContext.completeNow();
       } else {
         testContext.failNow(handler.cause());
+      }
+    });
+  }
+
+  @Test
+  @Order(39)
+  public void success4ConsumerTokenSubsAPI3(VertxTestContext testContext) {
+
+    JsonObject request = new JsonObject();
+    JsonObject authInfo = new JsonObject();
+
+    authInfo.put("token", JwtTokenHelper.openConsumerSubsToken);
+    authInfo.put("id", openId);
+    authInfo.put("apiEndpoint", apis.getMonthlyOverview());
+    authInfo.put("method", Method.GET);
+    List<String> list = new ArrayList<String>();
+    list.add("iudx:Resource");
+    list.add("iudx:TransitManagement");
+
+    JsonObject jsonObject = new JsonObject()
+            .put("id", "b58da193-23d9-43eb-b98a-a103d4b6103c")
+            .put("type", list)
+            .put("name","dummy_name")
+            .put("resourceGroup","5b7556b5-0779-4c47-9cf2-3f209779aa22")
+            .put("value", "2021-09-09T13:10:01")
+            .put("accessPolicy","OPEN");
+
+    JwtData jwtData = new JwtData();
+    jwtData.setSub("valid_sub");
+    jwtData.setIss("auth.test.com");
+    jwtData.setAud("rs.iudx.io");
+    jwtData.setExp(1627408865);
+    jwtData.setIat(1627408865);
+    jwtData.setIid("rg:example.com/79e7bfa62fad6c765bac69154c2f24c94c95220a/resource-group");
+    jwtData.setRole("provider");
+
+    JsonObject revokedTokenRequest=new JsonObject();
+    revokedTokenRequest.put("type", CacheType.REVOKED_CLIENT);
+    revokedTokenRequest.put("key", jwtData.getSub());
+
+    when(cacheService.get(revokedTokenRequest)).thenReturn(Future.succeededFuture(new JsonObject().put("value", "2021-09-09T13:10:01")));
+
+    when(cacheService.get(any())).thenReturn(Future.succeededFuture(jsonObject));
+    jwtAuthenticationService.tokenInterospect(request, authInfo, handler -> {
+      if (handler.succeeded()) {
+        testContext.completeNow();
+      } else {
+        testContext.failNow(handler.cause());
+      }
+    });
+  }
+
+
+  @Test
+  @Order(40)
+  @DisplayName("success - allow consumer access to /entities endpoint for access [api,subs]")
+  public void access4ConsumerTokenEntitiesAPI2(VertxTestContext testContext) {
+
+    JsonObject authInfo = new JsonObject();
+
+    authInfo.put("token", JwtTokenHelper.closedConsumerApiToken);
+    authInfo.put("id",
+            "datakaveri.org/04a15c9960ffda227e9546f3f46e629e1fe4132b/rs.iudx.io/pune-env-flood/FWR053");
+    authInfo.put("apiEndpoint", "/ngsi-ld/v1/entities");
+    authInfo.put("method", "GET");
+    authInfo.put("api_count",10000);
+    authInfo.put("consumed_data",10000);
+
+    JwtData jwtData = new JwtData();
+    jwtData.setIss("auth.test.com");
+    jwtData.setAud("rs.iudx.io");
+    jwtData.setExp(1627408865);
+    jwtData.setIat(1627408865);
+    jwtData.setIid(
+            "rg:datakaveri.org/04a15c9960ffda227e9546f3f46e629e1fe4132b/rs.iudx.io/pune-env-flood/FWR053");
+    jwtData.setRole("consumer");
+    JsonObject access = new JsonObject()
+            .put("api", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("sub", new JsonObject().put("limit", 10000).put("unit", "MB"))
+            .put("file", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("async", new JsonObject().put("limit", 10000).put("unit", "MB"));
+
+    JsonArray attrs = new JsonArray()
+            .add("trip_direction")
+            .add("trip_id")
+            .add("location")
+            .add("id")
+            .add("observationDateTime");
+
+    JsonObject cons = new JsonObject()
+            .put("access", access)
+            .put("attrs", attrs);
+
+    jwtData.setCons(cons);
+    JsonObject meteringCountRequest = new JsonObject();
+    meteringCountRequest.put("startTime", "endDateTime");
+    meteringCountRequest.put("endTime", "startDateTim");
+    meteringCountRequest.put("userid", "userid");
+    meteringCountRequest.put("resourceId", "resourceId");
+    meteringCountRequest.put("accessType", "api");
+
+    doAnswer(invocation -> {
+      Handler<AsyncResult<JsonObject>> handler = invocation.getArgument(1);
+      JsonObject meteringResponse = new JsonObject().put("result", new JsonArray().add(new JsonObject().put("consumed_data",100).put("api_count",100)));
+      handler.handle(Future.succeededFuture(meteringResponse));
+      return null;
+    }).when(meteringService).getConsumedData(any(JsonObject.class), any());
+
+    jwtAuthenticationService.validateAccess(jwtData, false, authInfo).onComplete(handler -> {
+      if (handler.succeeded()) {
+        testContext.completeNow();
+      } else {
+        testContext.failNow("invalid access");
+      }
+    });
+  }
+
+  @Test
+  @Order(41)
+  @DisplayName("failed - allow consumer access to /entities endpoint for access [api,subs]")
+  public void access4ConsumerTokenEntitiesAPI3(VertxTestContext testContext) {
+
+    JsonObject authInfo = new JsonObject();
+
+    authInfo.put("token", JwtTokenHelper.closedConsumerApiToken);
+    authInfo.put("id",
+            "datakaveri.org/04a15c9960ffda227e9546f3f46e629e1fe4132b/rs.iudx.io/pune-env-flood/FWR053");
+    authInfo.put("apiEndpoint", "/ngsi-ld/v1/entities");
+    authInfo.put("method", "GET");
+    authInfo.put("api_count",10);
+    authInfo.put("consumed_data",100);
+
+    JwtData jwtData = new JwtData();
+    jwtData.setIss("auth.test.com");
+    jwtData.setAud("rs.iudx.io");
+    jwtData.setExp(1627408865);
+    jwtData.setIat(1627408865);
+    jwtData.setIid(
+            "rg:datakaveri.org/04a15c9960ffda227e9546f3f46e629e1fe4132b/rs.iudx.io/pune-env-flood/FWR053");
+    jwtData.setRole("consumer");
+    JsonObject access = new JsonObject()
+            .put("api", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("sub", new JsonObject().put("limit", 10000).put("unit", "MB"))
+            .put("file", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("async", new JsonObject().put("limit", 10000).put("unit", "MB"));
+
+    JsonArray attrs = new JsonArray()
+            .add("trip_direction")
+            .add("trip_id")
+            .add("location")
+            .add("id")
+            .add("observationDateTime");
+
+    JsonObject cons = new JsonObject()
+            .put("access", access)
+            .put("attrs", attrs);
+    jwtData.setCons(cons);
+
+    JsonObject meteringCountRequest = new JsonObject();
+    meteringCountRequest.put("startTime", "endDateTime");
+    meteringCountRequest.put("endTime", "startDateTim");
+    meteringCountRequest.put("userid", "userid");
+    meteringCountRequest.put("resourceId", "resourceId");
+    meteringCountRequest.put("accessType", "api");
+
+    doAnswer(invocation -> {
+      Handler<AsyncResult<JsonObject>> handler = invocation.getArgument(1);
+      JsonObject meteringResponse = new JsonObject().put("result", new JsonArray().add(new JsonObject().put("consumed_data",100).put("api_count",10000)));
+      handler.handle(Future.succeededFuture(meteringResponse));
+      return null;
+    }).when(meteringService).getConsumedData(any(JsonObject.class), any());
+    String cert = "-----BEGIN CERTIFICATE-----\n" +
+            "MIIBnDCCAT+gAwIBAgIEAmHF8jAMBggqhkjOPQQDAgUAMEIxCTAHBgNVBAYTADEJMAcGA1UECBMAMQkwBwYDVQQHEwAxCTAHBgNVBAoTADEJMAcGA1UECxMAMQkwBwYDVQQDEwAwHhcNMjQwNjA0MDUwMjUyWhcNMzQwNDEzMDUwMjUyWjBCMQkwBwYDVQQGEwAxCTAHBgNVBAgTADEJMAcGA1UEBxMAMQkwBwYDVQQKEwAxCTAHBgNVBAsTADEJMAcGA1UEAxMAMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEh5f7KjNICeuv7WqbeA7M833XFaPolI8FxZ/aCcqjXOE9RKtiat2MJcW4/OElvLTXmsuJqurYEcf6AWpzjNorxqMhMB8wHQYDVR0OBBYEFKbYNWO6YB6Usl/kc6iTYw855Pm4MAwGCCqGSM49BAMCBQADSQAwRgIhAKpRdMvH23COf7EBm2M1thDE26pT8WL0SfP5u9szo0cdAiEAv/0b4E2sU3gIxtkJDx5KUr+kQWxtY5w2+MPQ32G38ig=\n" +
+            "-----END CERTIFICATE-----";
+    JWTAuthOptions jwtAuthOptions = new JWTAuthOptions();
+    jwtAuthOptions.addPubSecKey(
+            new PubSecKeyOptions()
+                    .setAlgorithm("ES256")
+                    .setBuffer(cert));
+    jwtAuthOptions.getJWTOptions().setIgnoreExpiration(true);// ignore token expiration only
+    // for
+    // test
+    JWTAuth jwtAuth = JWTAuth.create(ver, jwtAuthOptions);
+
+    authConfig.put("enableLimits",true);
+
+    jwtAuthenticationService =
+            new JwtAuthenticationServiceImpl(ver, jwtAuth, authConfig, cacheService,meteringService,pgService,apis);
+    jwtAuthenticationService.validateAccess(jwtData, false, authInfo).onComplete(handler -> {
+      if (!handler.failed()) {
+        testContext.failNow("invalid access");
+      } else {
+        testContext.completeNow();
+
+      }
+    });
+  }
+
+  @Test
+  @Order(42)
+  @DisplayName("failed - allow consumer access to /entities endpoint for access [api,subs]")
+  public void access4ConsumerTokenEntitiesAPI4(VertxTestContext testContext) {
+
+    JsonObject authInfo = new JsonObject();
+
+    authInfo.put("token", JwtTokenHelper.closedConsumerApiToken);
+    authInfo.put("id",
+            "datakaveri.org/04a15c9960ffda227e9546f3f46e629e1fe4132b/rs.iudx.io/pune-env-flood/FWR053");
+    authInfo.put("apiEndpoint", apis.getSubscriptionUrl());
+    authInfo.put("method", "GET");
+    authInfo.put("api_count",10);
+    authInfo.put("consumed_data",100);
+
+    JwtData jwtData = new JwtData();
+    jwtData.setIss("auth.test.com");
+    jwtData.setAud("rs.iudx.io");
+    jwtData.setExp(1627408865);
+    jwtData.setIat(1627408865);
+    jwtData.setIid(
+            "rg:datakaveri.org/04a15c9960ffda227e9546f3f46e629e1fe4132b/rs.iudx.io/pune-env-flood/FWR053");
+    jwtData.setRole("consumer");
+    JsonObject access = new JsonObject()
+            .put("api", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("sub", new JsonObject().put("limit", 10000).put("unit", "MB"))
+            .put("file", new JsonObject().put("limit", 1000).put("unit", "number"))
+            .put("async", new JsonObject().put("limit", 10000).put("unit", "MB"));
+
+    JsonArray attrs = new JsonArray()
+            .add("trip_direction")
+            .add("trip_id")
+            .add("location")
+            .add("id")
+            .add("observationDateTime");
+
+    JsonObject cons = new JsonObject()
+            .put("access", access)
+            .put("attrs", attrs);
+    jwtData.setCons(cons);
+
+    JsonObject meteringCountRequest = new JsonObject();
+    meteringCountRequest.put("startTime", "endDateTime");
+    meteringCountRequest.put("endTime", "startDateTim");
+    meteringCountRequest.put("userid", "userid");
+    meteringCountRequest.put("resourceId", "resourceId");
+    meteringCountRequest.put("accessType", "sub");
+
+    doAnswer(invocation -> {
+      Handler<AsyncResult<JsonObject>> handler = invocation.getArgument(1);
+      JsonObject meteringResponse = new JsonObject().put("result", new JsonArray().add(new JsonObject().put("consumed_data",100000).put("api_count",10000)));
+      handler.handle(Future.succeededFuture(meteringResponse));
+      return null;
+    }).when(meteringService).getConsumedData(any(JsonObject.class), any());
+    String cert = "-----BEGIN CERTIFICATE-----\n" +
+            "MIIBnDCCAT+gAwIBAgIEAmHF8jAMBggqhkjOPQQDAgUAMEIxCTAHBgNVBAYTADEJMAcGA1UECBMAMQkwBwYDVQQHEwAxCTAHBgNVBAoTADEJMAcGA1UECxMAMQkwBwYDVQQDEwAwHhcNMjQwNjA0MDUwMjUyWhcNMzQwNDEzMDUwMjUyWjBCMQkwBwYDVQQGEwAxCTAHBgNVBAgTADEJMAcGA1UEBxMAMQkwBwYDVQQKEwAxCTAHBgNVBAsTADEJMAcGA1UEAxMAMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEh5f7KjNICeuv7WqbeA7M833XFaPolI8FxZ/aCcqjXOE9RKtiat2MJcW4/OElvLTXmsuJqurYEcf6AWpzjNorxqMhMB8wHQYDVR0OBBYEFKbYNWO6YB6Usl/kc6iTYw855Pm4MAwGCCqGSM49BAMCBQADSQAwRgIhAKpRdMvH23COf7EBm2M1thDE26pT8WL0SfP5u9szo0cdAiEAv/0b4E2sU3gIxtkJDx5KUr+kQWxtY5w2+MPQ32G38ig=\n" +
+            "-----END CERTIFICATE-----";
+    JWTAuthOptions jwtAuthOptions = new JWTAuthOptions();
+    jwtAuthOptions.addPubSecKey(
+            new PubSecKeyOptions()
+                    .setAlgorithm("ES256")
+                    .setBuffer(cert));
+    jwtAuthOptions.getJWTOptions().setIgnoreExpiration(true);// ignore token expiration only
+    // for
+    // test
+    JWTAuth jwtAuth = JWTAuth.create(ver, jwtAuthOptions);
+
+    authConfig.put("enableLimits",true);
+
+    jwtAuthenticationService =
+            new JwtAuthenticationServiceImpl(ver, jwtAuth, authConfig, cacheService,meteringService,pgService,apis);
+    jwtAuthenticationService.validateAccess(jwtData, false, authInfo).onComplete(handler -> {
+      if (!handler.failed()) {
+        testContext.failNow("invalid access");
+      } else {
+        testContext.completeNow();
+
       }
     });
   }

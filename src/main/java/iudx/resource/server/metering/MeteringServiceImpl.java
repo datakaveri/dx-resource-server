@@ -428,6 +428,26 @@ public class MeteringServiceImpl implements MeteringService {
     return this;
   }
 
+  @Override
+  public MeteringService getConsumedData(
+      JsonObject request, Handler<AsyncResult<JsonObject>> handler) {
+    LOGGER.debug("request data: {}", request);
+    String query = queryBuilder.getConsumedDataQuery(request);
+    LOGGER.debug("getConsumedData query: {}", query);
+    executeQueryDatabaseOperation(query)
+        .onSuccess(
+            successHandler -> {
+              handler.handle(Future.succeededFuture(successHandler));
+            })
+        .onFailure(
+            failureHandler -> {
+              LOGGER.error("getConsumedData failed : {}", failureHandler);
+              handler.handle(Future.failedFuture(failureHandler.getMessage()));
+            });
+
+    return this;
+  }
+
   private Future<JsonObject> executeQueryDatabaseOperation(String query) {
     Promise<JsonObject> promise = Promise.promise();
     postgresService.executeQuery(

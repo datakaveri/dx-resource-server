@@ -7,7 +7,7 @@ import iudx.resource.server.common.ResponseUrn;
 public class ResponseUtil {
 
   public static JsonObject generateResponse(HttpStatusCode statusCode, ResponseUrn urn) {
-    return generateResponse(statusCode, urn, statusCode.getDescription());
+    return generateResponse(statusCode, urn, statusCode.getUrn());
   }
 
   public static JsonObject generateResponse(

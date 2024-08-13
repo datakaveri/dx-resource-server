@@ -110,14 +110,14 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Geo-circle query")
   void searchGeoCircle(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "geoSearch_")
-          .put("lon", 72.8296)
-          .put("lat", 21.2)
-          .put("radius", 1000)
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "geoSearch_")
+            .put("lon", 72.8296)
+            .put("lat", 21.2)
+            .put("radius", 1000)
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     List<String> list = new ArrayList<String>();
     list.add("iudx:Resource");
@@ -147,7 +147,7 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Basic Exceptions (No resource-id key)")
   void searchWithNoResourceId(VertxTestContext testContext) {
     JsonObject request = new JsonObject().put("searchType", "geoSearch_");
-    
+
     dbService.search(request).onSuccess(handler -> {
       testContext.failed();
     }).onFailure(handler -> {
@@ -182,7 +182,7 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Basic Exceptions (resource-id is empty)")
   void searchEmptyResourceId(VertxTestContext testContext) {
     JsonObject request =
-        new JsonObject().put("id", new JsonArray()).put("searchType", "geoSearch_");
+            new JsonObject().put("id", new JsonArray()).put("searchType", "geoSearch_");
 
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("resource-id is empty", new JsonObject(response.getMessage()).getString(
@@ -203,7 +203,7 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Basic Exceptions (resource-id is empty) in count query")
   void countEmptyResourceId(VertxTestContext testContext) {
     JsonObject request =
-        new JsonObject().put("id", new JsonArray()).put("searchType", "geoSearch_");
+            new JsonObject().put("id", new JsonArray()).put("searchType", "geoSearch_");
 
     // dbService.countQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("resource-id is empty", new JsonObject(response.getMessage()).getString(
@@ -225,9 +225,9 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Basic Exceptions (No searchType key)")
   void searchWithSearchType(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"));
+            .put("id", new JsonArray()
+                    .add(
+                            "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"));
 
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("No searchType found", new JsonObject(response.getMessage()).getString(
@@ -241,7 +241,7 @@ public class DatabaseServiceTest {
       JsonObject exceptionResponse=new JsonObject(handler.getMessage());
       assertEquals("Exception occured executing query", exceptionResponse.getString("detail"));
       testContext.completeNow();
-      
+
     });
   }
 
@@ -249,9 +249,9 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Basic Exceptions (No searchType key) in count query")
   void countWithSearchType(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"));
+            .put("id", new JsonArray()
+                    .add(
+                            "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"));
 
     // dbService.countQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("No searchType found", new JsonObject(response.getMessage()).getString(
@@ -265,7 +265,7 @@ public class DatabaseServiceTest {
       JsonObject exceptionResponse=new JsonObject(handler.getMessage());
       assertEquals("Exception occured executing query", exceptionResponse.getString("detail"));
       testContext.completeNow();
-      
+
     });
 
   }
@@ -274,10 +274,10 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Geo Exceptions (Missing necessary parameters [lat,lon,radius])")
   void searchMissingGeoParamsCircle(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
-          .put("searchType", "geoSearch_");
+            .put("id", new JsonArray()
+                    .add(
+                            "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
+            .put("searchType", "geoSearch_");
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("Missing/Invalid geo parameters", new JsonObject(response.getMessage())
     // .getString("detail"));
@@ -287,7 +287,7 @@ public class DatabaseServiceTest {
 
 //    assertThrows(ESQueryDecodeException.class, ()->dbService.search(request));
 //    testContext.completeNow();
-    
+
     dbService.search(request).onSuccess(handler -> {
       testContext.failed();
     }).onFailure(handler -> {
@@ -295,9 +295,9 @@ public class DatabaseServiceTest {
       //JsonObject exceptionResponse=new JsonObject(handler.getMessage());
       //assertEquals("Missing/Invalid geo parameters", exceptionResponse.getString("detail"));
       testContext.completeNow();
-      
+
     });
-    
+
   }
 
   @Test
@@ -308,17 +308,17 @@ public class DatabaseServiceTest {
      * [[[lo1,la1],[lo2,la2],[lo3,la3],[lo4,la4],[lo5,la5],[lo1,la1]]]
      */
     String id =
-        "b58da193-23d9-43eb-b98a-a103d4b6103c";
+            "b58da193-23d9-43eb-b98a-a103d4b6103c";
 
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray().add(id))
-          .put("geometry", "polygon")
-          .put("georel", "within")
-          .put("coordinates",
-              "[[[72.76,21.15],[72.76,21.13],[72.78,21.13],[72.78,21.15],[72.76,21.15]]]")
-          .put("geoproperty", "location")
-          .put("searchType", "geoSearch_")
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray().add(id))
+            .put("geometry", "polygon")
+            .put("georel", "within")
+            .put("coordinates",
+                    "[[[72.76,21.15],[72.76,21.13],[72.78,21.13],[72.78,21.15],[72.76,21.15]]]")
+            .put("geoproperty", "location")
+            .put("searchType", "geoSearch_")
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     // dbService.searchQuery(request, testContext.succeeding(response -> testContext.verify(() -> {
     // assertTrue(response.getJsonArray("results").getJsonObject(0).getString("id").equals(id));
@@ -353,11 +353,11 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Geo Exceptions (Missing necessary parameters [coordinates, geoproperty, georel)")
   void searchMissingGeoParamsGeometry(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
-          .put("searchType", "geoSearch_")
-          .put("geometry", "polygon");
+            .put("id", new JsonArray()
+                    .add(
+                            "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
+            .put("searchType", "geoSearch_")
+            .put("geometry", "polygon");
 
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("Missing/Invalid geo parameters", new JsonObject(response.getMessage())
@@ -382,16 +382,16 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Geo Polygon Exceptions (First and Last coordinates don't match)")
   void searchPolygonFirstLastNoMatch(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
-          .put("geometry", "polygon")
-          .put("georel", "within")
-          .put("coordinates",
-              "[[[82.9735,25.3703],[83.0053,25.3567],[82.9766,25.3372],[82.95,25.3519],"
-                  + "[82.936,25.3722]]]")
-          .put("geoproperty", "geoJsonLocation")
-          .put("searchType", "geoSearch_");
+            .put("id", new JsonArray()
+                    .add(
+                            "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
+            .put("geometry", "polygon")
+            .put("georel", "within")
+            .put("coordinates",
+                    "[[[82.9735,25.3703],[83.0053,25.3567],[82.9766,25.3372],[82.95,25.3519],"
+                            + "[82.936,25.3722]]]")
+            .put("geoproperty", "geoJsonLocation")
+            .put("searchType", "geoSearch_");
 
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("Coordinate mismatch (Polygon)", new JsonObject(response.getMessage())
@@ -421,15 +421,15 @@ public class DatabaseServiceTest {
      */
 
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("geometry", "linestring")
-          .put("georel", "intersects")
-          .put("coordinates", "[[72.84,21.19],[72.84,21.17]]")
-          .put("geoproperty", "location")
-          .put("searchType", "geoSearch_")
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("geometry", "linestring")
+            .put("georel", "intersects")
+            .put("coordinates", "[[72.84,21.19],[72.84,21.17]]")
+            .put("geoproperty", "location")
+            .put("searchType", "geoSearch_")
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     // dbService.searchQuery(request, testContext.succeeding(response -> testContext.verify(() -> {
     // assertTrue(72.5 <= response.getJsonArray("results").getJsonObject(0)
@@ -472,15 +472,15 @@ public class DatabaseServiceTest {
      */
 
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("geometry", "bbox")
-          .put("georel", "within")
-          .put("coordinates", "[[72.8296,21.2],[72.8297,21.15]]")
-          .put("geoproperty", "location")
-          .put("searchType", "geoSearch_")
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("geometry", "bbox")
+            .put("georel", "within")
+            .put("coordinates", "[[72.8296,21.2],[72.8297,21.15]]")
+            .put("geoproperty", "location")
+            .put("searchType", "geoSearch_")
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     // dbService.searchQuery(request, testContext.succeeding(response -> testContext.verify(() -> {
     // assertTrue(72.8 <= response.getJsonArray("results").getJsonObject(0)
@@ -522,15 +522,15 @@ public class DatabaseServiceTest {
      * coordinates should look like this [[lo1,la1],[lo3,la3]]
      */
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("geometry", "bbox")
-          .put("georel", "within")
-          .put("coordinates", "[[82,25.33],[82.01,25.317]]")
-          .put("geoproperty", "geoJsonLocation")
-          .put("searchType", "geoSearch_")
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("geometry", "bbox")
+            .put("georel", "within")
+            .put("coordinates", "[[82,25.33],[82.01,25.317]]")
+            .put("geoproperty", "geoJsonLocation")
+            .put("searchType", "geoSearch_")
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("Empty response", new JsonObject(response.getMessage())
@@ -540,7 +540,7 @@ public class DatabaseServiceTest {
 
     dbService.search(request).onSuccess(handler -> {
       testContext.failed();
-      
+
     }).onFailure(handler -> {
 //      assertEquals("Empty response", handler.getString("detail"));
       testContext.completeNow();
@@ -552,16 +552,16 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Response Filter")
   void searchResponseFilter(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "responseFilter_geoSearch_")
-          .put("geometry", "bbox")
-          .put("georel", "within")
-          .put("coordinates", "[[72.8296,21.2],[72.8297,21.15]]")
-          .put("geoproperty", "geoJsonLocation")
-          .put("attrs", new JsonArray().add("id").add("license_plate").add("speed"))
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "responseFilter_geoSearch_")
+            .put("geometry", "bbox")
+            .put("georel", "within")
+            .put("coordinates", "[[72.8296,21.2],[72.8297,21.15]]")
+            .put("geoproperty", "geoJsonLocation")
+            .put("attrs", new JsonArray().add("id").add("license_plate").add("speed"))
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
     Set<String> attrs = new HashSet<>();
     attrs.add("id");
     attrs.add("license_plate");
@@ -612,10 +612,10 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Response Filter Exceptions (Missing parameters [attrs]")
   void searchMissingResponseFilterParams(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
-          .put("searchType", "responseFilter_");
+            .put("id", new JsonArray()
+                    .add(
+                            "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
+            .put("searchType", "responseFilter_");
 
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("Missing/Invalid responseFilter parameters", new JsonObject(response
@@ -639,15 +639,15 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Complex (Geo + Response Filter) Search")
   void searchComplexGeoResponse(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "responseFilter_geoSearch_")
-          .put("attrs", new JsonArray().add("id").add("location").add("speed"))
-          .put("lon", 72.8296)
-          .put("lat", 21.2)
-          .put("radius", 1000)
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "responseFilter_geoSearch_")
+            .put("attrs", new JsonArray().add("id").add("location").add("speed"))
+            .put("lon", 72.8296)
+            .put("lat", 21.2)
+            .put("radius", 1000)
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
     Set<String> attrs = new HashSet<>();
     attrs.add("id");
     attrs.add("location");
@@ -698,14 +698,14 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Count Geo-Circle query")
   void countGeoCircle(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "geoSearch_")
-          .put("lon", 72.834)
-          .put("lat", 21.178)
-          .put("radius", 10)
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "geoSearch_")
+            .put("lon", 72.834)
+            .put("lat", 21.178)
+            .put("radius", 10)
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     // dbService.countQuery(request, testContext.succeeding(response -> testContext.verify(() -> {
     // assertTrue(response.getJsonArray("results").getJsonObject(0).containsKey("totalHits"));
@@ -741,12 +741,12 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Temporal Queries (During)")
   void searchDuringTemporal(VertxTestContext testContext) throws ParseException {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray().add(idOpen))
-          .put("searchType", "temporalSearch_")
-          .put("timerel", "during")
-          .put("time", temporalStartDate)
-          .put("endtime", temporalEndDate)
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray().add(idOpen))
+            .put("searchType", "temporalSearch_")
+            .put("timerel", "during")
+            .put("time", temporalStartDate)
+            .put("endtime", temporalEndDate)
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXXXX");
     OffsetDateTime start = OffsetDateTime.parse(temporalStartDate, dateTimeFormatter);
@@ -791,11 +791,11 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Temporal Queries (Before)")
   void searchBeforeTemporal(VertxTestContext testContext) throws ParseException {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray().add(idOpen))
-          .put("searchType", "temporalSearch_")
-          .put("timerel", "before")
-          .put("time", temporalEndDate)
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray().add(idOpen))
+            .put("searchType", "temporalSearch_")
+            .put("timerel", "before")
+            .put("time", temporalEndDate)
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXXXX");
     OffsetDateTime start = OffsetDateTime.parse(temporalEndDate, dateTimeFormatter);
@@ -839,11 +839,11 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Temporal Queries (After)")
   void searchAfterTemporal(VertxTestContext testContext) throws ParseException {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray().add(idOpen))
-          .put("searchType", "temporalSearch_")
-          .put("timerel", "after")
-          .put("time", temporalStartDate)
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));;
+            .put("id", new JsonArray().add(idOpen))
+            .put("searchType", "temporalSearch_")
+            .put("timerel", "after")
+            .put("time", temporalStartDate)
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));;
 
     DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXXXX");
     OffsetDateTime start = OffsetDateTime.parse(temporalStartDate, dateTimeFormatter);
@@ -888,16 +888,16 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Count Geo-Polygon query")
   void countGeoPolygon(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("geometry", "polygon")
-          .put("georel", "within")
-          .put("coordinates",
-              "[[[72.719,21],[72.842,21.2],[72.923,20.8],[72.74,20.34],[72.9,20.1],[72.67,20],[72.719,21]]]")
-          .put("geoproperty", "location")
-          .put("searchType", "geoSearch_")
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("geometry", "polygon")
+            .put("georel", "within")
+            .put("coordinates",
+                    "[[[72.719,21],[72.842,21.2],[72.923,20.8],[72.74,20.34],[72.9,20.1],[72.67,20],[72.719,21]]]")
+            .put("geoproperty", "location")
+            .put("searchType", "geoSearch_")
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     // dbService.countQuery(request, testContext.succeeding(response -> testContext.verify(() -> {
     // assertTrue(response.getJsonArray("results").getJsonObject(0).containsKey("totalHits"));
@@ -934,12 +934,12 @@ public class DatabaseServiceTest {
    *       JsonObject request = new JsonObject() .put("id", new JsonArray().add(idOpen))
    *       .put("searchType", "temporalSearch_").put("timerel", "before") .put("time",
    *       temporalStartDate);
-   * 
+   *
    *       DateTimeFormatter dateTimeFormatter =
    *       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXXXX"); OffsetDateTime start =
    *       OffsetDateTime.parse(temporalStartDate, dateTimeFormatter); LOGGER.debug("### start date:
    *       " + start);
-   * 
+   *
    *       dbService.searchQuery(request, testContext.succeeding(response -> testContext.verify(()
    *       -> { OffsetDateTime resDate =
    *       OffsetDateTime.parse(response.getJsonArray("results").getJsonObject(0)
@@ -951,15 +951,15 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Count Geo-Linestring query")
   void countGeoLineString(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("geometry", "linestring")
-          .put("georel", "intersects")
-          .put("coordinates", "[[72.833994,21.17798],[72.833978,21.178005]]")
-          .put("geoproperty", "location")
-          .put("searchType", "geoSearch_")
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("geometry", "linestring")
+            .put("georel", "intersects")
+            .put("coordinates", "[[72.833994,21.17798],[72.833978,21.178005]]")
+            .put("geoproperty", "location")
+            .put("searchType", "geoSearch_")
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     // dbService.countQuery(request, testContext.succeeding(response -> testContext.verify(() -> {
     // assertTrue(response.getJsonArray("results").getJsonObject(0).containsKey("totalHits"));
@@ -994,13 +994,13 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Temporal Queries (Before) with IST date format")
   void searchBeforeTemporalIST(VertxTestContext testContext) throws ParseException {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "temporalSearch_")
-          .put("timerel", "before")
-          .put("time", "2020-10-29T10:00:00+05:30")
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "temporalSearch_")
+            .put("timerel", "before")
+            .put("time", "2020-10-29T10:00:00+05:30")
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     ZonedDateTime start = ZonedDateTime.parse("2020-10-29T10:00:00+05:30");
     LOGGER.debug("### start date: " + start);
@@ -1042,13 +1042,13 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Temporal Queries (Before) with IST date format with limit exceed response")
   void searchBeforeTemporalISTLimitExceed(VertxTestContext testContext) throws ParseException {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "temporalSearch_")
-          .put("timerel", "before")
-          .put("time", "2020-09-29T10:00:00+05:30")
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));;
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "temporalSearch_")
+            .put("timerel", "before")
+            .put("time", "2020-09-29T10:00:00+05:30")
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));;
 
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // JsonObject json=new JsonObject(response.getMessage());
@@ -1068,12 +1068,12 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Temporal Exceptions (invalid date)")
   void searchTemporalInvalidDate(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "temporalSearch_")
-          .put("timerel", "after")
-          .put("time", "Invalid date");
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "temporalSearch_")
+            .put("timerel", "after")
+            .put("time", "Invalid date");
 
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("exception while parsing date/time", new JsonObject(response.getMessage())
@@ -1083,7 +1083,7 @@ public class DatabaseServiceTest {
 
 //    assertThrows(ESQueryDecodeException.class, ()->dbService.search(request));
 //    testContext.completeNow();
-    
+
     dbService.search(request).onSuccess(handler -> {
       testContext.failed();
     }).onFailure(handler -> {
@@ -1097,23 +1097,23 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Temporal Exceptions (invalid end date)")
   void searchTemporalInvalidEndDate(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "temporalSearch_")
-          .put("timerel", "during")
-          .put("time", "2020-09-18T14:20:00Z")
-          .put("endtime", "Invalid date");
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "temporalSearch_")
+            .put("timerel", "during")
+            .put("time", "2020-09-18T14:20:00Z")
+            .put("endtime", "Invalid date");
 
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("exception while parsing date/time", new JsonObject(response.getMessage())
     // .getString("detail"));
     // testContext.completeNow();
     // })));
-    
+
 //    assertThrows(ESQueryDecodeException.class, ()->dbService.search(request));
 //    testContext.completeNow();
-    
+
     dbService.search(request).onSuccess(handler -> {
       testContext.failed();
     }).onFailure(handler -> {
@@ -1128,13 +1128,13 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Temporal Exceptions (invalid timeRel date)")
   void searchTemporalInvalidTimerel(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "temporalSearch_")
-          .put("timerel", "adadas")
-          .put("time", "2020-09-18T14:20:00Z")
-          .put("endtime", "2020-09-19T14:20:00Z");
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "temporalSearch_")
+            .put("timerel", "adadas")
+            .put("time", "2020-09-18T14:20:00Z")
+            .put("endtime", "2020-09-19T14:20:00Z");
 
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("exception while parsing date/time", new JsonObject(response.getMessage())
@@ -1144,7 +1144,7 @@ public class DatabaseServiceTest {
 
 //    assertThrows(ESQueryDecodeException.class, ()->dbService.search(request));
 //    testContext.completeNow();
-    
+
     dbService.search(request).onSuccess(handler -> {
       testContext.failed();
     }).onFailure(handler -> {
@@ -1158,13 +1158,13 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Temporal Exceptions (end date before start date)")
   void searchTemporalInvalidTimeInterval(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "temporalSearch_")
-          .put("timerel", "during")
-          .put("time", "2020-09-28T14:20:00Z")
-          .put("endtime", "2020-09-19T14:20:00Z");
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "temporalSearch_")
+            .put("timerel", "during")
+            .put("time", "2020-09-28T14:20:00Z")
+            .put("endtime", "2020-09-19T14:20:00Z");
 
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("end date is before start date", new JsonObject(response.getMessage())
@@ -1174,7 +1174,7 @@ public class DatabaseServiceTest {
 
 //    assertThrows(ESQueryDecodeException.class, ()->dbService.search(request));
 //    testContext.completeNow();
-    
+
     dbService.search(request).onSuccess(handler -> {
       testContext.failed();
     }).onFailure(handler -> {
@@ -1188,15 +1188,15 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Count Geo-Bbox query")
   void countGeoBbox(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("geometry", "bbox")
-          .put("georel", "within")
-          .put("coordinates", "[[72.8296,21.2],[72.8297,21.15]]")
-          .put("geoproperty", "location")
-          .put("searchType", "geoSearch_")
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("geometry", "bbox")
+            .put("georel", "within")
+            .put("coordinates", "[[72.8296,21.2],[72.8297,21.15]]")
+            .put("geoproperty", "location")
+            .put("searchType", "geoSearch_")
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     // dbService.countQuery(request, testContext.succeeding(response -> testContext.verify(() -> {
     // assertTrue(response.getJsonArray("results").getJsonObject(0).containsKey("totalHits"));
@@ -1230,15 +1230,15 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Complex Queries (Geo + Temporal + Response Filter)")
   void searchComplexPart2(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray().add(idClose))
-          .put("searchType", "temporalSearch_geoSearch_responseFilter_")
-          .put("timerel", "before")
-          .put("time", temporalStartDate)
-          .put("lon", 72.8296)
-          .put("lat", 21.2)
-          .put("radius", 500)
-          .put("attrs", new JsonArray().add("id").add("location").add("observationDateTime"))
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray().add(idClose))
+            .put("searchType", "temporalSearch_geoSearch_responseFilter_")
+            .put("timerel", "before")
+            .put("time", temporalStartDate)
+            .put("lon", 72.8296)
+            .put("lat", 21.2)
+            .put("radius", 500)
+            .put("attrs", new JsonArray().add("id").add("location").add("observationDateTime"))
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
     Set<String> attrs = new HashSet<>();
     attrs.add("id");
     attrs.add("observationDateTime");
@@ -1287,11 +1287,11 @@ public class DatabaseServiceTest {
   @DisplayName("Testing response filter with count")
   void countResponseFilter(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
-          .put("searchType", "responseFilter_")
-          .put("attrs", new JsonArray().add("id").add("latitude").add("longitude"));
+            .put("id", new JsonArray()
+                    .add(
+                            "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
+            .put("searchType", "responseFilter_")
+            .put("attrs", new JsonArray().add("id").add("latitude").add("longitude"));
 
     // dbService.countQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("Count is not supported with filtering", new JsonObject(response
@@ -1319,7 +1319,7 @@ public class DatabaseServiceTest {
    *           .add("observationDateTime")); DateTimeFormatter dateTimeFormatter =
    *           DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXXXX"); OffsetDateTime start =
    *           OffsetDateTime.parse(temporalEndDate, dateTimeFormatter);
-   * 
+   *
    *           dbService.searchQuery(request, testContext.succeeding(response ->
    *           testContext.verify(() -> { OffsetDateTime resDate =
    *           OffsetDateTime.parse(response.getJsonArray("results").getJsonObject(3)
@@ -1335,10 +1335,10 @@ public class DatabaseServiceTest {
   @DisplayName("Testing invalid Search request")
   void searchInvalidType(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
-          .put("searchType", "response!@$_geoS241");
+            .put("id", new JsonArray()
+                    .add(
+                            "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
+            .put("searchType", "response!@$_geoS241");
 
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("Invalid search request",
@@ -1346,36 +1346,36 @@ public class DatabaseServiceTest {
     // testContext.completeNow();
     // })));
 
-    
+
 //    assertThrows(ESQueryDecodeException.class, ()->dbService.search(request));
 //    testContext.completeNow();
-    
+
     dbService.search(request).onSuccess(handler -> {
       testContext.failed();
     }).onFailure(handler -> {
       JsonObject exceptionResponse=new JsonObject(handler.getMessage());
       assertEquals("Exception occured executing query", exceptionResponse.getString("detail"));
       testContext.completeNow();
-      
+
     });
-    
+
   }
 
   @Test
   @DisplayName("Testing Attribute Search")
   void searchAttributeGt(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "attributeSearch_")
-          .put("attr-query",
-              new JsonArray()
-                  .add(new JsonObject()
-                      .put("attribute", "referenceLevel")
-                        .put("operator", ">")
-                        .put("value", "2")))
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "attributeSearch_")
+            .put("attr-query",
+                    new JsonArray()
+                            .add(new JsonObject()
+                                    .put("attribute", "referenceLevel")
+                                    .put("operator", ">")
+                                    .put("value", "2")))
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     List<String> list = new ArrayList<String>();
     list.add("iudx:Resource");
@@ -1406,17 +1406,17 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Attribute Search ")
   void searchAttributeLt(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "attributeSearch_")
-          .put("attr-query",
-              new JsonArray()
-                  .add(new JsonObject()
-                      .put("attribute", "referenceLevel")
-                        .put("operator", "<")
-                        .put("value", "5")))
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "attributeSearch_")
+            .put("attr-query",
+                    new JsonArray()
+                            .add(new JsonObject()
+                                    .put("attribute", "referenceLevel")
+                                    .put("operator", "<")
+                                    .put("value", "5")))
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
     // dbService.searchQuery(request, testContext.succeeding(response -> testContext.verify(() -> {
     // assertTrue(response.getJsonArray("results").getJsonObject(2).getDouble("referenceLevel") <
     // 5);
@@ -1451,17 +1451,17 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Attribute Search (property is greater than equal)")
   void searchAttributeGte(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "attributeSearch_")
-          .put("attr-query",
-              new JsonArray()
-                  .add(new JsonObject()
-                      .put("attribute", "referenceLevel")
-                        .put("operator", ">=")
-                        .put("value", "3")))
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "attributeSearch_")
+            .put("attr-query",
+                    new JsonArray()
+                            .add(new JsonObject()
+                                    .put("attribute", "referenceLevel")
+                                    .put("operator", ">=")
+                                    .put("value", "3")))
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
     // dbService.searchQuery(request, testContext.succeeding(response -> testContext.verify(() -> {
     // assertTrue(
     // response.getJsonArray("results").getJsonObject(3).getDouble("referenceLevel") >= 3);
@@ -1497,17 +1497,17 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Attribute Search (property is lesser than equal)")
   void searchAttributeLte(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "attributeSearch_")
-          .put("attr-query",
-              new JsonArray()
-                  .add(new JsonObject()
-                      .put("attribute", "referenceLevel")
-                        .put("operator", "<=")
-                        .put("value", "5")))
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "attributeSearch_")
+            .put("attr-query",
+                    new JsonArray()
+                            .add(new JsonObject()
+                                    .put("attribute", "referenceLevel")
+                                    .put("operator", "<=")
+                                    .put("value", "5")))
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
     // dbService.searchQuery(request, testContext.succeeding(response -> testContext.verify(() -> {
     // assertTrue(
     // response.getJsonArray("results").getJsonObject(7).getDouble("referenceLevel") <= 5);
@@ -1543,18 +1543,18 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Attribute Search (property is between)")
   void searchAttributeBetween(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "attributeSearch_")
-          .put("attr-query",
-              new JsonArray()
-                  .add(new JsonObject()
-                      .put("attribute", "referenceLevel")
-                        .put("operator", "<==>")
-                        .put("valueLower", "3")
-                        .put("valueUpper", "5")))
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "attributeSearch_")
+            .put("attr-query",
+                    new JsonArray()
+                            .add(new JsonObject()
+                                    .put("attribute", "referenceLevel")
+                                    .put("operator", "<==>")
+                                    .put("valueLower", "3")
+                                    .put("valueUpper", "5")))
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
     // dbService.searchQuery(request, testContext.succeeding(response -> testContext.verify(() -> {
     // assertTrue(response.getJsonArray("results").getJsonObject(9).getDouble("referenceLevel") > 3
     // && response.getJsonArray("results").getJsonObject(9).getDouble("referenceLevel") < 5);
@@ -1606,17 +1606,17 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Attribute Search (property is equal)")
   void searchAttributeEqual(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "attributeSearch_")
-          .put("attr-query",
-              new JsonArray()
-                  .add(new JsonObject()
-                      .put("attribute", "referenceLevel")
-                        .put("operator", "==")
-                        .put("value", "4.2")))
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "attributeSearch_")
+            .put("attr-query",
+                    new JsonArray()
+                            .add(new JsonObject()
+                                    .put("attribute", "referenceLevel")
+                                    .put("operator", "==")
+                                    .put("value", "4.2")))
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
     // dbService.searchQuery(request, testContext.succeeding(response -> testContext.verify(() -> {
     // assertEquals(response.getJsonArray("results").getJsonObject(0)
     // .getDouble("referenceLevel"), 4.2);
@@ -1652,17 +1652,17 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Attribute Search (property is not equal)")
   void searchAttributeNe(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "b58da193-23d9-43eb-b98a-a103d4b6103c"))
-          .put("searchType", "attributeSearch_")
-          .put("attr-query",
-              new JsonArray()
-                  .add(new JsonObject()
-                      .put("attribute", "referenceLevel")
-                        .put("operator", "!=")
-                        .put("value", "5")))
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "b58da193-23d9-43eb-b98a-a103d4b6103c"))
+            .put("searchType", "attributeSearch_")
+            .put("attr-query",
+                    new JsonArray()
+                            .add(new JsonObject()
+                                    .put("attribute", "referenceLevel")
+                                    .put("operator", "!=")
+                                    .put("value", "5")))
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
     // dbService.searchQuery(request, testContext.succeeding(response -> testContext.verify(() -> {
     // assertTrue(
     // response.getJsonArray("results").getJsonObject(4).getDouble("referenceLevel") != 5);
@@ -1697,33 +1697,33 @@ public class DatabaseServiceTest {
   @DisplayName("Testing Attribute Search (invalid property operator)")
   void searchInvalidAttributeOP(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "83c2e5c2-3574-4e11-9530-2b1fbdfce832"))
-          .put("searchType", "attributeSearch_")
-          .put("attr-query",
-              new JsonArray()
-                  .add(new JsonObject()
-                      .put("attribute", "referenceLevel")
-                        .put("operator", "asasd")
-                        .put("value", "5")))
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "83c2e5c2-3574-4e11-9530-2b1fbdfce832"))
+            .put("searchType", "attributeSearch_")
+            .put("attr-query",
+                    new JsonArray()
+                            .add(new JsonObject()
+                                    .put("attribute", "referenceLevel")
+                                    .put("operator", "asasd")
+                                    .put("value", "5")))
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("invalid attribute operator", new
     // JsonObject(response.getMessage()).getString("detail"));
     // testContext.completeNow();
     // })));
 
-    
+
     dbService.search(request).onSuccess(handler -> {
       testContext.failed();
     }).onFailure(handler -> {
       JsonObject exceptionResponse=new JsonObject(handler.getMessage());
       assertEquals("Exception occured executing query", exceptionResponse.getString("detail"));
       testContext.completeNow();
-      
+
     });
-    
+
   }
 
   /**
@@ -1758,8 +1758,8 @@ public class DatabaseServiceTest {
   @DisplayName("Testing auto index selection with malformed id")
   void malformedResourceId(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray().add("malformed-id"))
-          .put("searchType", "latestSearch");
+            .put("id", new JsonArray().add("malformed-id"))
+            .put("searchType", "latestSearch");
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("Malformed Id [\"malformed-id\"]", new JsonObject(response.getMessage())
     // .getString("detail"));
@@ -1790,15 +1790,15 @@ public class DatabaseServiceTest {
   @DisplayName("Testing auto index selection with Invalid resource-id")
   void autoIndexInvalidId(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id",
-            new JsonArray()
-                .add("ii/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx"
-                    + ".io/surat-itms-realtime-information/surat-itms-live-eta"))
-          .put("searchType", "geoSearch_")
-          .put("lon", 72.8296)
-          .put("lat", 21.2)
-          .put("radius", 500)
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id",
+                    new JsonArray()
+                            .add("ii/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx"
+                                    + ".io/surat-itms-realtime-information/surat-itms-live-eta"))
+            .put("searchType", "geoSearch_")
+            .put("lon", 72.8296)
+            .put("lat", 21.2)
+            .put("radius", 500)
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
 
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // LOGGER.debug(response.getMessage());
@@ -1809,7 +1809,7 @@ public class DatabaseServiceTest {
 
     dbService.search(request).onSuccess(handler -> {
       testContext.failed();
-      
+
     }).onFailure(handler -> {
 //      assertEquals("Invalid resource id", handler.getString("detail"));
       testContext.completeNow();
@@ -1820,14 +1820,14 @@ public class DatabaseServiceTest {
   @DisplayName("Testing search empty response with 204")
   void searchEmptyResponse(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
-          .put("searchType", "geoSearch_")
-          .put("lon", 72.8296)
-          .put("lat", 23.2)
-          .put("radius", 10)
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
+            .put("searchType", "geoSearch_")
+            .put("lon", 72.8296)
+            .put("lat", 23.2)
+            .put("radius", 10)
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
     // dbService.searchQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("Empty response", new JsonObject(response.getMessage()).getString("detail"));
     // testContext.completeNow();
@@ -1835,7 +1835,7 @@ public class DatabaseServiceTest {
 
     dbService.search(request).onSuccess(handler -> {
       testContext.failNow(handler.toString());
-     
+
     }).onFailure(handler -> {
 //      assertEquals("Empty response", handler.getString("detail"));
       testContext.completeNow();
@@ -1846,14 +1846,14 @@ public class DatabaseServiceTest {
   @DisplayName("Testing count empty response with 204")
   void countEmptyResponse(VertxTestContext testContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
-          .put("searchType", "geoSearch_")
-          .put("lon", 72.8296)
-          .put("lat", 23.2)
-          .put("radius", 10)
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
+            .put("searchType", "geoSearch_")
+            .put("lon", 72.8296)
+            .put("lat", 23.2)
+            .put("radius", 10)
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
     // dbService.countQuery(request, testContext.failing(response -> testContext.verify(() -> {
     // assertEquals("Empty response", new JsonObject(response.getMessage()).getString("detail"));
     // testContext.completeNow();
@@ -1861,7 +1861,7 @@ public class DatabaseServiceTest {
 
     dbService.count(request).onSuccess(handler -> {
       testContext.failed();
-      
+
     }).onFailure(handler -> {
 //      assertEquals("Empty response", handler.getString("detail"));
       testContext.completeNow();
@@ -1914,17 +1914,17 @@ public class DatabaseServiceTest {
   @DisplayName("Test countQuery method : with Exception")
   public void test_countQuery_with_exception(VertxTestContext vertxTestContext) {
     JsonObject request = new JsonObject()
-        .put("id", new JsonArray()
-            .add(
-                "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
-          .put("geometry", "bbox")
-          .put("georel", "within")
-          .put("coordinates", "[[72.8296,21.2],[72.8297,21.15]]")
-          .put("geoproperty", "location")
-          .put(REQ_TIMEREL, null)
-          .put(TIME_KEY, null)
-          .put("searchType", TEMPORAL_SEARCH_REGEX)
-          .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
+            .put("id", new JsonArray()
+                    .add(
+                            "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/surat-itms-realtime-information/surat-itms-live-eta"))
+            .put("geometry", "bbox")
+            .put("georel", "within")
+            .put("coordinates", "[[72.8296,21.2],[72.8297,21.15]]")
+            .put("geoproperty", "location")
+            .put(REQ_TIMEREL, null)
+            .put(TIME_KEY, null)
+            .put("searchType", TEMPORAL_SEARCH_REGEX)
+            .put("applicableFilters", new JsonArray().add("ATTR").add("TEMPORAL").add("SPATIAL"));
     JsonObject expected = new JsonObject();
     expected.put("type", 400);
     expected.put("title", "Failed");
@@ -2092,24 +2092,24 @@ public class DatabaseServiceTest {
             .put("name","dummy_name")
             .put("resourceGroup","5b7556b5-0779-4c47-9cf2-3f209779aa22");
 
-   when(cacheService.get(any(JsonObject.class))).thenReturn(Future.succeededFuture(jsonObject));
+    when(cacheService.get(any(JsonObject.class))).thenReturn(Future.succeededFuture(jsonObject));
 
     JsonObject esJson = new JsonObject().put("type","urn:dx:rs:success").put("title","Success").put("results", new JsonArray().add(new JsonObject().put("totalHits",60000)));
     when(elasticClient.asyncCount(anyString(),any())).thenReturn(Future.succeededFuture(esJson));
-JsonObject expectedJson = new JsonObject().put("type",413).put("title","urn:dx:rs:payloadTooLarge").put("details","Response size exceeds limit use filters to get value within limit or use async api");
+    JsonObject expectedJson = new JsonObject().put("type",413).put("title","urn:dx:rs:payloadTooLarge").put("details","Response size exceeds limit use filters to get value within limit or use async api");
     dbService
-        .search(request)
-        .onFailure(
-            handler -> {
-              assertEquals(
-                  handler.getMessage(),
-                  expectedJson.toString());
-              testContext.completeNow();
-            })
-        .onSuccess(
-            handler -> {
-              testContext.failed();
-            });
+            .search(request)
+            .onFailure(
+                    handler -> {
+                      assertEquals(
+                              handler.getMessage(),
+                              expectedJson.toString());
+                      testContext.completeNow();
+                    })
+            .onSuccess(
+                    handler -> {
+                      testContext.failed();
+                    });
   }
   @Test
   @DisplayName("Testing Attribute Search (property is not equal)")
@@ -2178,18 +2178,18 @@ JsonObject expectedJson = new JsonObject().put("type",413).put("title","urn:dx:r
     when(cacheService.get(any(JsonObject.class))).thenReturn(Future.succeededFuture(jsonObject));
 
     dbService
-        .search(request)
-        .onFailure(
-            handler -> {
-              assertEquals(
-                  handler.getMessage(),
-                  "{\"status\":400,\"type\":\"urn:dx:rs:badRequest\",\"title\":\"bad request parameter\",\"detail\":\"Malformed Id \"}");
-              testContext.completeNow();
-            })
-        .onSuccess(
-            handler -> {
-              testContext.failed();
-            });
+            .search(request)
+            .onFailure(
+                    handler -> {
+                      assertEquals(
+                              handler.getMessage(),
+                              "{\"status\":400,\"type\":\"urn:dx:rs:badRequest\",\"title\":\"bad request parameter\",\"detail\":\"Malformed Id \"}");
+                      testContext.completeNow();
+                    })
+            .onSuccess(
+                    handler -> {
+                      testContext.failed();
+                    });
   }
   @Test
   @DisplayName("Testing Attribute Count - MalFormedID")
@@ -2329,19 +2329,19 @@ JsonObject expectedJson = new JsonObject().put("type",413).put("title","urn:dx:r
     doAnswer(Answer -> Future.succeededFuture(jsonObject))
             .when(dbSpy).checkQuery(any());
     dbSpy
-        .search(request)
-        .onSuccess(
-            handler -> {
-              testContext.failNow("Failed");
-            })
-        .onFailure(
-            handler -> {
-              assertEquals(
-                  "{\"status\":400,\"type\":\"urn:dx:rs:badRequest\",\"title\":\"bad request parameter\",\"detail\":\"end date is before start date\"}",
-                  handler.getMessage());
-              LOGGER.info(handler.getMessage());
-              testContext.completeNow();
-            });
+            .search(request)
+            .onSuccess(
+                    handler -> {
+                      testContext.failNow("Failed");
+                    })
+            .onFailure(
+                    handler -> {
+                      assertEquals(
+                              "{\"status\":400,\"type\":\"urn:dx:rs:badRequest\",\"title\":\"bad request parameter\",\"detail\":\"end date is before start date\"}",
+                              handler.getMessage());
+                      LOGGER.info(handler.getMessage());
+                      testContext.completeNow();
+                    });
   }
   @Test
   @DisplayName("Testing Temporal Queries (During)")
@@ -2369,20 +2369,19 @@ JsonObject expectedJson = new JsonObject().put("type",413).put("title","urn:dx:r
     doAnswer(Answer -> Future.succeededFuture(jsonObject))
             .when(dbSpy).checkQuery(any());
     dbSpy
-        .search(request)
-        .onSuccess(
-            handler -> {
-              testContext.failNow("Failed");
-            })
-        .onFailure(
-            handler -> {
-              assertEquals(
-                  "{\"status\":400,\"type\":\"urn:dx:rs:badRequest\",\"title\":\"bad request parameter\",\"detail\":\"exception while parsing date/time\"}",
-                  handler.getMessage());
-              LOGGER.info(handler.getMessage());
-              testContext.completeNow();
-            });
+            .search(request)
+            .onSuccess(
+                    handler -> {
+                      testContext.failNow("Failed");
+                    })
+            .onFailure(
+                    handler -> {
+                      assertEquals(
+                              "{\"status\":400,\"type\":\"urn:dx:rs:badRequest\",\"title\":\"bad request parameter\",\"detail\":\"exception while parsing date/time\"}",
+                              handler.getMessage());
+                      LOGGER.info(handler.getMessage());
+                      testContext.completeNow();
+                    });
   }
 }
-
 

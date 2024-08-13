@@ -17,6 +17,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.serviceproxy.ServiceBinder;
 import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.common.Api;
+import iudx.resource.server.database.postgres.PostgresService;
 import iudx.resource.server.metering.MeteringService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,6 +45,7 @@ public class AuthenticationVerticle extends AbstractVerticle {
   private MeteringService meteringService;
   private Api api;
   private String dxApiBasePath;
+  private PostgresService postgresService;
 
   static WebClient createWebClient(Vertx vertx, JsonObject config) {
     return createWebClient(vertx, config, false);
@@ -93,12 +95,19 @@ public class AuthenticationVerticle extends AbstractVerticle {
 
               cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
               meteringService = MeteringService.createProxy(vertx, METERING_SERVICE_ADDRESS);
+              postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
               dxApiBasePath = config().getString("dxApiBasePath");
               api = Api.getInstance(dxApiBasePath);
               JWTAuth jwtAuth = JWTAuth.create(vertx, jwtAuthOptions);
               jwtAuthenticationService =
                   new JwtAuthenticationServiceImpl(
-                      vertx, jwtAuth, config(), cacheService, meteringService, api);
+                      vertx,
+                      jwtAuth,
+                      config(),
+                      cacheService,
+                      meteringService,
+                      postgresService,
+                      api);
 
               /* Publish the Authentication service with the Event Bus against an address. */
               consumer =

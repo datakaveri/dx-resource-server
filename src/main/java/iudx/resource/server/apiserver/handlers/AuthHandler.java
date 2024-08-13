@@ -1,14 +1,19 @@
 package iudx.resource.server.apiserver.handlers;
 
+import static iudx.resource.server.apiserver.response.ResponseUtil.generateResponse;
 import static iudx.resource.server.apiserver.util.Constants.*;
+import static iudx.resource.server.authenticator.Constants.ACCESSIBLE_ATTRS;
 import static iudx.resource.server.authenticator.Constants.ROLE;
 import static iudx.resource.server.common.Constants.*;
+import static iudx.resource.server.common.HttpStatusCode.BAD_REQUEST;
 import static iudx.resource.server.common.ResponseUrn.*;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RequestBody;
@@ -72,6 +77,9 @@ public class AuthHandler implements Handler<RoutingContext> {
     String id = getId(context, path, method);
     authInfo.put(ID, id);
 
+    String searchId = getSearchId();
+    authInfo.put("searchId", searchId);
+
     JsonArray ids = new JsonArray();
     String[] idArray = id == null ? new String[0] : id.split(",");
     for (String i : idArray) {
@@ -95,9 +103,16 @@ public class AuthHandler implements Handler<RoutingContext> {
             authInfo.put(ROLE, authHandler.result().getValue(ROLE));
             authInfo.put(DID, authHandler.result().getValue(DID));
             authInfo.put(DRL, authHandler.result().getValue(DRL));
+            authInfo.put(ACCESSIBLE_ATTRS, authHandler.result().getValue(ACCESSIBLE_ATTRS));
+            authInfo.put("accessType", authHandler.result().getValue("accessType"));
+            authInfo.put("access", authHandler.result().getValue("access"));
+            authInfo.put("meteringData", authHandler.result().getValue("meteringData"));
+            authInfo.put("accessPolicy", authHandler.result().getValue("accessPolicy"));
+            authInfo.put("resourceId", authHandler.result().getValue("resourceId"));
+            authInfo.put("enableLimits", authHandler.result().getValue("enableLimits"));
             context.data().put(this.authInfo, authInfo);
           } else {
-            processAuthFailure(context, authHandler.cause().getMessage());
+            processBackendResponse(context.response(), authHandler.cause().getMessage());
             return;
           }
           context.next();
@@ -105,29 +120,35 @@ public class AuthHandler implements Handler<RoutingContext> {
         });
   }
 
-  private void processAuthFailure(RoutingContext ctx, String result) {
-    if (result.contains("Not Found")) {
-      LOGGER.error("Error : Item Not Found");
-      HttpStatusCode statusCode = HttpStatusCode.getByValue(404);
-      ctx.response()
-          .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-          .setStatusCode(statusCode.getValue())
-          .end(generateResponse(RESOURCE_NOT_FOUND_URN, statusCode).toString());
-    } else {
-      LOGGER.error("Error : Authentication Failure");
-      HttpStatusCode statusCode = HttpStatusCode.getByValue(401);
-      ctx.response()
-          .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-          .setStatusCode(statusCode.getValue())
-          .end(generateResponse(INVALID_TOKEN_URN, statusCode).toString());
+  private void processBackendResponse(HttpServerResponse response, String failureMessage) {
+    LOGGER.debug("Info : " + failureMessage);
+    try {
+      JsonObject json = new JsonObject(failureMessage);
+      int statusCode = json.getInteger("status");
+      json.remove("status");
+
+      handleResponse(response, statusCode, json.toString());
+
+    } catch (DecodeException ex) {
+      LOGGER.error("ERROR : Expecting Json from backend service [ jsonFormattingException ]");
+      handleResponse(response, BAD_REQUEST, BACKING_SERVICE_FORMAT_URN);
     }
   }
 
-  private JsonObject generateResponse(ResponseUrn urn, HttpStatusCode statusCode) {
-    return new JsonObject()
-        .put(JSON_TYPE, urn.getUrn())
-        .put(JSON_TITLE, statusCode.getDescription())
-        .put(JSON_DETAIL, statusCode.getDescription());
+  private void handleResponse(HttpServerResponse response, HttpStatusCode code, ResponseUrn urn) {
+    handleResponse(response, code, urn, code.getDescription());
+  }
+
+  private void handleResponse(
+      HttpServerResponse response, HttpStatusCode statusCode, ResponseUrn urn, String message) {
+    response
+        .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+        .setStatusCode(statusCode.getValue())
+        .end(generateResponse(statusCode, urn, message).toString());
+  }
+
+  private void handleResponse(HttpServerResponse response, int statusCode, String message) {
+    response.putHeader(CONTENT_TYPE, APPLICATION_JSON).setStatusCode(statusCode).end(message);
   }
 
   /**
@@ -197,6 +218,10 @@ public class AuthHandler implements Handler<RoutingContext> {
       }
     }
     return id;
+  }
+
+  private String getSearchId() {
+    return request.getParam("searchID");
   }
 
   /**
