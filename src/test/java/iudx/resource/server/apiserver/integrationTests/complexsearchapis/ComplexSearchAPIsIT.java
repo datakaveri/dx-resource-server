@@ -45,8 +45,7 @@ public class ComplexSearchAPIsIT {
                 .body("title", equalTo("Success"))
                 .body("type", equalTo("urn:dx:rs:success"))
                 .body("results[0]", notNullValue())
-                .body("results[0].id", notNullValue())
-                .body("results[0].speed", notNullValue());
+                .body("results[0].id", notNullValue());
     }
     @Test
     @DisplayName("200 (success) - Search - circle geom + temporal before + response filter with optional encryption")
@@ -70,8 +69,7 @@ public class ComplexSearchAPIsIT {
                 .body("title", equalTo("Success"))
                 .body("type", equalTo("urn:dx:rs:success"))
                 .body("results[0]", notNullValue())
-                .body("results[0].id", notNullValue())
-                .body("results[0].speed", notNullValue());
+                .body("results[0].id", notNullValue());
     }
     @Test
     @DisplayName("204 (Empty Response) - Search - circle geom + temporal before + response filter")

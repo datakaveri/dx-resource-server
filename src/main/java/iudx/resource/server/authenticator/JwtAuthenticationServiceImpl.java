@@ -271,7 +271,15 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
     resourceIdFuture.onComplete(
         isResourceExistHandler -> {
           if (isResourceExistHandler.failed()) {
-            promise.fail("Not Found  : " + id);
+            Response response =
+                new Response.Builder()
+                    .withUrn(RESOURCE_NOT_FOUND_URN.getUrn())
+                    .withStatus(HttpStatus.SC_NOT_FOUND)
+                    .withTitle(NOT_FOUND.getDescription())
+                    .withDetail(isResourceExistHandler.toString())
+                    .build();
+            LOGGER.debug("Not Found  : " + id);
+            promise.fail(response.toString());
             return;
           } else {
             LOGGER.info(isResourceExistHandler.result());
@@ -366,7 +374,7 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
 
     LOGGER.trace("metering request : {}", meteringCountRequest);
 
-    if (isLimitsEnabled) {
+    if (isLimitsEnabled && jwtData.getRole().equalsIgnoreCase("consumer")) {
 
       meteringService.getConsumedData(
           meteringCountRequest,
