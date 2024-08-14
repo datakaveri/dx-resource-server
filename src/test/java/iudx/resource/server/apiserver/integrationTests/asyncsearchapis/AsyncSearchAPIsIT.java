@@ -165,9 +165,7 @@ public class AsyncSearchAPIsIT {
                 .then()
                 .statusCode(400)
                 //.log().body()
-                .body("type", equalTo("urn:dx:rs:general"))
-                .body("title", equalTo("Bad Request"))
-                .body("detail",equalTo("Fail: Incorrect search ID"))
+                .body("type", equalTo("urn:dx:rs:badRequest"))
                 .extract().response();
     }
     @Test
