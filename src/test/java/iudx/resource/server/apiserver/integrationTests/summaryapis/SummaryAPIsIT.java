@@ -71,7 +71,7 @@ public class SummaryAPIsIT {
                 .then()
                 .statusCode(401)
                 //.log().body()
-                .body("type", equalTo("urn:dx:rs:invalidAuthorizationToken"))
+                .body("type", equalTo("urn:dx:rs:unauthorizedEndpoint"))
                 .body("title", equalTo("Not Authorized"))
                 .extract().response();
     }
