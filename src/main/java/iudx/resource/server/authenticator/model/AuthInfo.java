@@ -133,9 +133,11 @@ public class AuthInfo {
         .put("did", did)
         .put("drl", drl)
         .put("role", role != null ? role.toString() : null)
+
         .put("consumedData", consumedData)
         .put("attributes", attributes)
         .put("accessPolicy", accessPolicy)
-        .put("access", access);
+        .put("access", access)
+        .put("consumedData", consumedData);
   }
 }

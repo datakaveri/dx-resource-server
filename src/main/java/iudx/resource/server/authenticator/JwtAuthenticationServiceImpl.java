@@ -18,9 +18,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.authentication.TokenCredentials;
 import io.vertx.ext.auth.jwt.JWTAuth;
+
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.client.predicate.ResponsePredicate;
+
 import iudx.resource.server.authenticator.authorization.AuthorizationContextFactory;
 import iudx.resource.server.authenticator.authorization.AuthorizationRequest;
 import iudx.resource.server.authenticator.authorization.AuthorizationStrategy;
