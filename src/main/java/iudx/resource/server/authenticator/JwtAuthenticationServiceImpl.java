@@ -1,5 +1,8 @@
 package iudx.resource.server.authenticator;
 
+import static iudx.resource.server.apiserver.util.Constants.*;
+import static iudx.resource.server.apiserver.util.Constants.DID;
+import static iudx.resource.server.apiserver.util.Constants.DRL;
 import static iudx.resource.server.authenticator.Constants.*;
 import static iudx.resource.server.common.HttpStatusCode.*;
 import static iudx.resource.server.common.ResponseUrn.*;
@@ -100,6 +103,7 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
       JsonObject request, JsonObject authenticationInfo, Handler<AsyncResult<JsonObject>> handler) {
 
     LOGGER.info("authInfo " + authenticationInfo);
+
     String endPoint = authenticationInfo.getString("apiEndpoint");
     String id = authenticationInfo.getString("id");
     String token = authenticationInfo.getString("token");
@@ -282,7 +286,6 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
             promise.fail(response.toString());
             return;
           } else {
-            LOGGER.info(isResourceExistHandler.result());
             Set<String> type =
                 new HashSet<String>(isResourceExistHandler.result().getJsonArray("type").getList());
             Set<String> itemTypeSet =
@@ -362,64 +365,6 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
     JwtAuthorization jwtAuthStrategy = new JwtAuthorization(authStrategy);
     LOGGER.trace("endPoint : {}", authInfo.getString("apiEndpoint"));
 
-    OffsetDateTime startDateTime = OffsetDateTime.now(ZoneId.of("Z", ZoneId.SHORT_IDS));
-    OffsetDateTime endDateTime = startDateTime.withHour(00).withMinute(00).withSecond(00);
-
-    JsonObject meteringCountRequest = new JsonObject();
-    meteringCountRequest.put("startTime", endDateTime.toString());
-    meteringCountRequest.put("endTime", startDateTime.toString());
-    meteringCountRequest.put("userid", jwtData.getSub());
-    meteringCountRequest.put("accessType", ACCESS_MAP.get(authInfo.getString("apiEndpoint")));
-    meteringCountRequest.put("resourceId", authInfo.getValue(ID));
-
-    LOGGER.trace("metering request : {}", meteringCountRequest);
-
-    if (isLimitsEnabled && jwtData.getRole().equalsIgnoreCase("consumer")) {
-
-      meteringService.getConsumedData(
-          meteringCountRequest,
-          meteringCountHandler -> {
-            if (meteringCountHandler.succeeded()) {
-              JsonObject meteringResponse = meteringCountHandler.result();
-              JsonObject consumedData = meteringResponse.getJsonArray("result").getJsonObject(0);
-              meteringData = consumedData;
-              LOGGER.info("consumedData: {}", consumedData);
-
-              try {
-                if (jwtAuthStrategy.isAuthorized(authRequest, jwtData, consumedData)) {
-                  LOGGER.info("User access is allowed.");
-                  promise.complete(
-                      createValidateAccessSuccessResponse(
-                          jwtData, authInfo.getString("apiEndpoint")));
-                } else {
-                  LOGGER.error("failed - no access provided to endpoint");
-                  Response response =
-                      new Response.Builder()
-                          .withStatus(401)
-                          .withUrn(ResponseUrn.UNAUTHORIZED_ENDPOINT_URN.getUrn())
-                          .withTitle(UNAUTHORIZED.getDescription())
-                          .withDetail("no access provided to endpoint")
-                          .build();
-                  promise.fail(response.toString());
-                }
-              } catch (RuntimeException e) {
-                LOGGER.error("Authorization error: {}", e.getMessage());
-                promise.fail(e.getMessage());
-              }
-            } else {
-              String failureMessage = meteringCountHandler.cause().getMessage();
-              LOGGER.error("failed to get metering response: {}", failureMessage);
-              Response response =
-                  new Response.Builder()
-                      .withStatus(401)
-                      .withUrn(ResponseUrn.UNAUTHORIZED_ENDPOINT_URN.getUrn())
-                      .withTitle(UNAUTHORIZED.getDescription())
-                      .withDetail("no access provided to endpoint")
-                      .build();
-              promise.fail(response.toString());
-            }
-          });
-    } else {
       try {
         if (jwtAuthStrategy.isAuthorized(authRequest, jwtData)) {
           LOGGER.info("User access is allowed.");
@@ -440,7 +385,6 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
         LOGGER.error("Authorization error: {}", e.getMessage());
         promise.fail(e.getMessage());
       }
-    }
     return promise.future();
   }
 
@@ -475,13 +419,16 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
     }
     JsonObject access =
         jwtData.getCons() != null ? jwtData.getCons().getJsonObject("access") : null;
-    jsonResponse.put("access", access);
-    jsonResponse.put("meteringData", meteringData);
-    jsonResponse.put("accessPolicy", accessPolicy);
-    jsonResponse.put("accessType", ACCESS_MAP.get(endPoint));
-    jsonResponse.put("resourceId", resourceId);
-    jsonResponse.put("enableLimits", isLimitsEnabled); // for async status auditing
-    LOGGER.info(jsonResponse);
+    jsonResponse.put(ACCESS, access);
+    jsonResponse.put(METERING_DATA, meteringData);
+    jsonResponse.put(ACCESS_POLICY, accessPolicy);
+    jsonResponse.put(ACCESS_TYPE, ACCESS_MAP.get(endPoint));
+    if (endPoint.matches(ASYNC_SEARCH_RGX)) {
+      jsonResponse.put("resourceId", resourceId);
+    }
+    jsonResponse.put(ENABLE_LIMITS, isLimitsEnabled); // for async status auditing
+
+    LOGGER.info("jsonResponse checking yeh wala" + jsonResponse);
     return jsonResponse;
   }
 

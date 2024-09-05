@@ -17,7 +17,6 @@ import static iudx.resource.server.common.HttpStatusCode.BAD_REQUEST;
 import static iudx.resource.server.common.ResponseUrn.*;
 import static iudx.resource.server.database.archives.Constants.ITEM_TYPES;
 import static iudx.resource.server.database.postgres.Constants.INSERT_S3_PENDING_SQL;
-import static iudx.resource.server.metering.util.Constants.*;
 
 import com.google.common.hash.Hashing;
 import io.netty.handler.codec.http.HttpConstants;
@@ -35,6 +34,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
 import iudx.resource.server.apiserver.handlers.AuthHandler;
+import iudx.resource.server.apiserver.handlers.DataAccessHandler;
 import iudx.resource.server.apiserver.handlers.FailureHandler;
 import iudx.resource.server.apiserver.handlers.ValidationHandler;
 import iudx.resource.server.apiserver.query.NgsildQueryParams;
@@ -71,8 +71,10 @@ public class AsyncRestApi {
   private EncryptionService encryptionService;
   private Api api;
   private int timeLimitForAsync;
+  private final DataAccessHandler dataAccessHandler;
 
-  AsyncRestApi(Vertx vertx, Router router, Api api, int timeLimitForAsync) {
+  AsyncRestApi(Vertx vertx, Router router, Api api, int timeLimitForAsync,DataAccessHandler dataAccessHandler) {
+
     this.vertx = vertx;
     this.router = router;
     this.databroker = DataBrokerService.createProxy(vertx, BROKER_SERVICE_ADDRESS);
@@ -83,6 +85,8 @@ public class AsyncRestApi {
     this.encryptionService = EncryptionService.createProxy(vertx, ENCRYPTION_SERVICE_ADDRESS);
     this.api = api;
     this.timeLimitForAsync = timeLimitForAsync;
+    this.dataAccessHandler = dataAccessHandler;
+
   }
 
   Router init() {
@@ -103,6 +107,7 @@ public class AsyncRestApi {
         .get(STATUS)
         .handler(asyncStatusValidation)
         .handler(AuthHandler.create(vertx, api))
+            .handler(dataAccessHandler)
         .handler(this::handleAsyncStatusRequest)
         .failureHandler(validationsFailureHandler);
 

@@ -104,12 +104,13 @@ public class AuthHandler implements Handler<RoutingContext> {
             authInfo.put(DID, authHandler.result().getValue(DID));
             authInfo.put(DRL, authHandler.result().getValue(DRL));
             authInfo.put(ACCESSIBLE_ATTRS, authHandler.result().getValue(ACCESSIBLE_ATTRS));
-            authInfo.put("accessType", authHandler.result().getValue("accessType"));
-            authInfo.put("access", authHandler.result().getValue("access"));
-            authInfo.put("meteringData", authHandler.result().getValue("meteringData"));
-            authInfo.put("accessPolicy", authHandler.result().getValue("accessPolicy"));
+            authInfo.put(ACCESS_TYPE, authHandler.result().getValue(ACCESS_TYPE));
+            authInfo.put(ACCESS, authHandler.result().getValue(ACCESS));
+            /*authInfo.put(METERING_DATA, authHandler.result().getValue(METERING_DATA));*/
+            authInfo.put(ACCESS_POLICY, authHandler.result().getValue(ACCESS_POLICY));
             authInfo.put("resourceId", authHandler.result().getValue("resourceId"));
-            authInfo.put("enableLimits", authHandler.result().getValue("enableLimits"));
+            authInfo.put(ENABLE_LIMITS, authHandler.result().getValue(ENABLE_LIMITS));
+
             context.data().put(this.authInfo, authInfo);
           } else {
             processBackendResponse(context.response(), authHandler.cause().getMessage());

@@ -29,9 +29,9 @@ public class AdminAuthStrategy implements AuthorizationStrategy {
     return true;
   }
 
-  @Override
+  /*@Override
   public boolean isAuthorized(
       AuthorizationRequest authRequest, JwtData jwtData, JsonObject quotaConsumed) {
     return isAuthorized(authRequest, jwtData);
-  }
+  }*/
 }

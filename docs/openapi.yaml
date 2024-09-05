@@ -2111,6 +2111,22 @@ paths:
             - Unauthorized - `token` invalid/expired
             - Unauthorized - `clientId` & `clientSecret` invalid/not match
 
+        410:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/expiredRequest"
+          description: |-
+            - Expired
+
+        429:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/tooManyRequest"
+          description: |-
+            - Limit Exceeded
+
   /consumer/audit:
     get:
       tags:
@@ -4169,6 +4185,33 @@ components:
           }
         ]
 
+    expiredRequest:
+      title: expiredRequest
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        detail:
+          type: string
+      example:
+        type: urn:dx:rs:UrlExpired
+        title: Gone
+        detail: The requested url/resource is expired and no longer available
+
+    tooManyRequest:
+      title: tooManyRequest
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        detail:
+          type: string
+      example:
+        type: urn:dx:rs:requestLimitExceeded
+        title: Too Many Requests
+        detail: Data usage limits exceeded
 
     standardInvalidTokenErrorResponseAllQueueAndExcahnge:
       title: standardInvalidTokenErrorResponse

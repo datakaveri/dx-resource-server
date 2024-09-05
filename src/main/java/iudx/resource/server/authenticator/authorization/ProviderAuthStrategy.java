@@ -37,10 +37,10 @@ public class ProviderAuthStrategy implements AuthorizationStrategy {
     return true;
   }
 
-  @Override
+ /* @Override
   public boolean isAuthorized(
       AuthorizationRequest authRequest, JwtData jwtData, JsonObject quotaConsumed) {
     // TODO Auto-generated method stub
     return isAuthorized(authRequest, jwtData);
-  }
+  }*/
 }

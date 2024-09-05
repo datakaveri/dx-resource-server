@@ -41,8 +41,10 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.TimeoutHandler;
+import iudx.resource.server.apiserver.common.ContextHelper;
 import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
 import iudx.resource.server.apiserver.handlers.AuthHandler;
+import iudx.resource.server.apiserver.handlers.DataAccessHandler;
 import iudx.resource.server.apiserver.handlers.FailureHandler;
 import iudx.resource.server.apiserver.handlers.ValidationHandler;
 import iudx.resource.server.apiserver.management.ManagementApi;
@@ -220,11 +222,14 @@ public class ApiServerVerticle extends AbstractVerticle {
     FailureHandler validationsFailureHandler = new FailureHandler();
     /* NGSI-LD api endpoints */
     ValidationHandler entityValidationHandler = new ValidationHandler(vertx, RequestType.ENTITY);
+    DataAccessHandler dataAccessHandler = new DataAccessHandler(vertx, config().getBoolean("isLimitEnable"));
     router
         .get(api.getEntitiesUrl())
         .handler(entityValidationHandler)
         .handler(AuthHandler.create(vertx, api))
+        .handler(dataAccessHandler)
         .handler(this::handleEntitiesQuery)
+            /*.handler(this::handleResponse)*/
         .failureHandler(validationsFailureHandler);
 
     ValidationHandler latestValidationHandler = new ValidationHandler(vertx, RequestType.LATEST);
@@ -232,6 +237,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .get(api.getEntitiesUrl() + "/*")
         .handler(latestValidationHandler)
         .handler(AuthHandler.create(vertx, api))
+        .handler(dataAccessHandler)
         .handler(this::handleLatestEntitiesQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -242,6 +248,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .consumes(APPLICATION_JSON)
         .handler(postTemporalValidationHandler)
         .handler(AuthHandler.create(vertx, api))
+        .handler(dataAccessHandler)
         .handler(this::handlePostEntitiesQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -252,6 +259,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .consumes(APPLICATION_JSON)
         .handler(postEntitiesValidationHandler)
         .handler(AuthHandler.create(vertx, api))
+            .handler(dataAccessHandler)
         .handler(this::handlePostEntitiesQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -261,6 +269,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .get(api.getTemporalUrl())
         .handler(temporalValidationHandler)
         .handler(AuthHandler.create(vertx, api))
+            .handler(dataAccessHandler)
         .handler(this::handleTemporalQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -434,9 +443,7 @@ public class ApiServerVerticle extends AbstractVerticle {
     postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
     encryptionService = EncryptionService.createProxy(vertx, ENCRYPTION_SERVICE_ADDRESS);
 
-    router
-        .route(api.getAsyncPath() + "/*")
-        .subRouter(new AsyncRestApi(vertx, router, api, timeLimitForAsync).init());
+    router.route(api.getAsyncPath() + "/*").subRouter(new AsyncRestApi(vertx, router, api,timeLimitForAsync, dataAccessHandler).init());
 
     router.route(ADMIN + "/*").subRouter(new AdminRestApi(vertx, router, api).init());
 
@@ -464,6 +471,8 @@ public class ApiServerVerticle extends AbstractVerticle {
     printDeployedEndpoints(router);
     LOGGER.info("API server deployed on :" + serverOptions.getPort());
   }
+
+
 
   private void getMonthlyOverview(RoutingContext routingContext) {
     HttpServerRequest request = routingContext.request();
@@ -868,10 +877,10 @@ public class ApiServerVerticle extends AbstractVerticle {
           if (handler.succeeded()) {
             LOGGER.info("Success: Search Success");
             if (context.request().getHeader(HEADER_PUBLIC_KEY) == null) {
-              handleSuccessResponse(
-                  response, ResponseType.Ok.getCode(), handler.result().toString());
-              context.data().put(RESPONSE_SIZE, response.bytesWritten());
-              Future.future(fu -> updateAuditTable(context));
+                handleSuccessResponse(
+                        response, ResponseType.Ok.getCode(), handler.result().toString());
+                context.data().put(RESPONSE_SIZE, response.bytesWritten());
+                Future.future(fu -> updateAuditTable(context));
             } else {
               // Encryption
               Future<JsonObject> future =
@@ -879,12 +888,12 @@ public class ApiServerVerticle extends AbstractVerticle {
               future.onComplete(
                   encryptionHandler -> {
                     if (encryptionHandler.succeeded()) {
-                      JsonObject result = encryptionHandler.result();
-                      handler.result().put("results", result);
-                      handleSuccessResponse(
-                          response, ResponseType.Ok.getCode(), handler.result().encode());
-                      context.data().put(RESPONSE_SIZE, response.bytesWritten());
-                      Future.future(fu -> updateAuditTable(context));
+                        JsonObject result = encryptionHandler.result();
+                        handler.result().put("results", result);
+                        handleSuccessResponse(
+                                response, ResponseType.Ok.getCode(), handler.result().encode());
+                        context.data().put(RESPONSE_SIZE, response.bytesWritten());
+                        Future.future(fu -> updateAuditTable(context));
                     } else {
                       LOGGER.error("Encryption not completed");
                       processBackendResponse(response, encryptionHandler.cause().getMessage());
@@ -900,16 +909,17 @@ public class ApiServerVerticle extends AbstractVerticle {
 
   private void executeLatestSearchQuery(
       RoutingContext context, JsonObject json, HttpServerResponse response) {
+    JsonObject authInfo = (JsonObject) context.data().get("authInfo");
     latestDataService.getLatestData(
         json,
         handler -> {
           if (handler.succeeded()) {
             LOGGER.info("Latest data search succeeded");
             if (context.request().getHeader(HEADER_PUBLIC_KEY) == null) {
-              handleSuccessResponse(
-                  response, ResponseType.Ok.getCode(), handler.result().toString());
-              context.data().put(RESPONSE_SIZE, response.bytesWritten());
-              Future.future(fu -> updateAuditTable(context));
+                handleSuccessResponse(
+                        response, ResponseType.Ok.getCode(), handler.result().toString());
+                context.data().put(RESPONSE_SIZE, response.bytesWritten());
+                Future.future(fu -> updateAuditTable(context));
             } else {
               //                Encryption
               Future<JsonObject> future =
@@ -917,12 +927,12 @@ public class ApiServerVerticle extends AbstractVerticle {
               future.onComplete(
                   encryptionHandler -> {
                     if (encryptionHandler.succeeded()) {
-                      JsonObject result = encryptionHandler.result();
-                      handler.result().put("results", result);
-                      handleSuccessResponse(
-                          response, ResponseType.Ok.getCode(), handler.result().encode());
-                      context.data().put(RESPONSE_SIZE, response.bytesWritten());
-                      Future.future(fu -> updateAuditTable(context));
+                        JsonObject result = encryptionHandler.result();
+                        handler.result().put("results", result);
+                        handleSuccessResponse(
+                                response, ResponseType.Ok.getCode(), handler.result().encode());
+                        context.data().put(RESPONSE_SIZE, response.bytesWritten());
+                        Future.future(fu -> updateAuditTable(context));
                     } else {
                       LOGGER.error("Encryption not completed");
                       processBackendResponse(response, encryptionHandler.cause().getMessage());
@@ -1694,7 +1704,7 @@ public class ApiServerVerticle extends AbstractVerticle {
                 request.put(API, authInfo.getValue(API_ENDPOINT));
                 request.put(RESPONSE_SIZE, context.data().get(RESPONSE_SIZE));
                 request.put(PROVIDER_ID, providerId);
-                request.put("accessType", authInfo.getString("accessType"));
+                request.put(ACCESS_TYPE, authInfo.getString(ACCESS_TYPE));
                 meteringService.insertMeteringValuesInRmq(
                     request,
                     handler -> {

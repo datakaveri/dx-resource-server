@@ -29,6 +29,8 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import iudx.resource.server.apiserver.common.DataAccessLimitValidator;
+import iudx.resource.server.apiserver.common.DataAccesssLimitValidator;
 import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.common.ResponseUrn;
 import iudx.resource.server.database.archives.ResponseBuilder;
@@ -122,7 +124,7 @@ public class AsyncServiceImpl implements AsyncService {
                     handler.handle(Future.failedFuture(responseBuilder.getResponse().toString()));
                     return;
                   }
-                  if (!isUsageWithinLimits(authInfo, answer.getLong("size"))) {
+                  if (!DataAccessLimitValidator.isUsageWithinLimits(authInfo,answer.getLong("size"),answer.getBoolean("isaudited"))) {
                     responseBuilder =
                         new ResponseBuilder("failed")
                             .setTypeAndTitle(429, LIMIT_EXCEED_URN.getUrn())
@@ -518,32 +520,6 @@ public class AsyncServiceImpl implements AsyncService {
       LOGGER.error("Invalid expiry format: " + e.getMessage());
       return false;
     }
-  }
-
-  private boolean isUsageWithinLimits(JsonObject authInfo, long currentSize) {
-    LOGGER.debug("isUsageWithinLimits () started");
-
-    if (!authInfo.getString(ROLE).equalsIgnoreCase("CONSUMER")
-        || authInfo.getString("accessPolicy").equalsIgnoreCase("OPEN")
-        || !authInfo.getBoolean("enableLimits")) {
-      return true;
-    }
-    boolean isUsageWithinLimits = false;
-    JsonObject access = authInfo.getJsonObject("access").getJsonObject("async");
-    JsonObject quotaConsumed = authInfo.getJsonObject("meteringData");
-    LOGGER.trace("access " + access);
-    LOGGER.debug("quotaConsumed " + quotaConsumed);
-
-    long allowedData = access.getInteger("limit");
-    long consumedData = quotaConsumed.getInteger("consumed_data");
-
-    if (consumedData + currentSize < allowedData) {
-      LOGGER.info("usage limits within defined limits");
-      isUsageWithinLimits = true;
-    } else {
-      LOGGER.info("usage limits exceeds defined limits");
-    }
-    return isUsageWithinLimits;
   }
 
   private Future<Void> updateDb(String searchId) {

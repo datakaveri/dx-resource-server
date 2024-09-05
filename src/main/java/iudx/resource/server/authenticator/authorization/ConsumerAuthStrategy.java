@@ -43,6 +43,17 @@ public class ConsumerAuthStrategy implements AuthorizationStrategy {
     return instance;
   }
 
+  private static void limitExceed() {
+    Response response =
+        new Response.Builder()
+            .withUrn(ResponseUrn.LIMIT_EXCEED_URN.getUrn())
+            .withStatus(429)
+            .withTitle("Too Many Requests")
+            .withDetail(LIMIT_EXCEED_URN.getMessage())
+            .build();
+    throw new RuntimeException(response.toString());
+  }
+
   private void buildPermissions(Api api) {
 
     // api access list/rules
@@ -107,7 +118,8 @@ public class ConsumerAuthStrategy implements AuthorizationStrategy {
     return result;
   }
 
-  @Override
+
+  /*@Override
   public boolean isAuthorized(
       AuthorizationRequest authRequest, JwtData jwtData, JsonObject quotaConsumed) {
     JsonObject access =
@@ -141,13 +153,13 @@ public class ConsumerAuthStrategy implements AuthorizationStrategy {
               && isUsageWithinLimits(access.getJsonObject("async"), quotaConsumed, "async");
     }
     return result;
-  }
+  }*/
 
-  private boolean isUsageWithinLimits(JsonObject access, JsonObject quotaConsumed, String type) {
+  /*private boolean isUsageWithinLimits(JsonObject access, JsonObject quotaConsumed, String type) {
     LOGGER.info("access: {} type: {} ", access, type);
     boolean isUsageWithinLimits = false;
     LOGGER.info("quotaConsumed: {} ", quotaConsumed);
-    int allowedLimit = access.getInteger("limit");
+    long allowedLimit = access.getLong("limit");
 
     int consumedData = quotaConsumed.getInteger("consumed_data");
     int apiCount = quotaConsumed.getInteger("api_count");
@@ -156,31 +168,36 @@ public class ConsumerAuthStrategy implements AuthorizationStrategy {
       if (apiCount < allowedLimit) {
         isUsageWithinLimits = true;
       } else {
-        Response response =
-            new Response.Builder()
-                .withUrn(ResponseUrn.LIMIT_EXCEED_URN.getUrn())
-                .withStatus(429)
-                .withTitle("Too Many Requests")
-                .withDetail(LIMIT_EXCEED_URN.getMessage())
-                .build();
-        throw new RuntimeException(response.toString());
+        limitExceed();
       }
     }
     if (type.equalsIgnoreCase("sub") || type.equalsIgnoreCase("async")) {
-      if (consumedData < allowedLimit) {
-        isUsageWithinLimits = true;
+      String unitType = access.getString("unit");
+      if (unitType.equalsIgnoreCase("KB")) {
+        allowedLimit = allowedLimit * 1024;
+      } else if (unitType.equalsIgnoreCase("MB")) {
+        allowedLimit = allowedLimit * 1024 * 1024;
+      } else if (unitType.equalsIgnoreCase("GB")) {
+        allowedLimit = allowedLimit * 1024 * 1024 * 1024;
       } else {
+        LOGGER.error("Unsupported unit type {}", unitType);
         Response response =
             new Response.Builder()
-                .withUrn(ResponseUrn.LIMIT_EXCEED_URN.getUrn())
-                .withStatus(429)
-                .withTitle("Too Many Requests")
-                .withDetail(LIMIT_EXCEED_URN.getMessage())
+                .withUrn("urn:dx:rs:UnsupportedUnit")
+                .withStatus(501)
+                .withTitle("Not Implemented")
+                .withDetail("Unsupported unit type")
                 .build();
         throw new RuntimeException(response.toString());
+      }
+      LOGGER.trace("Allowed Limit : {}", allowedLimit);
+      if (consumedData <= allowedLimit) {
+        isUsageWithinLimits = true;
+      } else {
+        limitExceed();
       }
     }
     LOGGER.info("usage limits {} defined limits", isUsageWithinLimits ? "within" : "exceeds");
     return isUsageWithinLimits;
-  }
+  }*/
 }

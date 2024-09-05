@@ -103,6 +103,7 @@ public class Constants {
   public static final String REQUEST_DELETE = "DELETE";
 
   public static final String STATUS = "status";
+  public static final String METHOD = "method";
   public static final String SUCCESS = "success";
   //  public static final String USER_ID = "shaUsername";
   public static final String SUBSCRIPTION_ID = "subscriptionID";

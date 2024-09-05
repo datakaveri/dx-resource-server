@@ -4,12 +4,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class Constants {
-
-  // date-time format
-  public static final String APP_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss[.SSSSSS]'Z'";
-  public static final String APP_NAME_REGEX = "[a-zA-Z0-9._\\-]*$";
-
-  public static final String APP_TEST_NAME = "vasanth";
   public static final String EVENT = "event";
   public static final String API_ENDPOINT = "apiEndpoint";
   public static final String API_METHOD = "method";
@@ -18,10 +12,12 @@ public class Constants {
       "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/"
           + "surat-itms-realtime-information/surat-itms-live-eta";
   public static final String RESPONSE_SIZE = "response_size";
+  public static final String ACCESS_TYPE = "accessType";
+  public static final String ACCESS = "access";
+  public static final String METERING_DATA = "meteringData";
+  public static final String ACCESS_POLICY = "accessPolicy";
+  public static final String ENABLE_LIMITS = "enableLimits";
   public static final String IDS = "ids";
-
-  // config
-  public static final String CONFIG_FILE = "config.properties";
 
   // NGSI-LD endpoints
   public static final String NGSILD_BASE_PATH = "/ngsi-ld/v1";
@@ -186,9 +182,6 @@ public class Constants {
   public static final String USERSHA = "userSha";
   public static final String JSON_ALIAS = "alias";
   public static final String JSON_COUNT = "Count";
-  public static final String JSON_URL = "url";
-  public static final String JSON_METHOD = "method";
-  public static final String JSON_PASSWORD = "password";
   public static final String RESOURCE_SERVER = "resourceServer";
   public static final String RESOURCE_GROUP = "resourceGroup";
   public static final String RESOURCE_NAME = "resourceName";
@@ -220,9 +213,6 @@ public class Constants {
   // subscription
   public static final String SUBSCRIPTION = "subscription";
   public static final String SUB_TYPE = "subscriptionType";
-  public static final String SUB_STREAMING = "streaming";
-  public static final String SUB_CALLBACK = "callback";
-  public static final String SUB_STREAMING_URL = "streamingURL";
 
   // messages (Error, Exception, messages..)
   public static final String MSG_INVALID_PARAM = "Invalid parameter in request.";
@@ -239,7 +229,6 @@ public class Constants {
   public static final String MSG_FAILURE_QUEUE_EXIST = "Queue already exists";
   public static final String MSG_EXCHANGE_EXIST = "Exchange already exists";
   public static final String MSG_SUB_TYPE_NOT_FOUND = "Subscription type not present in body";
-  public static final String MSG_SUB_INVALID_TOKEN = "Invalid/no token found in header";
   public static final String MSG_BAD_QUERY = "Bad query";
 
   // results
@@ -259,12 +248,6 @@ public class Constants {
   public static final List<String> VALIDATION_ALLOWED_HEADERS = List.of("token", "options");
 
   public static final String ENCODED_PUBLIC_KEY_REGEX = "^[a-zA-Z0-9_-]{42,43}={0,2}$";
-
-  public static final Pattern ID_DOMAIN_REGEX = Pattern.compile("^[a-zA-Z0-9.]{4,100}$");
-  public static final Pattern ID_USERSHA_REGEX = Pattern.compile("^[a-zA-Z0-9.]{4,100}$");
-  public static final Pattern ID_RS_REGEX = Pattern.compile("^[a-zA-Z.]{4,100}$");
-  public static final Pattern ID_RG_REGEX = Pattern.compile("^[a-zA-Z-_.]{4,100}$");
-  public static final Pattern ID_RN_REGEX = Pattern.compile("^[a-zA-Z0-9-_.]{4,100}$");
 
   public static final double VALIDATION_ALLOWED_DIST = 1000.0;
   public static final double VALIDATION_ALLOWED_DIST_FOR_ASYNC = 10000.0;

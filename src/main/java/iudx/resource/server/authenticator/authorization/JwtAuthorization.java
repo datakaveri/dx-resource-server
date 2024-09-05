@@ -17,9 +17,9 @@ public final class JwtAuthorization {
 
   public boolean isAuthorized(
       AuthorizationRequest authRequest, JwtData jwtData, JsonObject userQuotaLimit) {
-    if (authStrategy instanceof ConsumerAuthStrategy) {
+    /*if (authStrategy instanceof ConsumerAuthStrategy) {
       return authStrategy.isAuthorized(authRequest, jwtData, userQuotaLimit);
-    }
+    }*/
     return this.isAuthorized(authRequest, jwtData);
   }
 }
