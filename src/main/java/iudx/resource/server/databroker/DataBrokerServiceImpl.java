@@ -1,11 +1,6 @@
 package iudx.resource.server.databroker;
 
-import static iudx.resource.server.databroker.util.Constants.BAD_REQUEST_CODE;
-import static iudx.resource.server.databroker.util.Constants.BAD_REQUEST_DATA;
-import static iudx.resource.server.databroker.util.Constants.ID;
-import static iudx.resource.server.databroker.util.Constants.STATUS;
-import static iudx.resource.server.databroker.util.Constants.TYPE;
-import static iudx.resource.server.databroker.util.Constants.USER_ID;
+import static iudx.resource.server.databroker.util.Constants.*;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -116,6 +111,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     }
     return this;
   }
+
   /*
    * overridden method
    */
@@ -838,7 +834,8 @@ public class DataBrokerServiceImpl implements DataBrokerService {
         .onSuccess(
             successHandler -> {
               response.put("type", ResponseUrn.SUCCESS_URN.getUrn());
-              response.put("title", "Successfully changed the password");
+              response.put(TITLE, "successful");
+              response.put(DETAIL, "Successfully changed the password");
               JsonArray result =
                   new JsonArray()
                       .add(new JsonObject().put("username", userid).put("apiKey", password));

@@ -36,6 +36,11 @@ public class EsResponseFormatterToParquet extends AbstractEsSearchResponseFormat
   @Override
   public void append(List<Hit<ObjectNode>> searchHits) {}
 
+  @Override
+  public void append(List<Hit<ObjectNode>> searchHits, boolean appendComma) {
+
+  }
+
   /*    private SchemaMapping getParquetSchema(Schema arrowSchema) {
       SchemaConverter schemaConverter = new SchemaConverter();
       return schemaConverter.fromArrow(arrowSchema);

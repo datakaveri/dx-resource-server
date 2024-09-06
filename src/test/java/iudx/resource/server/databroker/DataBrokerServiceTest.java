@@ -111,9 +111,9 @@ public class DataBrokerServiceTest {
 
   private static final Logger LOGGER = LogManager.getLogger(DataBrokerServiceTest.class);
 
-  @BeforeAll
+  @BeforeEach
   @DisplayName("Deploy a verticle")
-  static void startVertx(Vertx vertx, VertxTestContext testContext) {
+  void startVertx(Vertx vertx, VertxTestContext testContext) {
     exchangeName = UUID.randomUUID().toString();
     queueName = UUID.randomUUID().toString();
     entities = new JsonArray("[\"id1\", \"id2\"]");

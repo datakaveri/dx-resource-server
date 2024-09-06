@@ -52,7 +52,7 @@ public class ParamsValidatorTest {
     @DisplayName("Test validate method : Success")
     public void test_validate(VertxTestContext vertxTestContext) {
 
-        when(paramsMap.get(anyString())).thenReturn("Dummy/string/value", null);
+        when(paramsMap.get(anyString())).thenReturn("Dummy/string/value", (String) null);
         when(catalogueService.getApplicableFilters(anyString())).thenReturn(listFuture);
         when(listFuture.result()).thenReturn(stringList);
         when(listAsyncResult.succeeded()).thenReturn(true);
@@ -80,7 +80,7 @@ public class ParamsValidatorTest {
     @DisplayName("Test isValidQueryWithFilters method : with different filters")
     public void test_isValidQueryWithFilters(String value, VertxTestContext vertxTestContext) {
 
-        when(paramsMap.get(anyString())).thenReturn("Dummy/string/value", null);
+        when(paramsMap.get(anyString())).thenReturn("Dummy/string/value", (String) null);
         when(catalogueService.getApplicableFilters(anyString())).thenReturn(listFuture);
         when(listFuture.result()).thenReturn(stringList);
         when(listAsyncResult.succeeded()).thenReturn(true);
@@ -123,7 +123,7 @@ public class ParamsValidatorTest {
     @Test
     @DisplayName("Test isValidQueryWithFilters method : Failure")
     public void test_isValidQueryWithFilters_failure(VertxTestContext vertxTestContext) {
-        when(paramsMap.get(anyString())).thenReturn("Dummy/string/value", null);
+        when(paramsMap.get(anyString())).thenReturn("Dummy/string/value", (String) null);
         when(catalogueService.getApplicableFilters(anyString())).thenReturn(listFuture);
         when(listAsyncResult.succeeded()).thenReturn(false);
         doAnswer(new Answer<AsyncResult<List<String>>>() {

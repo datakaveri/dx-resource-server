@@ -10,4 +10,6 @@ public interface EsResponseFormatter {
   void finish();
 
   void append(List<Hit<ObjectNode>> searchHits);
+
+  void append(List<Hit<ObjectNode>> searchHits, boolean appendComma);
 }

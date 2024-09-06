@@ -22432,7 +22432,7 @@
 									"pm.test(\"Check response body\", function () {    ",
 									"    const body = pm.response.json();",
 									"    pm.expect(body).to.have.property(\"type\", \"urn:dx:rs:success\");",
-									"    pm.expect(body).to.have.property(\"title\", \"Successfully changed the password\");",
+									"    pm.expect(body).to.have.property(\"title\", \"successful\");",
 									"    pm.expect(body).to.have.property(\"result\");",
 									"    const resultsjsonData = body.result[0];",
 									"    pm.expect(resultsjsonData).to.have.property(\"username\");",

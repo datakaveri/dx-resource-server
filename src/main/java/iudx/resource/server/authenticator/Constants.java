@@ -63,4 +63,5 @@ public class Constants {
   public static final String DID = "did";
 
   public static final String REVOKED_CLIENT_SQL = "SELECT * FROM revoked_tokens WHERE _id='$1'";
+  public static final int JWT_LEEWAY_TIME = 30;
 }

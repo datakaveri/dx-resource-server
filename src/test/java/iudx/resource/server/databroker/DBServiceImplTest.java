@@ -386,7 +386,7 @@ public class DBServiceImplTest {
                 String actual = object.getString("username");
                 assertEquals("Dummy User ID", actual);
                 assertEquals("urn:dx:rs:success", handler.result().getString("type"));
-                assertEquals("Successfully changed the password", handler.result().getString("title"));
+                assertEquals("successful", handler.result().getString("title"));
                 assertNotNull(handler.result().getString("result"));
                 vertxTestContext.completeNow();
             } else {

@@ -44,12 +44,16 @@ public class EsResponseFormatterToJson extends AbstractEsSearchResponseFormatter
   }
 
   @Override
-  public void append(List<Hit<ObjectNode>> searchHits) {
+  public void append(List<Hit<ObjectNode>> searchHits) {}
+
+  @Override
+  public void append(List<Hit<ObjectNode>> searchHits, boolean appendComma) {
     try {
-      boolean appendComma = false;
       for (Hit<ObjectNode> sh : searchHits) {
+        assert sh.source() != null;
         if (appendComma) {
-          fileWriter.write("," + sh.source().toString());
+          fileWriter.write(",\n");
+          fileWriter.write(String.valueOf(sh.source()));
         } else {
           fileWriter.write(sh.source().toString());
         }

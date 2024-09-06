@@ -10,10 +10,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class EsResponseFormatterToCsv extends AbstractEsSearchResponseFormatter {
   static JsonFlatten jsonFlatten;
   static LinkedHashMap<String, Object> map;
+  private final Logger LOGGER = LogManager.getLogger(EsResponseFormatterToCsv.class);
   FileWriter fileWriter;
 
   /**
@@ -53,7 +56,7 @@ public class EsResponseFormatterToCsv extends AbstractEsSearchResponseFormatter 
   public void getHeader(List<Hit<ObjectNode>> searchHits) {
     Hit<ObjectNode> firstHit = searchHits.get(0);
     if (jsonFlatten == null) {
-      jsonFlatten = new JsonFlatten((JsonNode) firstHit.source());
+      jsonFlatten = new JsonFlatten(firstHit.source());
     }
     map = jsonFlatten.flatten();
     Set<String> header = map.keySet();
@@ -73,9 +76,9 @@ public class EsResponseFormatterToCsv extends AbstractEsSearchResponseFormatter 
     for (String field : header) {
       Object cell = map.get(field);
       if (cell == null) {
-        stringBuilder.append("" + ",");
+        stringBuilder.append("NAN").append(",");
       } else {
-        stringBuilder.append(cell + ",");
+        stringBuilder.append(cell).append(",");
       }
     }
 
@@ -95,7 +98,7 @@ public class EsResponseFormatterToCsv extends AbstractEsSearchResponseFormatter 
   private void simpleFileWriter(Set<String> header) {
     StringBuilder stringBuilder = new StringBuilder();
     for (String obj : header) {
-      stringBuilder.append(obj + ",");
+      stringBuilder.append(obj).append(",");
     }
     String data = stringBuilder.substring(0, stringBuilder.length() - 1);
     try {
@@ -121,6 +124,11 @@ public class EsResponseFormatterToCsv extends AbstractEsSearchResponseFormatter 
 
   @Override
   public void append(List<Hit<ObjectNode>> searchHits) {
+    this.flattenRecord(searchHits);
+  }
+
+  @Override
+  public void append(List<Hit<ObjectNode>> searchHits, boolean appendComma) {
     this.flattenRecord(searchHits);
   }
 }

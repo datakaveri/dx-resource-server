@@ -105,6 +105,7 @@ public class ElasticClient {
                 int totalIterations = totalHits < 10000 ? 1 : (int) Math.ceil(totalHits / 10000.0);
                 double iterationCount = 0.0;
                 double progress;
+                boolean appendComma = false;
                 while (searchHits != null && searchHits.size() > 0) {
                   long downloadedDocs = searchHits.size();
                   totaldocsDownloaded += downloadedDocs;
@@ -117,7 +118,7 @@ public class ElasticClient {
                   // external (s3)
                   double finalProgress = progress * 0.9;
                   Future.future(handler -> progressListener.updateProgress(finalProgress));
-                  instance.append(searchHits);
+                  instance.append(searchHits, appendComma);
 
                   ScrollRequest scrollRequest = nextScrollRequest(scrollId);
                   CompletableFuture<ScrollResponse<ObjectNode>> future =
@@ -125,6 +126,7 @@ public class ElasticClient {
                   ScrollResponse<ObjectNode> scrollResponse = future.get();
                   scrollId = scrollResponse.scrollId();
                   searchHits = scrollResponse.hits().hits();
+                  appendComma = true;
                 }
 
                 instance.finish();

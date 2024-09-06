@@ -1,0 +1,15 @@
+{ 
+    "dataBaseHost": "",
+    "dataBasePassword": "",
+    "dataBaseName": "",
+    "dataBaseUser": "",
+    "dataBasePort": "",
+    "vhost": "",
+    "dataBrokerUserName": "",
+    "dataBrokerPassword": "",
+    "dataBrokerHost": "",
+    "dataBrokerQueue": "",
+    "dataBrokerPort": "" 
+
+}
+

@@ -5,8 +5,6 @@ import static iudx.resource.server.apiserver.util.Constants.ID;
 import static iudx.resource.server.common.Constants.METERING_SERVICE_ADDRESS;
 import static iudx.resource.server.database.archives.Constants.*;
 import static iudx.resource.server.database.async.util.Constants.*;
-import static iudx.resource.server.database.async.util.Constants.STATUS;
-import static iudx.resource.server.database.async.util.Constants.USER_ID;
 import static iudx.resource.server.database.postgres.Constants.*;
 import static iudx.resource.server.metering.util.Constants.*;
 import static iudx.resource.server.metering.util.Constants.API;
@@ -25,9 +23,7 @@ import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.cache.cachelmpl.CacheType;
 import iudx.resource.server.common.ResponseUrn;
 import iudx.resource.server.database.archives.ResponseBuilder;
-import iudx.resource.server.database.async.util.QueryProgress;
-import iudx.resource.server.database.async.util.S3FileOpsHelper;
-import iudx.resource.server.database.async.util.Util;
+import iudx.resource.server.database.async.util.*;
 import iudx.resource.server.database.elastic.ElasticClient;
 import iudx.resource.server.database.elastic.QueryDecoder;
 import iudx.resource.server.database.postgres.PostgresService;
@@ -88,46 +84,52 @@ public class AsyncServiceImpl implements AsyncService {
           if (pgHandler.succeeded()) {
             JsonArray results = pgHandler.result().getJsonArray("result");
             if (results.isEmpty()) {
-              responseBuilder =
-                  new ResponseBuilder("failed")
-                      .setTypeAndTitle(400)
-                      .setMessage("Fail: Incorrect search ID");
-              handler.handle(Future.failedFuture(responseBuilder.getResponse().toString()));
-            } else {
-              JsonObject answer = results.getJsonObject(0);
-
-              String userId = answer.getString("user_id");
-              if (sub.equals(userId)) {
-                String status = answer.getString(STATUS);
-                if (status.equalsIgnoreCase(QueryProgress.COMPLETE.toString())) {
-                  answer.put(FILE_DOWNLOAD_URL, answer.getValue(S3_URL));
-                }
-                answer.put("searchId", answer.getString("search_id"));
-                answer.put("userId", userId);
-
-                answer.remove(S3_URL);
-                answer.remove("search_id");
-                answer.remove(USER_ID);
-                LOGGER.debug(answer.encodePrettily());
-                JsonObject response =
-                    new JsonObject()
-                        .put("type", ResponseUrn.SUCCESS_URN.getUrn())
-                        .put("title", ResponseUrn.SUCCESS_URN.getMessage())
-                        .put("results", new JsonArray().add(answer));
-                handler.handle(Future.succeededFuture(response));
-              } else {
-                responseBuilder =
-                    new ResponseBuilder("failed")
-                        .setTypeAndTitle(400, ResponseUrn.BAD_REQUEST_URN.getUrn())
-                        .setMessage(
-                            "Please use same user token to check status as "
-                                + "used while calling search API");
-                handler.handle(Future.failedFuture(responseBuilder.getResponse().toString()));
-              }
+              sendErrorResponse(handler, ResponseUrn.BAD_REQUEST_URN, "Fail: Incorrect search ID");
+              return;
             }
+
+            AsyncStatusQueryResult queryResult =
+                new AsyncStatusQueryResult(results.getJsonObject(0));
+            LOGGER.debug(queryResult.toJson());
+            LOGGER.debug(queryResult.getUserId());
+            if (!sub.equals(queryResult.getUserId())) {
+              sendErrorResponse(
+                  handler,
+                  ResponseUrn.BAD_REQUEST_URN,
+                  "Please use the same user token to check status as used while calling the search API");
+              return;
+            }
+            LOGGER.debug("here");
+            processQueryResult(queryResult, handler);
           }
         });
     return this;
+  }
+
+  private void processQueryResult(
+      AsyncStatusQueryResult queryResult, Handler<AsyncResult<JsonObject>> handler) {
+    if (queryResult.getStatus().equalsIgnoreCase(QueryProgress.COMPLETE.toString())) {
+      queryResult.setFileDownloadUrl(null);
+    }
+
+    queryResult.setSearchId(null);
+
+    AsyncStatusServiceResult response = new AsyncStatusServiceResult();
+    response.setStatus("success");
+    response.setStatusCode(200);
+    response.setTitle(ResponseUrn.SUCCESS_URN.getMessage());
+    response.setResult(queryResult);
+
+    handler.handle(Future.succeededFuture(response.toJson()));
+  }
+
+  private void sendErrorResponse(
+      Handler<AsyncResult<JsonObject>> handler, ResponseUrn badRequestUrn, String message) {
+    responseBuilder =
+        new ResponseBuilder("failed")
+            .setTypeAndTitle(400, badRequestUrn.getUrn())
+            .setMessage(message);
+    handler.handle(Future.failedFuture(responseBuilder.getResponse().toString()));
   }
 
   @Override
@@ -143,24 +145,34 @@ public class AsyncServiceImpl implements AsyncService {
     String id = query.getJsonArray(ID).getString(0);
     getRecord4RequestId(requestId)
         .onSuccess(
-            handler -> {
-              process4ExistingRequestId(
-                  id, requestId, sub, searchId, handler, format, role, drl, did);
+            record -> {
+              process4ExistingRequestId(id, sub, searchId, record, role, drl, did);
             })
         .onFailure(
-            handler -> {
-              updateQueryExecutionStatus(searchId, QueryProgress.IN_PROGRESS)
-                  .onSuccess(
-                      statusHandler -> {
-                        process4NewRequestId(searchId, sub, query, format, role, drl, did);
-                      })
-                  .onFailure(
-                      statusHandler -> {
-                        LOGGER.error("");
-                      });
+            throwable -> {
+              handleRecordNotFound(requestId, searchId, query, format, role, drl, did);
             });
 
     return this;
+  }
+
+  private void handleRecordNotFound(
+      String requestId,
+      String searchId,
+      JsonObject query,
+      String format,
+      String role,
+      String drl,
+      String did) {
+    updateQueryExecutionStatus(searchId, QueryProgress.IN_PROGRESS)
+        .onSuccess(
+            status -> {
+              process4NewRequestId(searchId, requestId, query, format, role, drl, did);
+            })
+        .onFailure(
+            throwable -> {
+              LOGGER.error("Failed to update query execution status", throwable);
+            });
   }
 
   private Future<Void> updateQueryExecutionStatus(String searchId, QueryProgress status) {
@@ -231,11 +243,9 @@ public class AsyncServiceImpl implements AsyncService {
 
   void process4ExistingRequestId(
       String id,
-      String requestId,
       String sub,
       String searchId,
       JsonArray record,
-      String format,
       String role,
       String drl,
       String did) {
@@ -386,7 +396,7 @@ public class AsyncServiceImpl implements AsyncService {
     }
     /*
      * Example: searchIndex =
-     * iudx__datakaveri.org__b8bd3e3f39615c8ec96722131ae95056b5938f2f__rs.iudx.io__pune-env-aqm
+     * iudx__6c2a05e3-fc5a-4ce9-bede-f1bde41c55e9
      */
     LOGGER.info("Index name: " + searchIndex);
 
