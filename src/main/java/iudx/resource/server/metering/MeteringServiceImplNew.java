@@ -70,7 +70,7 @@ public class MeteringServiceImplNew implements MeteringServiceNew {
             .forUserId(authInfo.getUserid())
             .forResourceId(authInfo.getResourceId())
             .forResourceGroup(authInfo.getResourceGroup())
-            .forApi(authInfo.getApi())
+            .forApi(authInfo.getEndPoint())
             .forEvent(event)
             .forType("RESOURCE")
             .withPrimaryKey(primaryKeySuppler.get())
