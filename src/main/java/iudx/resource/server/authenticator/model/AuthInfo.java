@@ -5,138 +5,137 @@ import io.vertx.core.json.JsonObject;
 import iudx.resource.server.authenticator.authorization.IudxRole;
 
 public class AuthInfo {
-    private String userid;
-    private String resourceId;
-    private String providerId;
-    private String api;
-    private String resourceGroup;
-    private String did;
-    private String drl;
-    private IudxRole role;
-    private JsonObject consumedData;
-    private String endPoint;
+  private String userid;
+  private String resourceId;
+  private String providerId;
+  private String api;
+  private String resourceGroup;
+  private String did;
+  private String drl;
+  private IudxRole role;
+  private JsonObject consumedData;
+  private String endPoint;
+  private JsonObject access;
+  private JsonArray attributes;
+  private String accessPolicy;
 
-    public JsonObject getAccess() {
-        return access;
-    }
+  public JsonObject getAccess() {
+    return access;
+  }
 
-    public void setAccess(JsonObject access) {
-        this.access = access;
-    }
+  public void setAccess(JsonObject access) {
+    this.access = access;
+  }
 
-    public JsonArray getAttributes() {
-        return attributes;
-    }
+  public JsonArray getAttributes() {
+    return attributes;
+  }
 
-    public void setAttributes(JsonArray attributes) {
-        this.attributes = attributes;
-    }
+  public void setAttributes(JsonArray attributes) {
+    this.attributes = attributes;
+  }
 
-    private JsonObject access;
-    private JsonArray attributes;
+  public String getAccessPolicy() {
+    return accessPolicy;
+  }
 
-    public String getAccessPolicy() {
-        return accessPolicy;
-    }
+  public void setAccessPolicy(String accessPolicy) {
+    this.accessPolicy = accessPolicy;
+  }
 
-    public void setAccessPolicy(String accessPolicy) {
-        this.accessPolicy = accessPolicy;
-    }
+  public String getEndPoint() {
+    return endPoint;
+  }
 
-    private String accessPolicy;
+  public void setEndPoint(String endPoint) {
+    this.endPoint = endPoint;
+  }
 
-    public String getEndPoint() {
-        return endPoint;
-    }
+  public JsonObject getConsumedData() {
+    return consumedData;
+  }
 
-    public void setEndPoint(String endPoint) {
-        this.endPoint = endPoint;
-    }
+  public void setConsumedData(JsonObject consumedData) {
+    this.consumedData = consumedData;
+  }
 
-    public JsonObject getConsumedData() {
-        return consumedData;
-    }
+  public String getUserid() {
+    return userid;
+  }
 
-    public void setConsumedData(JsonObject consumedData) {
-        this.consumedData = consumedData;
-    }
+  public void setUserid(String userid) {
+    this.userid = userid;
+  }
 
-    public String getUserid() {
-        return userid;
-    }
+  public String getResourceId() {
+    return resourceId;
+  }
 
-    public void setUserid(String userid) {
-        this.userid = userid;
-    }
+  public void setResourceId(String resourceId) {
+    this.resourceId = resourceId;
+  }
 
-    public String getResourceId() {
-        return resourceId;
-    }
+  public String getProviderId() {
+    return providerId;
+  }
 
-    public void setResourceId(String resourceId) {
-        this.resourceId = resourceId;
-    }
+  public void setProviderId(String providerId) {
+    this.providerId = providerId;
+  }
 
-    public String getProviderId() {
-        return providerId;
-    }
+  public String getApi() {
+    return api;
+  }
 
-    public void setProviderId(String providerId) {
-        this.providerId = providerId;
-    }
+  public void setApi(String api) {
+    this.api = api;
+  }
 
-    public String getApi() {
-        return api;
-    }
+  public String getResourceGroup() {
+    return resourceGroup;
+  }
 
-    public void setApi(String api) {
-        this.api = api;
-    }
+  public void setResourceGroup(String resourceGroup) {
+    this.resourceGroup = resourceGroup;
+  }
 
-    public String getResourceGroup() {
-        return resourceGroup;
-    }
+  public String getDid() {
+    return did;
+  }
 
-    public void setResourceGroup(String resourceGroup) {
-        this.resourceGroup = resourceGroup;
-    }
+  public void setDid(String did) {
+    this.did = did;
+  }
 
-    public String getDid() {
-        return did;
-    }
+  public String getDrl() {
+    return drl;
+  }
 
-    public void setDid(String did) {
-        this.did = did;
-    }
+  public void setDrl(String drl) {
+    this.drl = drl;
+  }
 
-    public String getDrl() {
-        return drl;
-    }
+  public IudxRole getRole() {
+    return role;
+  }
 
-    public void setDrl(String drl) {
-        this.drl = drl;
-    }
+  public void setRole(IudxRole role) {
+    this.role = role;
+  }
 
-    public IudxRole getRole() {
-        return role;
-    }
-
-    public void setRole(IudxRole role) {
-        this.role = role;
-    }
-
-    // Method to convert AuthInfo to JsonObject
-    public JsonObject toJson() {
-        return new JsonObject()
-                .put("userid", userid)
-                .put("resourceId", resourceId)
-                .put("providerId", providerId)
-                .put("api", api)
-                .put("resourceGroup", resourceGroup)
-                .put("did", did)
-                .put("drl", drl)
-                .put("role", role != null ? role.toString() : null)
-                .put("consumedData", consumedData);
-    }
+  public JsonObject toJson() {
+    return new JsonObject()
+        .put("userid", userid)
+        .put("resourceId", resourceId)
+        .put("providerId", providerId)
+        .put("api", api)
+        .put("resourceGroup", resourceGroup)
+        .put("did", did)
+        .put("drl", drl)
+        .put("role", role != null ? role.toString() : null)
+        .put("consumedData", consumedData)
+        .put("attributes", attributes)
+        .put("accessPolicy", accessPolicy)
+        .put("access", access);
+  }
 }
-
