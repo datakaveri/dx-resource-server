@@ -4,6 +4,7 @@ public class Constants {
 
   /** service proxy addresses * */
   public static final String PG_SERVICE_ADDRESS = "iudx.rs.pgsql.service";
+  public static final String REDIS_SERVICE_ADDRESS = "iudx.rs.redis.service";
 
   public static final String CACHE_SERVICE_ADDRESS = "iudx.rs.cache.service";
   public static final String LATEST_SERVICE_ADDRESS = "iudx.rs.latest.service";
