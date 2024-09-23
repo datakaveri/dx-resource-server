@@ -123,6 +123,15 @@
       "id": "iudx.resource.server.encryption.EncryptionVerticle",
       "isWorkerVerticle": false,
       "verticleInstances": 1
+    },
+    {
+      "id": "iudx.resource.server.database.redis.RedisVerticle",
+      "isWorkerVerticle": false,
+      "redisUsername": "",
+      "redisPassword": "",
+      "redisHost": "",
+      "redisPort": 1234,
+      "verticleInstances": 1
     }
   ]
 }
