@@ -62,8 +62,5 @@ The encrypted data could be decrypted using the lazysodium sealed box by supplyi
 ### Async Service
 The async service allows users to make API requests for resources over extended time periods and larger geographic areas. By processing these requests asynchronously, it ensures that the system remains responsive, even when handling large or complex data queries, and users can retrieve results once the processing is complete.
 
-### Database Connector
-The database connector Service routes between the data broker (to which streaming data may be published) and the database (where the data will be stored).
-
 ### Latest Service
 The Latest Service retrieves latest data from Redis, providing users with quick access to current data. By using Redis, the service ensures fast response times, enhancing the overall efficiency of data retrieval.
