@@ -1,0 +1,86 @@
+name: Update Wiki
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  update-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+      - name: Clone Wiki Repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.DOC_UPDATE }}
+        run: |
+          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git wiki
+        continue-on-error: true
+
+      - name: Remove Old Wiki Content
+        run: |
+          echo "Removing old wiki content..."
+          rm -rf wiki/*
+
+      - name: Copy other files to target repository
+        run: |
+          cp -r LICENSE wiki/LICENSE.md | 
+          cp -r CODE_OF_CONDUCT.md wiki/ |
+          cp -r CONTRIBUTING.md wiki/ | 
+          cp -r SECURITY.md wiki/ |
+          ls -la wiki/
+
+      - name: Copy and Modify README for Wiki
+        run: |
+          echo "Copying and modifying README.md to wiki/Home.md..."
+          sed -e 's|./docs/|./|g' \
+              -e 's|./Solution_Architecture.md|./02-Solution-Architecture|g' \
+              -e 's|./Configurations.md|./03-Configurations|g' \
+              -e 's|./Explanation.md|./04-Explanation|g' \
+              -e 's|./SETUP-and-Installation.md|./05-SETUP-and-Installation|g' \
+              -e 's|./example-tutorials|./06-Tutorials|g' \
+              -e 's|./FAQ.md|07-FAQ|g' \
+              -e 's|./mai./|d/main/docs/|g'  README.md > wiki/Home.md
+          ls -la wiki  # Verify the file creation
+
+      - name: Copy Files to Wiki
+        run: |
+          echo "Copying files..."
+          cp -r docs/* wiki/
+          ls -la wiki  # List files to verify copying
+
+      - name: Rename Files to Ensure Correct Order
+        run: |
+          echo "Renaming files to ensure correct order..."
+          mv wiki/Solution_Architecture.md wiki/02-Solution-Architecture.md
+          mv wiki/Configurations.md wiki/03-Configurations.md
+          mv wiki/Explanation.md wiki/04-Explanation.md
+          mv wiki/SETUP-and-Installation.md wiki/05-SETUP-and-Installation.md
+          mv wiki/Tutorials.md wiki/06-Tutorials.md
+          mv wiki/FAQ.md wiki/07-FAQ.md
+          mv wiki/LICENSE.md wiki/08-License.md
+          mv wiki/CODE_OF_CONDUCT.md wiki/09-Code-of-conduct.md | sed -i -e 's/.\/docs\/cdpg.png/cdpg.png/ ' wiki/09-Code-of-conduct.md 
+          mv wiki/CONTRIBUTING.md wiki/10-Contributing.md | sed -i -e 's/.\/docs\/cdpg.png/cdpg.png/ ' wiki/10-Contributing.md 
+          mv wiki/SECURITY.md wiki/11-Security.md | sed -i -e 's/.\/docs\/cdpg.png/cdpg.png/ ' wiki/11-Security.md
+          ls -la wiki  # List files to verify renaming
+
+
+      - name: Commit and Push Changes to Wiki
+        run: |
+          cd wiki
+          git add .
+          git commit -m "Update wiki content with new file order" || echo "No changes to commit"
+          git push
+        continue-on-error: true
+
+      - name: List files in wiki directory after push
+        run: ls -la wiki

@@ -91,9 +91,9 @@ info:
     The application should address them accordingly.
 
   contact:
-    name: For support contact IUDX Team at
+    name: For support contact CDPG Team at
     email: support@iudx.org.in
-    url: https://iudx.org.in/
+    url: https://dataforpublicgood.org.in/
   license:
     name: Apache 2.0
 
@@ -1070,7 +1070,7 @@ paths:
       parameters:
         - name: token
           in: header
-          description: 'IUDX auth token for accessing the API'
+          description: 'DX auth token for accessing the API'
           required: true
           style: simple
           schema:
@@ -1373,7 +1373,7 @@ paths:
       parameters:
         - name: token
           in: header
-          description: 'IUDX auth token for accessing the API'
+          description: 'DX auth token for accessing the API'
           required: true
           style: simple
           schema:
