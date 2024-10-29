@@ -33,15 +33,15 @@ configs/
 
 ## CommonConfig
 
-| Key Name            | Datatype | Example                        | Description                                                                                                                     |
-|:--------------------|:--------:|:-------------------------------|:--------------------------------------------------------------------------------------------------------------------------------|
-| dxApiBasePath       |  String  | /auth/v1                       | API base path for DX AAA server. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)          |
-| dxAuthBasePath      |  String  | /ngsi-ld/v1                    | API base path for DX rs-proxy-sever. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)      |
-| dxCatalogueBasePath |  String  | /iudx/cat/v1                   | API base path for DX Catalogue server. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)    |
-| catServerHost       |  String  | api.cat-test.iudx.io           | Host name of DX Catalogue server for fetching the information of resources, resource groups                                     |
-| catServerPort       | integer  | 443                            | Port number to access HTTPS APIs of Catalogue Server                                                                            |
-| timeLimit           |  String  | "test,2020-10-22T00:00:00Z,20" | Contains three parts separated by commas: the deployment type, a date-time stamp, and the maximum number of allowed query days. |
-| timeLimitForAsync   | integer  | 365                            | No of time limit (in days) for asynchronous search queries.                                                                     |
+| Key Name            | Datatype | Example                        | Description                                                                                                                             |
+|:--------------------|:--------:|:-------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------|
+| dxApiBasePath       |  String  | /auth/v1                       | API base path for DX AAA server. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)                  |
+| dxAuthBasePath      |  String  | /ngsi-ld/v1                    | API base path for DX rs-proxy-sever. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)              |
+| dxCatalogueBasePath |  String  | /iudx/cat/v1                   | API base path for DX Catalogue server. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)            |
+| catServerHost       |  String  | api.cat-test.iudx.io           | Host name of DX Catalogue server for fetching the information of resources, resource groups                                             |
+| catServerPort       | integer  | 443                            | Port number to access HTTPS APIs of Catalogue Server                                                                                    |
+| timeLimit           |  String  | "test,2020-10-22T00:00:00Z,20" | Contains three comma-separated parts: deployment type (e.g., test or production), a date-time stamp, and the maximum allowed query days | |          |                                | it could be test or production                                                                                                          |
+| timeLimitForAsync   | integer  | 365                            | No of time limit (in days) for asynchronous search queries.                                                                             |
 
 ## Api Server Verticle
 
