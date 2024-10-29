@@ -28,7 +28,7 @@ jobs:
 
       - name: Remove Old Wiki Content
         run: |
-          echo "Removing old wiki content..."
+          echo "Removing old wiki content.."
           rm -rf wiki/*
 
       - name: Copy other files to target repository
