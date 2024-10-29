@@ -1,7 +1,12 @@
 name: Update Wiki
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 jobs:
   update-wiki:
     runs-on: ubuntu-latest
