@@ -10,7 +10,7 @@
     "dxAuthBasePath": "/auth/v1",
     "catServerHost": "",
     "catServerPort": 443,
-    "timeLimit": "test,2020-10-22T00:00:00Z,20",
+    "timeLimit": "test,2020-10-22T00:00:00Z,365",
     "timeLimitForAsync": 365
   },
   "modules": [
@@ -22,8 +22,7 @@
       "databaseIP": "",
       "databasePort": 24034,
       "dbUser": "",
-      "dbPassword": "",
-      "timeLimit": ""
+      "dbPassword": ""
     },
     {
       "id": "iudx.resource.server.authenticator.AuthenticationVerticle",
@@ -117,7 +116,6 @@
       "databasePort": 998,
       "dbUser": "",
       "dbPassword": "",
-      "timeLimit": "",
       "filePath": "/home/kailash/Downloads/",
       "bucketName": ""
     },

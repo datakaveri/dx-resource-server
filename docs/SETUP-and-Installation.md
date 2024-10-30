@@ -61,8 +61,13 @@ In this section we explain about the dependencies and their scope. It is expecte
 | <rg-id>                       | redis-latest             | IUDX          | <rg-id>/.*  |
 | <rg-id>                       | subscriptions-monitoring | IUDX          | <rg-id>/.*  |
 | latest-data-unique-attributes | rs-unique-attributes     | IUDX-INTERNAL | #           |
-| invalid-sub                   | rs-invalid-sub           | IUDX-INTERNAL | #           |             |
-| async-query                   | rs-async-query           | IUDX-INTERNAL | #           |               |             |
+| invalid-sub                   | rs-invalid-sub           | IUDX-INTERNAL | #           |
+| async-query                   | rs-async-query           | IUDX-INTERNAL | #           |
+
+**Note** 
+- 'latest-data-unique-attributes' and 'invalid-sub' should be available to bind 'rs-unique-attributes' and 'rs-invalid-sub'.
+- The 'rs-unique-attributes' queue is used to retrieve the latest data with unique attributes.
+- The 'rs-invalid-sub' queue provides details about revoked tokens.
 
 ##### User and Permissions
 Create a DX RS user using the RabbitMQ management UI and set write permission. This user will be used by DX Resource server to publish audit data
@@ -91,7 +96,9 @@ Body for the API request
 
 #### Postgres SQL
 - To setup PostgreSQL refer setup and installation instructions available [here](https://github.com/datakaveri/iudx-deployment/blob/master/Docker-Swarm-deployment/single-node/postgres)
-- **Note** : PostgreSQL database should be configured with a RBAC user having CRUD privileges
+- **Note** 
+  - PostgreSQL database should be configured with a RBAC user having CRUD privileges
+  - Any Schema changes will be available [here](https://github.com/datakaveri/iudx-resource-server/blob/master/src/main/resources/db/migration/) and use flyway migration to update/create the postgres table.
 
 | Table Name           | Purpose                                                      | 
 |----------------------|--------------------------------------------------------------|

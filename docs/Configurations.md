@@ -33,15 +33,15 @@ configs/
 
 ## CommonConfig
 
-| Key Name            | Datatype | Example                        | Description                                                                                                                             |
-|:--------------------|:--------:|:-------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------|
-| dxApiBasePath       |  String  | /auth/v1                       | API base path for DX AAA server. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)                  |
-| dxAuthBasePath      |  String  | /ngsi-ld/v1                    | API base path for DX rs-proxy-sever. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)              |
-| dxCatalogueBasePath |  String  | /iudx/cat/v1                   | API base path for DX Catalogue server. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)            |
-| catServerHost       |  String  | api.cat-test.iudx.io           | Host name of DX Catalogue server for fetching the information of resources, resource groups                                             |
-| catServerPort       | integer  | 443                            | Port number to access HTTPS APIs of Catalogue Server                                                                                    |
-| timeLimit           |  String  | "test,2020-10-22T00:00:00Z,20" | Contains three comma-separated parts: deployment type (e.g., test or production), a date-time stamp, and the maximum allowed query days | |          |                                | it could be test or production                                                                                                          |
-| timeLimitForAsync   | integer  | 365                            | No of time limit (in days) for asynchronous search queries.                                                                             |
+| Key Name            | Datatype | Example                         | Description                                                                                                                             |
+|:--------------------|:--------:|:--------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------|
+| dxApiBasePath       |  String  | /auth/v1                        | API base path for DX AAA server. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)                  |
+| dxAuthBasePath      |  String  | /ngsi-ld/v1                     | API base path for DX rs-proxy-sever. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)              |
+| dxCatalogueBasePath |  String  | /iudx/cat/v1                    | API base path for DX Catalogue server. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)            |
+| catServerHost       |  String  | api.cat-test.iudx.io            | Host name of DX Catalogue server for fetching the information of resources, resource groups                                             |
+| catServerPort       | integer  | 443                             | Port number to access HTTPS APIs of Catalogue Server                                                                                    |
+| timeLimit           |  String  | "test,2020-10-22T00:00:00Z,365" | Contains three comma-separated parts: deployment type (e.g., test or production), a date-time stamp, and the maximum allowed query days |
+| timeLimitForAsync   | integer  | 365                             | No of time limit (in days) for asynchronous search queries.                                                                             |
 
 ## Api Server Verticle
 
@@ -54,16 +54,15 @@ configs/
 
 ## Database Verticle
 
-| Key Name          | Value Datatype | Value Example           | Description                                                              |
-|:------------------|:--------------:|:------------------------|:-------------------------------------------------------------------------|
-| isWorkerVerticle  |    boolean     | false                   | To check if worker verticle needs to be deployed for blocking operations |
-| verticleInstances |    integer     | 1                       | Number of instances required for verticles                               |
-| tenantPrefix      |     String     | iudx                    | To identify indexes                                                      |
-| databaseIP        |     String     | localhost               | Ip Address                                                               |
-| databasePort      |    integer     | 24034                   | Port Number                                                              |
-| dbUser            |     String     | xyz-user                | Elastic User                                                             |
-| dbPassword        |     String     | xyz-password            | Elastic User Password                                                    |                                                                          |
-| timeLimit         |     String     | 2020-10-22T00:00:00Z,10 | Some random time limit to handle async request when no time limit given  |
+| Key Name          | Value Datatype | Value Example | Description                                                              |
+|:------------------|:--------------:|:--------------|:-------------------------------------------------------------------------|
+| isWorkerVerticle  |    boolean     | false         | To check if worker verticle needs to be deployed for blocking operations |
+| verticleInstances |    integer     | 1             | Number of instances required for verticles                               |
+| tenantPrefix      |     String     | iudx          | To identify indexes                                                      |
+| databaseIP        |     String     | localhost     | Ip Address                                                               |
+| databasePort      |    integer     | 24034         | Port Number                                                              |
+| dbUser            |     String     | xyz-user      | Elastic User                                                             |
+| dbPassword        |     String     | xyz-password  | Elastic User Password                                                    |                                                                          |
 
 ## DataBroker Verticle
 
@@ -151,20 +150,19 @@ configs/
 
 ## Async Verticle
 
-| Key Name          | Value Datatype | Value Example           | Description                                    |
-|:------------------|:---------------|:------------------------|:-----------------------------------------------|
-| isWorkerVerticle  | boolean        | false                   | Indicates if the verticle is a worker verticle |
-| tenantPrefix      | String         | iudx                    | Tenant prefix for ES index                     |
-| threadPoolName    | String         | async-query-pool        | Name of the thread pool                        |
-| threadPoolSize    | integer        | 20                      | Size of the thread pool                        |
-| verticleInstances | integer        | 20                      | Number of instances for this verticle          |
-| databaseIP        | String         | localhost               | IP address of ES database                      |
-| databasePort      | integer        | 998                     | Port number of ES database                     |
-| dbUser            | String         | xyz-user                | ES username                                    |
-| dbPassword        | String         | xyz-password            | ES password                                    |
-| timeLimit         | String         | 2020-10-22T00:00:00Z,10 | Time limit for async queries                   |
-| filePath          | String         | /home/xyz/Downloads/    | File path for async queries                    |
-| bucketName        | String         | abc-xyz                 | S3 bucket name for async queries               |
+| Key Name          | Value Datatype | Value Example        | Description                                    |
+|:------------------|:---------------|:---------------------|:-----------------------------------------------|
+| isWorkerVerticle  | boolean        | false                | Indicates if the verticle is a worker verticle |
+| tenantPrefix      | String         | iudx                 | Tenant prefix for ES index                     |
+| threadPoolName    | String         | async-query-pool     | Name of the thread pool                        |
+| threadPoolSize    | integer        | 20                   | Size of the thread pool                        |
+| verticleInstances | integer        | 20                   | Number of instances for this verticle          |
+| databaseIP        | String         | localhost            | IP address of ES database                      |
+| databasePort      | integer        | 998                  | Port number of ES database                     |
+| dbUser            | String         | xyz-user             | ES username                                    |
+| dbPassword        | String         | xyz-password         | ES password                                    |
+| filePath          | String         | /home/xyz/Downloads/ | File path for async queries                    |
+| bucketName        | String         | abc-xyz              | S3 bucket name for async queries               |
 
 ## Encryption Verticle
 
