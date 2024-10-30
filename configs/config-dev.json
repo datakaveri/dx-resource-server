@@ -1,135 +1,130 @@
 {
-    "version": "1.0",
-    "zookeepers": [
-        "zookeeper"
-    ],
-    "clusterId": "iudx-rs-cluster",
-    "commonConfig" : {
-        "dxApiBasePath" : "/ngsi-ld/v1",
-        "dxCatalogueBasePath": "/iudx/cat/v1",
-        "dxAuthBasePath": "/auth/v1"
+  "version": "1.0",
+  "zookeepers": [
+    "zookeeper"
+  ],
+  "clusterId": "iudx-rs-cluster",
+  "commonConfig": {
+    "dxApiBasePath": "/ngsi-ld/v1",
+    "dxCatalogueBasePath": "/iudx/cat/v1",
+    "dxAuthBasePath": "/auth/v1",
+    "timeLimit": "test,2020-10-22T00:00:00Z,365",
+    "timeLimitForAsync": 365
+  },
+  "modules": [
+    {
+      "id": "iudx.resource.server.database.archives.DatabaseVerticle",
+      "isWorkerVerticle": false,
+      "tenantPrefix": "iudx",
+      "verticleInstances": 8,
+      "databaseIP": "",
+      "databasePort": 24034,
+      "dbUser": "",
+      "dbPassword": ""
     },
-    "modules": [
-        {
-            "id": "iudx.resource.server.database.archives.DatabaseVerticle",
-            "isWorkerVerticle":false,
-	    "tenantPrefix": "iudx",
-            "verticleInstances": 8,
-            "databaseIP": "",
-            "databasePort": 24034,
-            "dbUser": "",
-            "dbPassword": "",
-            "timeLimit": ""
-        },
-        {
-            "id": "iudx.resource.server.authenticator.AuthenticationVerticle",
-            "isWorkerVerticle":false,
-            "verticleInstances": 1,
-            "audience": "rs.iudx.io",
-            "authServerHost": "",
-            "catServerHost": "",
-            "catServerPort": 443,
-	        "jwtIgnoreExpiry": true,
-	        "enableLimits": false
-
-        },
-        {
-            "id": "iudx.resource.server.databroker.DataBrokerVerticle",
-            "isWorkerVerticle":false,
-            "verticleInstances": 1,
-            "dataBrokerIP": "",
-            "dataBrokerPort": 29042,
-
-            "prodVhost":"",
-            "internalVhost": "",
-            "externalVhost":"",
-
-            "dataBrokerUserName": "",
-            "dataBrokerPassword": "",
-            "dataBrokerManagementPort": 30042,
-            "connectionTimeout": 6000,
-            "requestedHeartbeat": 60,
-            "handshakeTimeout": 6000,
-            "requestedChannelMax": 5,
-            "networkRecoveryInterval": 500,
-            "automaticRecoveryEnabled": "true",
-            "postgresDatabaseIP": "",
-            "postgresDatabasePort": 5432,
-            "postgresDatabaseName": "",
-            "postgresDatabaseUserName": "",
-            "postgresDatabasePassword": "",
-            "postgrespoolSize": 25,
-
-            "brokerAmqpIp":"",
-            "brokerAmqpPort":1234
-        },
-        {
-            "id": "iudx.resource.server.apiserver.ApiServerVerticle",
-            "isWorkerVerticle":false,
-            "ssl": true,
-            "keystore": "configs/keystore.jks",
-            "keystorePassword": "",
-	    "httpPort": 8443,
-            "verticleInstances": 8,
-            "catServerHost": "",
-            "catServerPort": 443
-        },
-        {
-           "id": "iudx.resource.server.database.latest.LatestVerticle",
-           "isWorkerVerticle":false,
-	    "tenantPrefix": "iudx",
-            "verticleInstances": 2,
-            "redisMode": "",
-            "redisUsername": "",
-            "redisPassword": "",
-            "redisMaxWaitingHandlers": 1024,
-            "redisHost":"",
-            "redisPort": 1234
-
-        },
-        {
-         	"id": "iudx.resource.server.metering.MeteringVerticle",
-         	"isWorkerVerticle":false,
-            "verticleInstances": 1
-        },
-        {
-            "id":"iudx.resource.server.database.postgres.PostgresVerticle",
-            "isWorkerVerticle":false,
-            "verticleInstances": 1,
-            "databaseIp": "localhost",
-            "databasePort": 5432,
-            "databaseName": "",
-            "databaseUserName": "",
-            "databasePassword": "",
-            "poolSize": 25
-
-        },
-        {
-            "id": "iudx.resource.server.cache.CacheVerticle",
-            "isWorkerVerticle":false,
-            "catServerHost": "cat-api",
-            "catServerPort": 123,
-            "verticleInstances": 1
-        },
-        {
-            "id": "iudx.resource.server.database.async.AsyncVerticle",
-            "isWorkerVerticle":true,
-	    "tenantPrefix": "iudx",
-            "threadPoolName":"async-query-pool",
-            "threadPoolSize":20,
-            "verticleInstances": 20,
-            "databaseIP": "",
-            "databasePort":998 ,
-            "dbUser": "",
-            "dbPassword": "",
-            "timeLimit": "",
-            "filePath": "/home/kailash/Downloads/",
-            "bucketName": ""
-        },
-        {
-            "id": "iudx.resource.server.encryption.EncryptionVerticle",
-            "isWorkerVerticle":false,
-            "verticleInstances": 1
-        }
-    ]
+    {
+      "id": "iudx.resource.server.authenticator.AuthenticationVerticle",
+      "isWorkerVerticle": false,
+      "verticleInstances": 1,
+      "audience": "rs.iudx.io",
+      "authServerHost": "",
+      "catServerHost": "",
+      "catServerPort": 443,
+      "jwtIgnoreExpiry": true,
+      "enableLimits": false
+    },
+    {
+      "id": "iudx.resource.server.databroker.DataBrokerVerticle",
+      "isWorkerVerticle": false,
+      "verticleInstances": 1,
+      "dataBrokerIP": "",
+      "dataBrokerPort": 29042,
+      "prodVhost": "",
+      "internalVhost": "",
+      "externalVhost": "",
+      "dataBrokerUserName": "",
+      "dataBrokerPassword": "",
+      "dataBrokerManagementPort": 30042,
+      "connectionTimeout": 6000,
+      "requestedHeartbeat": 60,
+      "handshakeTimeout": 6000,
+      "requestedChannelMax": 5,
+      "networkRecoveryInterval": 500,
+      "automaticRecoveryEnabled": "true",
+      "postgresDatabaseIP": "",
+      "postgresDatabasePort": 5432,
+      "postgresDatabaseName": "",
+      "postgresDatabaseUserName": "",
+      "postgresDatabasePassword": "",
+      "postgrespoolSize": 25,
+      "brokerAmqpIp": "",
+      "brokerAmqpPort": 1234
+    },
+    {
+      "id": "iudx.resource.server.apiserver.ApiServerVerticle",
+      "isWorkerVerticle": false,
+      "ssl": true,
+      "keystore": "configs/keystore.jks",
+      "keystorePassword": "",
+      "httpPort": 8443,
+      "verticleInstances": 8,
+      "catServerHost": "",
+      "catServerPort": 443
+    },
+    {
+      "id": "iudx.resource.server.database.latest.LatestVerticle",
+      "isWorkerVerticle": false,
+      "tenantPrefix": "iudx",
+      "verticleInstances": 2,
+      "redisMode": "",
+      "redisUsername": "",
+      "redisPassword": "",
+      "redisMaxWaitingHandlers": 1024,
+      "redisHost": "",
+      "redisPort": 1234
+    },
+    {
+      "id": "iudx.resource.server.metering.MeteringVerticle",
+      "isWorkerVerticle": false,
+      "verticleInstances": 1
+    },
+    {
+      "id": "iudx.resource.server.database.postgres.PostgresVerticle",
+      "isWorkerVerticle": false,
+      "verticleInstances": 1,
+      "databaseIp": "localhost",
+      "databasePort": 5432,
+      "databaseName": "",
+      "databaseUserName": "",
+      "databasePassword": "",
+      "poolSize": 25
+    },
+    {
+      "id": "iudx.resource.server.cache.CacheVerticle",
+      "isWorkerVerticle": false,
+      "catServerHost": "cat-api",
+      "catServerPort": 123,
+      "verticleInstances": 1
+    },
+    {
+      "id": "iudx.resource.server.database.async.AsyncVerticle",
+      "isWorkerVerticle": true,
+      "tenantPrefix": "iudx",
+      "threadPoolName": "async-query-pool",
+      "threadPoolSize": 20,
+      "verticleInstances": 20,
+      "databaseIP": "",
+      "databasePort": 998,
+      "dbUser": "",
+      "dbPassword": "",
+      "timeLimit": "",
+      "filePath": "/home/kailash/Downloads/",
+      "bucketName": ""
+    },
+    {
+      "id": "iudx.resource.server.encryption.EncryptionVerticle",
+      "isWorkerVerticle": false,
+      "verticleInstances": 1
+    }
+  ]
 }
