@@ -9,7 +9,9 @@
     "dxCatalogueBasePath": "/iudx/cat/v1",
     "dxAuthBasePath": "/auth/v1",
     "catServerHost": "",
-    "catServerPort": 443
+    "catServerPort": 443,
+    "timeLimit": "test,2020-10-22T00:00:00Z,20",
+    "timeLimitForAsync": 365
   },
   "modules": [
     {

@@ -8,9 +8,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
-import iudx.resource.server.apiserver.util.Constants;
 import iudx.resource.server.common.HttpStatusCode;
-import iudx.resource.server.common.ResponseUrn;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
@@ -30,9 +28,11 @@ public class QueryMapper {
   private boolean isResponseFilter = false;
   private boolean isAttributeSearch = false;
   private RoutingContext context;
+  private int timeLimit;
 
-  public QueryMapper(RoutingContext context) {
+  public QueryMapper(RoutingContext context, int timeLimit) {
     this.context = context;
+    this.timeLimit = timeLimit;
   }
 
   public JsonObject toJson(NgsildQueryParams params, boolean isTemporal) {
@@ -82,9 +82,7 @@ public class QueryMapper {
         } else {
           json.put(JSON_GEOMETRY, params.getGeometry());
           json.put(JSON_COORDINATES, params.getCoordinates());
-          json.put(
-              JSON_GEOREL,
-              getOrDefault(params.getGeoRel().getRelation(), JSON_WITHIN));
+          json.put(JSON_GEOREL, getOrDefault(params.getGeoRel().getRelation(), JSON_WITHIN));
           if (params.getGeoRel().getMaxDistance() != null) {
             json.put(JSON_MAXDISTANCE, params.getGeoRel().getMaxDistance());
           } else if (params.getGeoRel().getMinDistance() != null) {
@@ -116,10 +114,7 @@ public class QueryMapper {
         json.put(JSON_TIMEREL, params.getTemporalRelation().getTemprel());
 
         isValidTimeInterval(
-            JSON_DURING,
-            json.getString(JSON_TIME),
-            json.getString(JSON_ENDTIME),
-            isAsyncQuery);
+            JSON_DURING, json.getString(JSON_TIME), json.getString(JSON_ENDTIME), isAsyncQuery);
       } else {
         json.put(JSON_TIME, params.getTemporalRelation().getTime().toString());
         json.put(JSON_TIMEREL, params.getTemporalRelation().getTemprel());
@@ -187,21 +182,20 @@ public class QueryMapper {
         this.context.fail(400, exc);
       }
     }
-    if (isAsyncQuery
-        && totalDaysAllowed > VALIDATION_MAX_DAYS_INTERVAL_ALLOWED_FOR_ASYNC) {
+    if (isAsyncQuery && totalDaysAllowed > timeLimit) {
       DxRuntimeException ex =
           new DxRuntimeException(
               BAD_REQUEST.getValue(),
               INVALID_TEMPORAL_PARAM_URN,
-              "time interval greater than 1 year is not allowed");
+              "time interval greater than " + timeLimit + " days is not allowed");
       this.context.fail(400, ex);
     }
-    if (!isAsyncQuery && totalDaysAllowed > VALIDATION_MAX_DAYS_INTERVAL_ALLOWED) {
+    if (!isAsyncQuery && totalDaysAllowed > timeLimit) {
       DxRuntimeException ex =
           new DxRuntimeException(
               BAD_REQUEST.getValue(),
               INVALID_TEMPORAL_PARAM_URN,
-              "time interval greater than 10 days is not allowed");
+              "time interval greater than " + timeLimit + " days is not allowed");
       this.context.fail(400, ex);
     }
   }

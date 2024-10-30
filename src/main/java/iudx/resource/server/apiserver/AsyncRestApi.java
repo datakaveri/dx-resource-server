@@ -65,8 +65,9 @@ public class AsyncRestApi {
   private AsyncService asyncService;
   private EncryptionService encryptionService;
   private Api api;
+  private int timeLimitForAsync;
 
-  AsyncRestApi(Vertx vertx, Router router, Api api) {
+  AsyncRestApi(Vertx vertx, Router router, Api api, int timeLimitForAsync) {
     this.vertx = vertx;
     this.router = router;
     this.databroker = DataBrokerService.createProxy(vertx, BROKER_SERVICE_ADDRESS);
@@ -76,6 +77,7 @@ public class AsyncRestApi {
     this.postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
     this.encryptionService = EncryptionService.createProxy(vertx, ENCRYPTION_SERVICE_ADDRESS);
     this.api = api;
+    this.timeLimitForAsync = timeLimitForAsync;
   }
 
   Router init() {
@@ -127,7 +129,7 @@ public class AsyncRestApi {
         validationHandler -> {
           if (validationHandler.succeeded()) {
             NgsildQueryParams ngsildquery = new NgsildQueryParams(params);
-            QueryMapper queryMapper = new QueryMapper(routingContext);
+            QueryMapper queryMapper = new QueryMapper(routingContext, timeLimitForAsync);
             JsonObject json = queryMapper.toJson(ngsildquery, true, true);
             json.put(JSON_INSTANCEID, instanceId);
             LOGGER.debug("Info: IUDX json query;" + json);

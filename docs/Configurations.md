@@ -3,8 +3,12 @@
 </p>
 
 # Modules
-This document contains the information of the configurations to setup various services and dependencies in order to bring up the DX Resource Server. 
-Please find the example configuration file [here](https://github.com/datakaveri/iudx-resource-server/blob/master/example-configs/configs/config-dev.json). While running the server, make a copy of sample configs directory and add appropriate values to all files.
+
+This document contains the information of the configurations to setup various services and dependencies in order to
+bring up the DX Resource Server.
+Please find the example configuration
+file [here](https://github.com/datakaveri/iudx-resource-server/blob/master/example-configs/configs/config-dev.json).
+While running the server, make a copy of sample configs directory and add appropriate values to all files.
 
 ```console
  cp -r example-configs/* .
@@ -19,6 +23,25 @@ configs/
 └── keystore.p12
 ```
 
+## Other Configuration
+
+| Key Name   | Value Datatype | Value Example   | Description                                                 |
+|:-----------|:--------------:|:----------------|:------------------------------------------------------------|
+| version    |     Float      | 1.0             | config version                                              |
+| zookeepers |     Array      | zookeeper       | zookeeper configuration to deploy clustered vert.x instance |
+| clusterId  |     String     | iudx-rs-cluster | cluster id to deploy clustered vert.x instance              |
+
+## CommonConfig
+
+| Key Name            | Datatype | Example                        | Description                                                                                                                             |
+|:--------------------|:--------:|:-------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------|
+| dxApiBasePath       |  String  | /auth/v1                       | API base path for DX AAA server. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)                  |
+| dxAuthBasePath      |  String  | /ngsi-ld/v1                    | API base path for DX rs-proxy-sever. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)              |
+| dxCatalogueBasePath |  String  | /iudx/cat/v1                   | API base path for DX Catalogue server. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)            |
+| catServerHost       |  String  | api.cat-test.iudx.io           | Host name of DX Catalogue server for fetching the information of resources, resource groups                                             |
+| catServerPort       | integer  | 443                            | Port number to access HTTPS APIs of Catalogue Server                                                                                    |
+| timeLimit           |  String  | "test,2020-10-22T00:00:00Z,20" | Contains three comma-separated parts: deployment type (e.g., test or production), a date-time stamp, and the maximum allowed query days | |          |                                | it could be test or production                                                                                                          |
+| timeLimitForAsync   | integer  | 365                            | No of time limit (in days) for asynchronous search queries.                                                                             |
 
 ## Api Server Verticle
 
@@ -28,19 +51,6 @@ configs/
 | verticleInstances |    integer     | 8             | Number of instances required for verticles                               |
 | httpPort          |    integer     | 8443          | Port for running the instance DX Resource Server                         |
 | ssl               |    boolean     | true          | Enable or Disable secure sockets                                         |
-
-## Other Configuration
-
-| Key Name                         | Value Datatype | Value Example                        | Description                                                                                                                  |
-|:---------------------------------|:--------------:|:-------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------|
-| version                          |     Float      | 1.0                                  | config version                                                                                                               |
-| zookeepers                       |     Array      | zookeeper                            | zookeeper configuration to deploy clustered vert.x instance                                                                  |
-| clusterId                        |     String     | iudx-rs-cluster                      | cluster id to deploy clustered vert.x instance                                                                               |
-| commonConfig.dxApiBasePath       |     String     | /ngsi-ld/v1                          | API base path for DX Resource Server. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)  |
-| commonConfig.dxCatalogueBasePath |     String     | /iudx/cat/v1                         | API base path for DX Catalogue server. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/) |
-| commonConfig.dxAuthBasePath      |     String     | /auth/v1                             | API base path for DX AAA server. Reference : [link](https://swagger.io/docs/specification/2-0/api-host-and-base-path/)       |
-| commonConfig.catServerHost       |     String     | api.cat-test.iudx.io                 | Host name of DX Catalogue server for fetching the information of resources, resource groups                                  |
-| commonConfig.catServerPort       |    integer     | 443                                  | Port number to access HTTPS APIs of Catalogue Server                                                                         |
 
 ## Database Verticle
 
@@ -84,7 +94,6 @@ configs/
 | brokerAmqpIp             |     String     | localhost        | AMQ IP of data broker                                                                                  |                                                                                                        |
 | brokerAmqpPort           |    integer     | 23456            | AMQ Port of data broker                                                                                |                                                                                                        |
 
-
 ## Authentication Verticle
 
 | Key Name          | Value Datatype | Value Example | Description                                                                 |
@@ -98,10 +107,10 @@ configs/
 
 ## Metering Verticle
 
-| Key Name                 | Value Datatype | Value Example | Description                                                                                            |
-|:-------------------------|:--------------:|:--------------|:-------------------------------------------------------------------------------------------------------|
-| isWorkerVerticle         |    boolean     | false         | To check if worker verticle needs to be deployed for blocking operations                               |
-| verticleInstances        |    integer     | 1             | Number of instances required for verticles                                                             |
+| Key Name          | Value Datatype | Value Example | Description                                                              |
+|:------------------|:--------------:|:--------------|:-------------------------------------------------------------------------|
+| isWorkerVerticle  |    boolean     | false         | To check if worker verticle needs to be deployed for blocking operations |
+| verticleInstances |    integer     | 1             | Number of instances required for verticles                               |
 
 ## Latest Verticle
 
@@ -135,10 +144,10 @@ configs/
 
 ## Cache Verticle
 
-| Key Name           | Value Datatype | Value Example                             | Description                                     |
-|:-------------------|:---------------|:------------------------------------------|:------------------------------------------------|
-| isWorkerVerticle   | boolean        | false                                     | Indicates if the verticle is a worker verticle  |
-| verticleInstances  | integer        | 1                                         | Number of instances for this verticle           |
+| Key Name          | Value Datatype | Value Example | Description                                    |
+|:------------------|:---------------|:--------------|:-----------------------------------------------|
+| isWorkerVerticle  | boolean        | false         | Indicates if the verticle is a worker verticle |
+| verticleInstances | integer        | 1             | Number of instances for this verticle          |
 
 ## Async Verticle
 

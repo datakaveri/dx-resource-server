@@ -12,6 +12,7 @@ import static iudx.resource.server.common.HttpStatusCode.NOT_FOUND;
 import static iudx.resource.server.common.HttpStatusCode.UNAUTHORIZED;
 import static iudx.resource.server.common.ResponseUrn.*;
 import static iudx.resource.server.database.archives.Constants.ITEM_TYPES;
+import static iudx.resource.server.database.archives.Constants.TIME_LIMIT;
 import static iudx.resource.server.metering.util.Constants.DELEGATOR_ID;
 import static iudx.resource.server.metering.util.Constants.EPOCH_TIME;
 import static iudx.resource.server.metering.util.Constants.ISO_TIME;
@@ -104,7 +105,7 @@ public class ApiServerVerticle extends AbstractVerticle {
   private static final String LATEST_SEARCH_ADDRESS = "iudx.rs.latest.service";
   private static final String METERING_SERVICE_ADDRESS = "iudx.rs.metering.service";
   private static final String ENCRYPTION_SERVICE_ADDRESS = "iudx.rs.encryption.service";
-
+  int timeLimitForAsync;
   private HttpServer server;
   private Router router;
   private int port;
@@ -124,6 +125,7 @@ public class ApiServerVerticle extends AbstractVerticle {
   private Api api;
   private LatestDataService latestDataService;
   private CacheService cacheService;
+  private int timeLimit;
 
   /**
    * This method is used to start the Verticle. It deploys a verticle in a cluster, reads the
@@ -157,6 +159,9 @@ public class ApiServerVerticle extends AbstractVerticle {
     allowedMethods.add(HttpMethod.PUT);
 
     /* Create a reference to HazelcastClusterManager. */
+    String[] timeLimitConfig = config().getString(TIME_LIMIT).split(",");
+    timeLimit = Integer.valueOf(timeLimitConfig[2]);
+    timeLimitForAsync = config().getInteger("timeLimitForAsync");
 
     router = Router.router(vertx);
 
@@ -428,7 +433,9 @@ public class ApiServerVerticle extends AbstractVerticle {
     postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
     encryptionService = EncryptionService.createProxy(vertx, ENCRYPTION_SERVICE_ADDRESS);
 
-    router.route(api.getAsyncPath() + "/*").subRouter(new AsyncRestApi(vertx, router, api).init());
+    router
+        .route(api.getAsyncPath() + "/*")
+        .subRouter(new AsyncRestApi(vertx, router, api, timeLimitForAsync).init());
 
     router.route(ADMIN + "/*").subRouter(new AdminRestApi(vertx, router, api).init());
 
@@ -707,7 +714,7 @@ public class ApiServerVerticle extends AbstractVerticle {
             }
             // create json
             JsonObject json;
-            QueryMapper queryMapper = new QueryMapper(routingContext);
+            QueryMapper queryMapper = new QueryMapper(routingContext, timeLimit);
             json = queryMapper.toJson(ngsildquery, false);
             /* HTTP request instance/host details */
             String instanceId = request.getHeader(HEADER_HOST);
@@ -763,7 +770,7 @@ public class ApiServerVerticle extends AbstractVerticle {
           if (validationHandler.succeeded()) {
             // parse query params
             NgsildQueryParams ngsildquery = new NgsildQueryParams(requestJson);
-            QueryMapper queryMapper = new QueryMapper(routingContext);
+            QueryMapper queryMapper = new QueryMapper(routingContext, timeLimit);
             JsonObject json = queryMapper.toJson(ngsildquery, requestJson.containsKey("temporalQ"));
             String instanceId = request.getHeader(HEADER_HOST);
             json.put(JSON_INSTANCEID, instanceId);
@@ -977,7 +984,7 @@ public class ApiServerVerticle extends AbstractVerticle {
             // parse query params
             NgsildQueryParams ngsildquery = new NgsildQueryParams(params);
             // create json
-            QueryMapper queryMapper = new QueryMapper(routingContext);
+            QueryMapper queryMapper = new QueryMapper(routingContext, timeLimit);
 
             JsonObject json = queryMapper.toJson(ngsildquery, true);
             json.put(JSON_INSTANCEID, instanceId);
