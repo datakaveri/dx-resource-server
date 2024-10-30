@@ -15,8 +15,8 @@
 ## Tokens accepted in DX Resource Server
 
 ##### Access Policy
-- secure - secure access policy represents that the resource on which request is made is secure, so it will have some associated constraints.
-- open - open access policy represents that the resource on which request is made is open, its don't have associated constraints.
+- secure - secure access policy represents that the resource on which request is made is secure (private,personal), so it will have some associated constraints.
+- open - open access policy represents that the resource on which request is made is open (public), it does not have any associated constraints.
 
 Tokens accepted by the DX Resource Server are the DX Identity token and access token(open/secure). Identity token is used for user specific APIs whereas the bearer token is used for the Verify API.
 Providers, Consumers and delegates of providers and consumers are allowed to access the following APIs using the mentioned token:
