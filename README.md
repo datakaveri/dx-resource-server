@@ -18,9 +18,7 @@ The DX Resource Server serves as the data plane for datasets, enabling data disc
 It facilitates data providers in publishing their resources based on annotated metadata and allows consumers to access 
 data in accordance with the provider's access policies. The server ensures secure data access by integrating with 
 an authorization server, requiring consumers to present access tokens validated through token introspection APIs before
-serving protected data. Additionally, the resource server offers an interface with a data broker for streaming data 
-access via AMQP and supports advanced search functionalities like temporal and geo-spatial queries through a database 
-integration. Consumers can access the data using both HTTP and AMQP protocols.
+serving protected data. Additionally, the resource server offers an interface with a data broker for streaming data ingestion and subscription via AMQPs. It also supports advanced search functionalities like temporal, geo-spatial and attribute queries through an HTTPs API interface. Data Providers can publish the data and Consumers can access/consume the data using both HTTPs and AMQPs protocols.
 
 <p align="center">
 <img src="./docs/rs-architecture.drawio.png">
@@ -29,15 +27,15 @@ integration. Consumers can access the data using both HTTP and AMQP protocols.
 
 ## Features
 
-- Provides data access from available resources using standard APIs, streaming subscriptions (AMQP).
+- Provides data ingestion and data access from available resources using standard HTTPs APIs, AMQPs streaming 
 - Search and count APIs for searching through available data: Support for Spatial (Circle, Polygon, Bbox, Linestring), Temporal (Before, during, After) and Attribute searches
 - Adaptor registration endpoints and streaming endpoints for data ingestion
-- Integration with authorization server (token introspection) to serve private data as per the access control policies set by the provider
-- End to End encryption supported using certificate
-- Secure data access over TLS
+- Integration with authorization server (token introspection) to serve protected data as per the access control policies set by the provider
+- End to End encryption for data access using certificate for HTTPs
+- Secure data ingestion and data access over TLS for HTTP and AMQP
 - Scalable, service mesh architecture based implementation using open source components: Vert.X API framework, Elasticsearch/Logstash for database and RabbitMQ for data broker.
 - Hazelcast and Zookeeper based cluster management and service discovery
-- Integration with auditing server for metering purpose which uses Postgres for faster performance
+- Integration with auditing server for metering and accounting purpose
 
 # Explanation
 ## Understanding Resource Server
