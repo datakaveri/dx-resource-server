@@ -91,8 +91,8 @@ configs/
 | postgresDatabaseUserName |     String     | postgresUser     | User Name of Postgres                                                                                  |
 | postgresDatabasePassword |     String     | postgresPassword | Password of Postgres                                                                                   |                                 
 | postgrespoolSize         |    integer     | 25               | Number of connections                                                                                  |
-| brokerAmqpIp             |     String     | localhost        | AMQ IP of data broker                                                                                  |                                                                                                        |
-| brokerAmqpPort           |    integer     | 23456            | AMQ Port of data broker                                                                                |                                                                                                        |
+| brokerAmqpIp             |     String     | localhost        | AMQP IP of data broker                                                                                 |                                                                                                        |
+| brokerAmqpPort           |    integer     | 23456            | AMQP Port of data broker                                                                               |                                                                                                        |
 
 ## Authentication Verticle
 
