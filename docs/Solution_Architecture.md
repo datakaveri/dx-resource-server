@@ -21,9 +21,9 @@ The APIs, wherever applicable, of the resource server, are implemented as per th
 The Database Search Service is called by the API Server to serve consumer data requests. Consumers may request for data by querying for it in accordance with the NGSI-LD specification.
 
 A number of search queries are supported including -
+- Temporal search - searches and retrieves data based on temporal attributes (such as time, endtime and timerel)
+- Geo-Spatial search - searches and retrieves data based on geo-spatial queries such as circle, bounding box, polygon or line string
 - Attribute search - searches and retrieves data based on attribute or key-value pairs whose values maybe text or numeric attributes (such as name, licence-plate-number, etc)
-- Geo-Spatial search - searches and retrieves data based on geo-spatial queries which may be a circle, a bounding box, a polygon or a line string
-- Text search -  searches and retrieves data based on a free text search
 - Complex search - searches and retrieves data based on a combination of an attribute search, a geo-spatial search and a text search
 
 Responses from these queries may additionally be filtered out to make the data more manageable using filters on the attributes contained in the data.
@@ -33,7 +33,7 @@ Responses from these queries may additionally be filtered out to make the data m
 This module relies on a PostgreSQL database to store and manage data for services such as auditing, caching, and async processes. Each service interacts with the database to maintain its data efficiently.
 
 ### Databroker Module
-The Data Broker Service is used by the API Server to interact with the data broker to create, update, delete exchanges, queues and subscriptions for users, and it also manages queue for service like auditing.
+The Data Broker Service is used by the API Server to interact with the RabbitMQ data broker to create, update, delete exchanges, queues and subscriptions for users, and it also manages queue for service like auditing.
 The ancillary services handled by the data broker service to facilitate subscription of data are -
 - Create Exchange - Facilitates creation of an exchange into which adaptors, sensor-gateway or sensors can publish data
 - Delete Exchange - Facilitates deletion of an exchange
@@ -51,10 +51,10 @@ The auditing service ensures comprehensive tracking and logging of resource serv
 This service interacts with the DX AAA Server to validate user tokens. Based on the tokens, it retrieves user roles and access policies, ensuring the correct authorization for each request.
 
 ### Catalogue Service
-The catalogue service provides essential metadata for other services, such as the auth and cache services, facilitating resource discovery and management across the platform.
+The catalogue service provides essential metadata for other services, such as the auth and cache services. It plays a key role on facilitating resource information for the cache service.
 
 ### Encryption Service
-All the count and search APIs have a feature to get encrypted data.
+All the count and search HTTPs APIs have a feature to get encrypted data.
 To get the data in encrypted format, the user could provide a `publicKey` in the header, with the value that is generated from [lazySodium sealed box](https://github.com/terl/lazysodium-java/wiki/Getting-started).
 The header value should be in _url-safe base64 format_.
 The encrypted data could be decrypted using the lazysodium sealed box by supplying the private and public key.
