@@ -21,6 +21,7 @@ public class Api {
   private StringBuilder asyncPath;
   private StringBuilder monthlyOverview;
   private StringBuilder summaryPath;
+  private StringBuilder ingestionPathEntities;
 
   private Api(String dxApiBasePath) {
     this.dxApiBasePath = dxApiBasePath;
@@ -36,6 +37,10 @@ public class Api {
       }
     }
     return apiInstance;
+  }
+
+  public String getIngestionPathEntities() {
+    return ingestionPathEntities.toString();
   }
 
   private void buildPaths() {
@@ -56,6 +61,7 @@ public class Api {
     resetPassword = new StringBuilder(dxApiBasePath).append(RESET_PWD);
     monthlyOverview = new StringBuilder(dxApiBasePath).append(MONTHLY_OVERVIEW);
     summaryPath = new StringBuilder(dxApiBasePath).append(SUMMARY_ENDPOINT);
+    ingestionPathEntities = new StringBuilder(dxApiBasePath).append(INGESTION_PATH_ENTITIES);
   }
 
   public String getEntitiesUrl() {

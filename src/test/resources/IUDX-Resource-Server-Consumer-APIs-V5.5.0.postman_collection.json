@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "1e242c76-0800-47be-a499-5caad292c700",
-		"name": "IUDX-Resource-Server-Consumer-APIs-V5.0.0",
+		"_postman_id": "a6c8d8c9-7db4-4518-8911-908dfc6cedee",
+		"name": "IUDX-Resource-Server-Consumer-APIs-V5.5.0",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "20457128"
 	},
@@ -9507,7 +9507,6 @@
 									"    pm.expect(body).to.have.property(\"title\", \"Success\");",
 									"    const resultsjsonData = body.results[0];",
 									"    pm.expect(resultsjsonData).to.have.property(\"id\");",
-									"    pm.expect(resultsjsonData).to.have.property(\"speed\");",
 									"});",
 									""
 								],
@@ -9610,7 +9609,6 @@
 									"    pm.expect(body).to.have.property(\"title\", \"Success\");",
 									"    const resultsjsonData = body.results[0];",
 									" pm.expect(resultsjsonData).to.have.property(\"id\");",
-									"    pm.expect(resultsjsonData).to.have.property(\"speed\");",
 									"});",
 									""
 								],
@@ -12254,7 +12252,6 @@
 									"    pm.expect(body).to.have.property(\"title\", \"Success\");",
 									"    const resultsjsonData = body.results[0];",
 									"    pm.expect(resultsjsonData).to.have.property(\"id\");",
-									"    pm.expect(resultsjsonData).to.have.property(\"speed\");",
 									"});",
 									""
 								],
@@ -12323,7 +12320,6 @@
 									"    pm.expect(body).to.have.property(\"title\", \"Success\");",
 									"    const resultsjsonData = body.results[0];",
 									"    pm.expect(resultsjsonData).to.have.property(\"id\");",
-									"    pm.expect(resultsjsonData).to.have.property(\"speed\");",
 									"});",
 									""
 								],
@@ -13619,7 +13615,6 @@
 									"    pm.expect(body).to.have.property(\"title\", \"Success\");",
 									"    const resultsjsonData = body.results[0];",
 									"    pm.expect(resultsjsonData).to.have.property(\"id\");",
-									"    pm.expect(resultsjsonData).to.have.property(\"speed\");",
 									"    pm.expect(body).to.have.property(\"results\");",
 									"});",
 									""
@@ -13913,7 +13908,6 @@
 									"    pm.expect(body).to.have.property(\"title\", \"Success\");",
 									"    const resultsjsonData = body.results[0];",
 									"    pm.expect(resultsjsonData).to.have.property(\"id\");",
-									"    pm.expect(resultsjsonData).to.have.property(\"speed\");",
 									"    pm.expect(body).to.have.property(\"results\");",
 									"});",
 									""
@@ -14202,7 +14196,6 @@
 									"    pm.expect(body).to.have.property(\"title\", \"Success\");",
 									"    const resultsjsonData = body.results[0];",
 									"    pm.expect(resultsjsonData).to.have.property(\"id\");",
-									"    pm.expect(resultsjsonData).to.have.property(\"speed\");",
 									"    pm.expect(body).to.have.property(\"results\");",
 									"});",
 									""
@@ -14491,7 +14484,6 @@
 									"    pm.expect(body).to.have.property(\"title\", \"Success\");",
 									"    const resultsjsonData = body.results[0];",
 									"    pm.expect(resultsjsonData).to.have.property(\"id\");",
-									"    pm.expect(resultsjsonData).to.have.property(\"speed\");",
 									"    pm.expect(body).to.have.property(\"results\");",
 									"});",
 									""
@@ -17381,9 +17373,9 @@
 									"// Test the response",
 									"pm.test(\"Check response body\", function () {    ",
 									"    const body = pm.response.json();",
-                                    "    const results = body.results[0];",
-                                    "    pm.expect(body).to.have.property(\"type\");",
-                                    "    pm.expect(body).to.have.property(\"results\");",
+									"    const results = body.results[0];",
+									"    pm.expect(body).to.have.property(\"type\");",
+									"    pm.expect(body).to.have.property(\"results\");",
 									"});",
 									""
 								],
@@ -23436,6 +23428,192 @@
 									"key": "endtime",
 									"value": "2022-10-27T00:00:00Z"
 								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Data Publish Api",
+			"item": [
+				{
+					"name": "200 - data push ingestion entities",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"",
+									"// Test the response code",
+									"pm.test(\"response is 200 (success)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Test the response header",
+									"pm.test(\"Check response header\", function () {",
+									"    pm.response.to.have.header(\"Content-Type\",\"application/json\");",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "token",
+								"value": "{{adaptorToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currentLevel\": 1.16,\n    \"referenceLevel\": 15.9,\n    \"measuredDistance\": 14.74,\n    \"entities\": [\n        \"695e222b-3fae-4325-8db0-3e29d01c4fc0\"\n    ],\n    \"observationDateTime\": \"2020-09-22T18:30:00+05:30\",\n    \"deviceInfo\": {\n        \"deviceID\": \"FWR055\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/{{basePath}}/ingestion/entities",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{basePath}}",
+								"ingestion",
+								"entities"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "401 - InvalidAuthorization",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test the response code",
+									"pm.test(\"response is 401 (Not Authorized)\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"// Test the response header",
+									"pm.test(\"Check response header\", function () {",
+									"    pm.response.to.have.header(\"Content-Type\",\"application/json\");",
+									"});",
+									"",
+									"// Test the response",
+									"pm.test(\"Check response body\", function () {    ",
+									"    const body = pm.response.json();",
+									"    pm.expect(body).to.have.property(\"title\", \"Not Authorized\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "token",
+								"value": "{{secureResourceToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currentLevel\": 1.16,\n    \"referenceLevel\": 15.9,\n    \"measuredDistance\": 14.74,\n    \"entities\": [\n        \"83c2e5c2-3574-4e11-9530-2b1fbdfce832\"\n    ],\n    \"observationDateTime\": \"2020-09-22T18:30:00+05:30\",\n    \"deviceInfo\": {\n        \"deviceID\": \"FWR055\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/{{basePath}}/ingestion/entities",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{basePath}}",
+								"ingestion",
+								"entities"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "404 - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test the response code",
+									"pm.test(\"response is 404 (Not Found)\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"// Test the response header",
+									"pm.test(\"Check response header\", function () {",
+									"    pm.response.to.have.header(\"Content-Type\",\"application/json\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "token",
+								"value": "{{adaptorToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currentLevel\": 1.16,\n    \"referenceLevel\": 15.9,\n    \"measuredDistance\": 14.74,\n    \"entities\": [\n        \"695e222b-3ae-4325-8db0-3e29d01c4fc0\"\n    ],\n    \"observationDateTime\": \"2020-09-22T18:30:00+05:30\",\n    \"deviceInfo\": {\n        \"deviceID\": \"FWR055\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/{{basePath}}/ingestion/entities",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{basePath}}",
+								"ingestion",
+								"entities"
 							]
 						}
 					},

@@ -31,15 +31,18 @@ public class EsResponseFormatterToParquet extends AbstractEsSearchResponseFormat
   }
 
   @Override
+  public Set<String> writeToCsv(List<Hit<ObjectNode>> searchHits) {
+    return null;
+  }
+
+  @Override
   public void finish() {}
 
   @Override
-  public void append(List<Hit<ObjectNode>> searchHits) {}
+  public void append(List<Hit<ObjectNode>> searchHits, boolean appendComma) {}
 
   @Override
-  public void append(List<Hit<ObjectNode>> searchHits, boolean appendComma) {
-
-  }
+  public void append(List<Hit<ObjectNode>> searchHits, boolean appendComma, Set<String> headers) {}
 
   /*    private SchemaMapping getParquetSchema(Schema arrowSchema) {
       SchemaConverter schemaConverter = new SchemaConverter();

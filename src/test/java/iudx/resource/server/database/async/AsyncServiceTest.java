@@ -185,7 +185,7 @@ public class AsyncServiceTest {
                 .put("expiry", "2022-03-02T16:08:38.495665")
                 .put("user_id", "15c7506f-c800-48d6-adeb-0542b03947c6")
                 .put("object_id", "b8a47206-364c-4580-8885-45205118db57")
-                .put("size", 0));
+                .put("size", 0).put("progress",100));
 
     return record;
   }

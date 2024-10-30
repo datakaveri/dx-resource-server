@@ -460,7 +460,7 @@ JsonObject jsonObject = new JsonObject()
         managementApi.publishDataFromAdapter(json,dataBrokerService).onComplete(handler -> {
             if(handler.succeeded())
             {
-                assertEquals(json,handler.result());
+                assertEquals("urn:dx:rs:success",handler.result().getString("type"));
                 vertxTestContext.completeNow();
             }
             else

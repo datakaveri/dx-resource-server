@@ -3,12 +3,14 @@ package iudx.resource.server.databroker;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.rabbitmq.RabbitMQClient;
+import io.vertx.rabbitmq.RabbitMQOptions;
 import iudx.resource.server.cache.CacheService;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,13 +47,17 @@ public class DBServiceImplTest {
     @Mock
     PostgresClient pgClient;
     @Mock
-    RabbitMQClient rabbitMQClient;
+    RabbitMQClient rabbitMQClient,iudxRabbitMQClient;
     @Mock
     AsyncResult<Void> asyncResult1;
     DataBrokerServiceImpl databrokerSpy;
     JsonObject expected;
     @Mock
     CacheService cacheService;
+    @Mock
+    RabbitMQOptions iudxConfig;
+    @Mock
+    Vertx vertx;
 
     @BeforeEach
     public void setUp(VertxTestContext vertxTestContext) {
@@ -66,7 +72,7 @@ public class DBServiceImplTest {
         request.put("type", HttpStatus.SC_OK);
         throwableMessage = "Dummy failure message";
         when(config.getString(anyString())).thenReturn("internalVhost");
-        databroker = new DataBrokerServiceImpl(webClient, pgClient, config,cacheService);
+        databroker = new DataBrokerServiceImpl(webClient, pgClient, config,cacheService,/* iudxConfig, vertx,*/ iudxRabbitMQClient);
         databrokerSpy = spy(databroker);
         vertxTestContext.completeNow();
     }
@@ -117,8 +123,17 @@ public class DBServiceImplTest {
         request.put("status", "Dummy status");
         request.put("routingKey", "routingKeyValue");
         request.put("type", HttpStatus.SC_OK);
-        when(webClient.getRabbitmqClient()).thenReturn(rabbitMQClient);
+        request.put("entities", new JsonArray().add("5b7556b5-0779-4c47-9cf2-3f209779aa22"));
+        /*when(webClient.getRabbitmqClient()).thenReturn(rabbitMQClient);*/
         when(asyncResult1.succeeded()).thenReturn(true);
+
+        JsonObject providerJson =
+                new JsonObject()
+                        .put("provider", "8b95ab80-2aaf-4636-a65e-7f2563d0d371")
+                        .put("id", "5b7556b5-0779-4c47-9cf2-3f209779aa22")
+                        .put("resourceGroup", "dummy_resource");
+
+        when(cacheService.get(any())).thenReturn(Future.succeededFuture(providerJson));
 
         doAnswer(new Answer<AsyncResult<Void>>() {
             @Override
@@ -126,8 +141,9 @@ public class DBServiceImplTest {
                 ((Handler<AsyncResult<Void>>) arg0.getArgument(3)).handle(asyncResult1);
                 return null;
             }
-        }).when(rabbitMQClient).basicPublish(anyString(), anyString(), any(Buffer.class), any(Handler.class));
+        }).when(iudxRabbitMQClient).basicPublish(anyString(), anyString(), any(Buffer.class), any(Handler.class));
         expected.put("status", 200);
+
         databroker.publishFromAdaptor(request, vHost, handler -> {
             if (handler.succeeded()) {
                 assertEquals(expected, handler.result());
@@ -836,7 +852,8 @@ public class DBServiceImplTest {
         request.put("status", "Dummy status");
         request.put("routingKey", "routingKeyValue");
         request.put("type", HttpStatus.SC_OK);
-        when(webClient.getRabbitmqClient()).thenReturn(rabbitMQClient);
+        request.put("entities", new JsonArray().add("5b7556b5-0779-4c47-9cf2-3f209779aa22"));
+        lenient().when(webClient.getRabbitmqClient()).thenReturn(rabbitMQClient);
         when(asyncResult1.succeeded()).thenReturn(false);
         when(asyncResult1.cause()).thenReturn(throwable);
         when(throwable.getMessage()).thenReturn(throwableMessage);
@@ -847,8 +864,15 @@ public class DBServiceImplTest {
                 ((Handler<AsyncResult<Void>>) arg0.getArgument(3)).handle(asyncResult1);
                 return null;
             }
-        }).when(rabbitMQClient).basicPublish(anyString(), anyString(), any(Buffer.class), any(Handler.class));
+        }).when(iudxRabbitMQClient).basicPublish(anyString(), anyString(), any(Buffer.class), any(Handler.class));
         expected.put("status", 200);
+        JsonObject providerJson =
+                new JsonObject()
+                        .put("provider", "8b95ab80-2aaf-4636-a65e-7f2563d0d371")
+                        .put("entities", new JsonArray().add("5b7556b5-0779-4c47-9cf2-3f209779aa22"))
+                        .put("resourceGroup", "dummy_resource");
+
+        when(cacheService.get(any())).thenReturn(Future.succeededFuture(providerJson));
         databroker.publishFromAdaptor(request, vHost, handler -> {
             if (handler.failed()) {
                 assertEquals("Dummy failure message", handler.cause().getMessage());

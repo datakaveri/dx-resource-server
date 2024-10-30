@@ -67,7 +67,7 @@ public class TestEsResponseFormatterToCsv {
     @DisplayName("Test method : Success")
     public void testWriteMethod(VertxTestContext vertxTestContext)
     {
-        responseFormatterToCsv.write(searchHits);
+        responseFormatterToCsv.writeToCsv(searchHits);
         verify(searchHits, times(1)).get(anyInt());
         verify(jsonFlatten,times(1)).flatten();
         verify(stringObjectMap,times(1)).keySet();
@@ -76,7 +76,7 @@ public class TestEsResponseFormatterToCsv {
     @Test
     @DisplayName("Test method : Failure")
     public void testWriteMethodFailure(VertxTestContext vertxTestContext) throws IOException {
-        responseFormatterToCsv.write(searchHits);
+        responseFormatterToCsv.writeToCsv(searchHits);
         responseFormatterToCsv.fileWriter = mock(fileWriter.getClass());
         doThrow(new IOException()).when(responseFormatterToCsv.fileWriter).write(anyString());
 
@@ -84,7 +84,7 @@ public class TestEsResponseFormatterToCsv {
         verify(jsonFlatten,times(1)).flatten();
         verify(stringObjectMap,times(1)).keySet();
 
-        assertThrows(RuntimeException.class,()-> responseFormatterToCsv.write(searchHits));
+        assertThrows(RuntimeException.class,()-> responseFormatterToCsv.writeToCsv(searchHits));
         vertxTestContext.completeNow();
     }
 

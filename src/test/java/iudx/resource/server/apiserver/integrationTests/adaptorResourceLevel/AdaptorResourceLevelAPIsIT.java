@@ -10,7 +10,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static io.restassured.RestAssured.*;
-import static iudx.resource.server.authenticator.TokensForITs.providerToken;
+import static iudx.resource.server.authenticator.TokensForITs.*;
 import static org.hamcrest.Matchers.equalTo;
 
 /**
@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.equalTo;
 public class AdaptorResourceLevelAPIsIT {
     private static final Logger LOGGER = LogManager.getLogger(AdaptorResourceLevelAPIsIT.class);
     String adapter_id_RL= "935f2045-f5c6-4c76-b14a-c29a88589bf3";
+    String adapter_id_RL2 = "695e222b-3fae-4325-8db0-3e29d01c4fc0";
 
     @Test
     @Order(1)
@@ -178,6 +179,63 @@ public class AdaptorResourceLevelAPIsIT {
                 .pathParam("adapter_id_RL", adapter_id_RL)
                 .when()
                 .delete("/ingestion/{adapter_id_RL}")
+                .then()
+                .statusCode(404)
+                .body("title", equalTo("Not Found"))
+                .extract()
+                .response();
+    }
+
+    @Test
+    @Order(10)
+    @DisplayName("testing adaptor resource level  - 200 (Created Successfully) Ingestion Entities Adaptor")
+    void PostIngestionEntitiesAdaptor() {
+        JsonObject requestBody = new JsonObject()
+                .put("entities", new JsonArray().add(adapter_id_RL2));
+        Response response = given()
+                .header("token", adaptorToken)
+                .body(requestBody.toString())
+                .contentType("application/json")
+                .when()
+                .post("/ingestion/entities")
+                .then()
+                .statusCode(200)
+                .body("title", equalTo("Success"))
+                .extract()
+                .response();
+    }
+
+    @Test
+    @Order(11)
+    @DisplayName("testing adaptor resource level  - 401 (Unauthorized) Ingestion Entities Adaptor")
+    void PostIngestionEntitiesAdaptorUnAuthorized() {
+        JsonObject requestBody = new JsonObject()
+                .put("entities", new JsonArray().add(adapter_id_RL2));
+        Response response = given()
+                .header("token", secureResourceToken)
+                .body(requestBody.toString())
+                .contentType("application/json")
+                .when()
+                .post("/ingestion/entities")
+                .then()
+                .statusCode(401)
+                .body("title", equalTo("Not Authorized"))
+                .extract()
+                .response();
+    }
+
+    @Test
+    @Order(12)
+    @DisplayName("testing adaptor resource level  - 404 (Unauthorized) Ingestion Entities Adaptor")
+    void PostIngestionEntitiesAdaptorNotFound() {
+        JsonObject requestBody = new JsonObject()
+                .put("entities", new JsonArray().add("adapter_id_RL2"));
+        Response response = given()
+                .header("token", secureResourceToken)
+                .body(requestBody.toString())
+                .contentType("application/json")
+                .when()
+                .post("/ingestion/entities")
                 .then()
                 .statusCode(404)
                 .body("title", equalTo("Not Found"))

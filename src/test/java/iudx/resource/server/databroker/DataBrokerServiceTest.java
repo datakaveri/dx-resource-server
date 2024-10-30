@@ -26,7 +26,6 @@ import static iudx.resource.server.databroker.util.Constants.USER_ID;
 import static iudx.resource.server.databroker.util.Constants.USER_NAME;
 import static iudx.resource.server.databroker.util.Constants.VHOST;
 import static iudx.resource.server.databroker.util.Constants.VHOST_IUDX;
-import static iudx.resource.server.metering.util.Constants.PROVIDER_ID;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.InputStream;
@@ -108,6 +107,8 @@ public class DataBrokerServiceTest {
   @Mock
   static
   CacheService cacheService;
+  @Mock
+  static RabbitMQClient iudxRabbitMQClient;
 
   private static final Logger LOGGER = LogManager.getLogger(DataBrokerServiceTest.class);
 
@@ -191,7 +192,9 @@ public class DataBrokerServiceTest {
     webConfig.setDefaultHost(dataBrokerIP);
     webConfig.setDefaultPort(dataBrokerManagementPort);
     webConfig.setKeepAliveTimeout(86400000);
-
+    RabbitMQOptions iudxConfig = new RabbitMQOptions(config);
+    String prodVhost = "IUDX";
+    iudxConfig.setVirtualHost(prodVhost);
 
     /* Create a RabbitMQ Clinet with the configuration and vertx cluster instance. */
 
@@ -233,7 +236,7 @@ public class DataBrokerServiceTest {
     rabbitMQWebClient = new RabbitWebClient(vertx, webConfig, propObj);
     pgClient = new PostgresClient(vertx, connectOptions, poolOptions);
     rabbitMQStreamingClient = new RabbitClient(vertx, config, rabbitMQWebClient, pgClient, brokerConfig);
-    databroker = new DataBrokerServiceImpl(rabbitMQStreamingClient, pgClient, brokerConfig,cacheService);
+    databroker = new DataBrokerServiceImpl(rabbitMQStreamingClient, pgClient, brokerConfig,cacheService, /*iudxConfig, vertx,*/ iudxRabbitMQClient);
 
     userid = UUID.randomUUID().toString();
 

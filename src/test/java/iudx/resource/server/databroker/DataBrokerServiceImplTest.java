@@ -3,25 +3,22 @@ package iudx.resource.server.databroker;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonArray;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.rabbitmq.RabbitMQClient;
+import io.vertx.rabbitmq.RabbitMQOptions;
 import iudx.resource.server.cache.CacheService;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
 import static iudx.resource.server.databroker.util.Constants.ID;
-import static iudx.resource.server.databroker.util.Constants.USER_ID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -51,6 +48,12 @@ public class DataBrokerServiceImplTest {
     JsonObject expected;
     @Mock
     CacheService cacheService;
+    @Mock
+    RabbitMQOptions iudxConfig;
+    @Mock
+    Vertx vertx;
+    @Mock
+    RabbitMQClient iudxRabbitMQClient;
 
     @BeforeEach
     public void setUp(VertxTestContext vertxTestContext) {
@@ -65,7 +68,7 @@ public class DataBrokerServiceImplTest {
         request.put("type", HttpStatus.SC_OK);
         throwableMessage = "Dummy failure message";
         when(config.getString(anyString())).thenReturn("internalVhost");
-        databroker = new DataBrokerServiceImpl(webClient, pgClient, config,cacheService);
+        databroker = new DataBrokerServiceImpl(webClient, pgClient, config,cacheService, /*iudxConfig, vertx,*/ iudxRabbitMQClient);
         databrokerSpy = spy(databroker);
         vertxTestContext.completeNow();
     }

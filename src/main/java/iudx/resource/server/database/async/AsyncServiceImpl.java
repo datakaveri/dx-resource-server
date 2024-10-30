@@ -91,7 +91,6 @@ public class AsyncServiceImpl implements AsyncService {
             AsyncStatusQueryResult queryResult =
                 new AsyncStatusQueryResult(results.getJsonObject(0));
             LOGGER.debug(queryResult.toJson());
-            LOGGER.debug(queryResult.getUserId());
             if (!sub.equals(queryResult.getUserId())) {
               sendErrorResponse(
                   handler,
@@ -99,7 +98,6 @@ public class AsyncServiceImpl implements AsyncService {
                   "Please use the same user token to check status as used while calling the search API");
               return;
             }
-            LOGGER.debug("here");
             processQueryResult(queryResult, handler);
           }
         });
@@ -109,14 +107,15 @@ public class AsyncServiceImpl implements AsyncService {
   private void processQueryResult(
       AsyncStatusQueryResult queryResult, Handler<AsyncResult<JsonObject>> handler) {
     if (queryResult.getStatus().equalsIgnoreCase(QueryProgress.COMPLETE.toString())) {
+      queryResult.setFileDownloadUrl(queryResult.getFileDownloadUrl());
+    } else {
       queryResult.setFileDownloadUrl(null);
     }
 
-    queryResult.setSearchId(null);
+    queryResult.setSearchId(queryResult.getSearchId());
 
     AsyncStatusServiceResult response = new AsyncStatusServiceResult();
-    response.setStatus("success");
-    response.setStatusCode(200);
+    response.setType("urn:dx:rs:success");
     response.setTitle(ResponseUrn.SUCCESS_URN.getMessage());
     response.setResult(queryResult);
 

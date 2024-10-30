@@ -24,7 +24,7 @@ import io.vertx.core.json.JsonObject;
 import iudx.resource.server.database.archives.ResponseBuilder;
 import iudx.resource.server.database.async.ProgressListener;
 import java.io.File;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -101,7 +101,14 @@ public class ElasticClient {
                 LOGGER.debug(file.getAbsolutePath());
 
                 int totaldocsDownloaded = 0;
-                instance.write(searchHits);
+                Set<String> headers = null;
+
+                if (format.equalsIgnoreCase("json")) {
+                  instance.write(searchHits);
+                } else {
+                  headers = instance.writeToCsv(searchHits);
+                }
+
                 int totalIterations = totalHits < 10000 ? 1 : (int) Math.ceil(totalHits / 10000.0);
                 double iterationCount = 0.0;
                 double progress;
@@ -118,7 +125,12 @@ public class ElasticClient {
                   // external (s3)
                   double finalProgress = progress * 0.9;
                   Future.future(handler -> progressListener.updateProgress(finalProgress));
-                  instance.append(searchHits, appendComma);
+
+                  if (format.equalsIgnoreCase("json")) {
+                    instance.append(searchHits, appendComma);
+                  } else {
+                    instance.append(searchHits, appendComma, headers);
+                  }
 
                   ScrollRequest scrollRequest = nextScrollRequest(scrollId);
                   CompletableFuture<ScrollResponse<ObjectNode>> future =

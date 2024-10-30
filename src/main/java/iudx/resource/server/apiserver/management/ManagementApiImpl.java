@@ -11,9 +11,7 @@ import static iudx.resource.server.common.Constants.CREATE_INGESTION_SQL;
 import static iudx.resource.server.common.Constants.DELETE_INGESTION_SQL;
 import static iudx.resource.server.common.Constants.SELECT_INGESTION_SQL;
 import static iudx.resource.server.database.archives.Constants.ITEM_TYPES;
-import static iudx.resource.server.databroker.util.Constants.RESULTS;
-import static iudx.resource.server.databroker.util.Constants.TITLE;
-import static iudx.resource.server.databroker.util.Constants.TYPE;
+import static iudx.resource.server.databroker.util.Constants.*;
 import static iudx.resource.server.metering.util.Constants.PROVIDER_ID;
 
 import io.vertx.core.Future;
@@ -242,11 +240,18 @@ public class ManagementApiImpl implements ManagementApi {
         handler -> {
           if (handler.succeeded()) {
             JsonObject result = handler.result();
+            JsonObject finalResponse = new JsonObject();
             LOGGER.debug("Result from databroker verticle :: " + result);
             if (!result.containsKey(JSON_TYPE)) {
-              promise.complete(result);
+              finalResponse.put(TYPE, ResponseUrn.SUCCESS_URN.getUrn());
+              finalResponse.put(TITLE, ResponseUrn.SUCCESS_URN.getMessage());
+              finalResponse.put(DETAIL, "Item Published");
+              promise.complete(finalResponse);
             } else {
-              promise.fail(result.toString());
+              finalResponse.put(TYPE, ResponseUrn.BAD_REQUEST_URN.getUrn());
+              finalResponse.put(TITLE, ResponseUrn.BAD_REQUEST_URN.getMessage());
+              finalResponse.put(DETAIL, "Failed to published");
+              promise.fail(finalResponse.toString());
             }
           } else {
             promise.fail(handler.cause().getMessage());

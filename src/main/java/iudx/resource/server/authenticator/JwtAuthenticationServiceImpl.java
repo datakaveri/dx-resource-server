@@ -8,11 +8,13 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.authentication.TokenCredentials;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
+import io.vertx.ext.web.client.predicate.ResponsePredicate;
 import iudx.resource.server.authenticator.authorization.AuthorizationContextFactory;
 import iudx.resource.server.authenticator.authorization.AuthorizationRequest;
 import iudx.resource.server.authenticator.authorization.AuthorizationStrategy;
@@ -48,6 +50,7 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
   final Api apis;
   final String catBasePath;
   boolean isLimitsEnabled;
+  String relationshipCatPath;
 
   JwtAuthenticationServiceImpl(
       Vertx vertx,
@@ -73,10 +76,17 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
     this.meteringService = meteringService;
   }
 
+  private static boolean isIngestionEntitiesEndpoint(JsonObject authenticationInfo) {
+    return authenticationInfo
+        .getString("apiEndpoint")
+        .equalsIgnoreCase("/ngsi-ld/v1/ingestion/entities");
+  }
+
   @Override
   public AuthenticationService tokenInterospect(
       JsonObject request, JsonObject authenticationInfo, Handler<AsyncResult<JsonObject>> handler) {
 
+    LOGGER.info("authInfo " + authenticationInfo);
     String endPoint = authenticationInfo.getString("apiEndpoint");
     String id = authenticationInfo.getString("id");
     String token = authenticationInfo.getString("token");
@@ -128,6 +138,11 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
             openResourceHandler -> {
               LOGGER.debug("isOpenResource messahe {}", openResourceHandler);
               result.isOpen = openResourceHandler.equalsIgnoreCase("OPEN");
+
+              if (endPoint.equalsIgnoreCase(apis.getIngestionPathEntities())) {
+                return isValidId(result.jwtData, id);
+              }
+
               if (result.isOpen && checkOpenEndPoints(endPoint)) {
                 JsonObject json = new JsonObject();
                 json.put(JSON_USERID, result.jwtData.getSub());
@@ -143,6 +158,22 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
             })
         .compose(
             validIdHandler -> {
+              if (isIngestionEntitiesEndpoint(authenticationInfo)) {
+                return getProviderUserId(authenticationInfo.getString("id"));
+              } else {
+                return Future.succeededFuture("");
+              }
+            })
+        .compose(
+            providerUserHandler -> {
+              if (isIngestionEntitiesEndpoint(authenticationInfo)) {
+                return validateProviderUser(providerUserHandler, result.jwtData);
+              } else {
+                return Future.succeededFuture(true);
+              }
+            })
+        .compose(
+            validProviderHandler -> {
               if (result.jwtData.getIss().equals(result.jwtData.getSub())) {
                 JsonObject jsonResponse = new JsonObject();
                 jsonResponse.put(JSON_USERID, result.jwtData.getSub());
@@ -414,6 +445,70 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
       promise.fail("Incorrect id value in jwt");
     }
 
+    return promise.future();
+  }
+
+  Future<String> getProviderUserId(String id) {
+    LOGGER.trace("getProviderUserId () started");
+    relationshipCatPath = catBasePath + "/relationship";
+    Promise<String> promise = Promise.promise();
+    LOGGER.debug("id: " + id);
+    catWebClient
+        .get(port, host, relationshipCatPath)
+        .addQueryParam("id", id)
+        .addQueryParam("rel", "provider")
+        .expect(ResponsePredicate.JSON)
+        .send(
+            catHandler -> {
+              if (catHandler.succeeded()) {
+                JsonArray response = catHandler.result().bodyAsJsonObject().getJsonArray("results");
+                response.forEach(
+                    json -> {
+                      JsonObject res = (JsonObject) json;
+                      String providerUserId = null;
+                      providerUserId = res.getString("providerUserId");
+                      if (providerUserId == null) {
+                        providerUserId = res.getString("ownerUserId");
+                        LOGGER.info(" owneruserid : " + providerUserId);
+                      }
+                      promise.complete(providerUserId);
+                    });
+
+              } else {
+                LOGGER.error(
+                    "Failed to call catalogue  while getting provider user id {}",
+                    catHandler.cause().getMessage());
+              }
+            });
+
+    return promise.future();
+  }
+
+  Future<Boolean> validateProviderUser(String providerUserId, JwtData jwtData) {
+    LOGGER.trace("validateProviderUser() started");
+    Promise<Boolean> promise = Promise.promise();
+    try {
+      if (jwtData.getRole().equalsIgnoreCase("delegate")) {
+        if (jwtData.getDid().equalsIgnoreCase(providerUserId)) {
+          LOGGER.info("success");
+          promise.complete(true);
+        } else {
+          LOGGER.error("fail");
+          promise.fail("incorrect providerUserId");
+        }
+      } else if (jwtData.getRole().equalsIgnoreCase("provider")) {
+        if (jwtData.getSub().equalsIgnoreCase(providerUserId)) {
+          LOGGER.info("success");
+          promise.complete(true);
+        } else {
+          LOGGER.error("fail");
+          promise.fail("incorrect providerUserId");
+        }
+      }
+    } catch (Exception e) {
+      LOGGER.error("exception occurred while validating provider user : " + e.getMessage());
+      promise.fail("exception occurred while validating provider user");
+    }
     return promise.future();
   }
 

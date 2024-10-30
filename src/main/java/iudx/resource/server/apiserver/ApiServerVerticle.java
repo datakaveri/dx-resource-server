@@ -331,7 +331,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .handler(AuthHandler.create(vertx, api))
         .handler(this::publishHeartbeat);
     router
-        .post(api.getIngestionPath() + "/entities")
+        .post(api.getIngestionPathEntities())
         .handler(AuthHandler.create(vertx, api))
         .handler(this::publishDataFromAdapter);
     router
@@ -1471,10 +1471,10 @@ public class ApiServerVerticle extends AbstractVerticle {
     JsonObject requestJson = routingContext.body().asJsonObject();
     HttpServerRequest request = routingContext.request();
     HttpServerResponse response = routingContext.response();
-    String instanceId = request.getHeader(HEADER_HOST);
+    /*String instanceId = request.getHeader(HEADER_HOST);*/
     JsonObject authenticationInfo = new JsonObject();
     authenticationInfo.put(API_ENDPOINT, "/iudx/v1/adapter");
-    requestJson.put(JSON_INSTANCEID, instanceId);
+    /*requestJson.put(JSON_INSTANCEID, instanceId);*/
     if (request.headers().contains(HEADER_TOKEN)) {
       authenticationInfo.put(HEADER_TOKEN, request.getHeader(HEADER_TOKEN));
 
@@ -1636,6 +1636,7 @@ public class ApiServerVerticle extends AbstractVerticle {
 
   private Future<Void> updateAuditTable(RoutingContext context) {
     JsonObject authInfo = (JsonObject) context.data().get("authInfo");
+    LOGGER.debug("auth info" + authInfo);
     Promise<Void> promise = Promise.promise();
     JsonObject request = new JsonObject();
     JsonObject cacheRequest = new JsonObject();

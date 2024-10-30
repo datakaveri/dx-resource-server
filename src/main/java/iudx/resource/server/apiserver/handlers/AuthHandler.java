@@ -218,6 +218,8 @@ public class AuthHandler implements Handler<RoutingContext> {
       path = api.getPostEntitiesQueryPath();
     } else if (url.matches(getpathRegex(api.getSubscriptionUrl()))) {
       path = api.getSubscriptionUrl();
+    } else if (url.matches(api.getIngestionPathEntities())) {
+      path = api.getIngestionPathEntities();
     } else if (url.matches(getpathRegex(api.getIngestionPath()))) {
       path = api.getIngestionPath();
     } else if (url.matches(getpathRegex(api.getMonthlyOverview()))) {

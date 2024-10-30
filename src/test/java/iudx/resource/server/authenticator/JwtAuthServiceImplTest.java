@@ -1168,4 +1168,86 @@ public class JwtAuthServiceImplTest {
       }
     });
   }
+
+  @Test
+  @Order(35)
+  @DisplayName("Failed")
+  public void failedValidateProviderUser(VertxTestContext testContext) {
+
+    JsonObject request = new JsonObject();
+    JsonObject authInfo = new JsonObject();
+    authInfo.put("token", JwtTokenHelper.closedDelegateIngestToken);
+    authInfo.put("id", closeId);
+    authInfo.put("apiEndpoint", apis.getIngestionPathEntities());
+    authInfo.put("method", Method.POST);
+    List<String> list = new ArrayList<String>();
+    list.add("iudx:Resource");
+    list.add("iudx:TransitManagement");
+
+    JsonObject jsonObject =
+        new JsonObject()
+            .put("id", "b58da193-23d9-43eb-b98a-a103d4b6103c")
+            .put("type", list)
+            .put("name", "dummy_name")
+            .put("resourceGroup", "5b7556b5-0779-4c47-9cf2-3f209779aa22")
+            .put("value", "2021-09-09T12:52:37")
+            .put("accessPolicy", "SECURED")
+            .put("type", new JsonArray().add("ri:RESOURCEGROUP"))
+                .put("providerUserId","b58da193-23d9-43eb-b98a-a103d4b6103c");
+
+    JwtData jwtData = new JwtData();
+    jwtData.setSub("valid_sub");
+    jwtData.setIss("auth.test.com");
+    jwtData.setAud("rs.iudx.io");
+    jwtData.setExp(1627408865);
+    jwtData.setIat(1627408865);
+    jwtData.setIid("rg:example.com/79e7bfa62fad6c765bac69154c2f24c94c95220a/resource-group");
+    jwtData.setRole("provider");
+    jwtData.setDid("b58da193-23d9-43eb-b98a-a103d4b6103c");
+    jwtData.setCons(new JsonObject().put("access", new JsonArray().add("api")));
+
+    JsonObject revokedTokenRequest=new JsonObject();
+    revokedTokenRequest.put("type", CacheType.REVOKED_CLIENT);
+    revokedTokenRequest.put("key", jwtData.getSub());
+
+    JsonObject cacheRequest=new JsonObject();
+    cacheRequest.put("type", CacheType.CATALOGUE_CACHE);
+    cacheRequest.put("key", authInfo.getString("id"));
+
+    when(cacheService.get(revokedTokenRequest)).thenReturn(Future.succeededFuture(new JsonObject().put("value","2021-09-09T12:52:37")));
+
+    when(cacheService.get(any())).thenReturn(Future.succeededFuture(jsonObject));
+    JsonObject jsonObject1 = new JsonObject();
+    JsonArray jsonArray = new JsonArray();
+    JsonArray jsonArray1 = new JsonArray();
+    jsonObject1.put("id", "abcd/abcd/abcd/abcd");
+    jsonObject1.put("iudxResourceAPIs", jsonArray1);
+    jsonObject1.put("providerUserId","abc");
+    jsonArray.add(jsonObject1);
+    jsonObject.put("results", jsonArray);
+    JwtAuthenticationServiceImpl.catWebClient = mock(WebClient.class);
+    when(JwtAuthenticationServiceImpl.catWebClient.get(anyInt(), anyString(), anyString())).thenReturn(httpRequest);
+    when(httpRequest.addQueryParam(anyString(), anyString())).thenReturn(httpRequest);
+    when(httpRequest.expect(any())).thenReturn(httpRequest);
+    when(asyncResult.succeeded()).thenReturn(true);
+    when(asyncResult.result()).thenReturn(httpResponse);
+    when(httpResponse.bodyAsJsonObject()).thenReturn(jsonObject);
+    doAnswer(new Answer<AsyncResult<HttpResponse<Buffer>>>() {
+      @Override
+      public AsyncResult<HttpResponse<Buffer>> answer(InvocationOnMock arg0) throws Throwable {
+
+        ((Handler<AsyncResult<HttpResponse<Buffer>>>) arg0.getArgument(0)).handle(asyncResult);
+        return null;
+      }
+    }).when(httpRequest).send(any());
+
+
+    jwtAuthenticationService.tokenInterospect(request, authInfo, handler -> {
+      if (handler.failed()) {
+        testContext.completeNow();
+      } else {
+        testContext.failNow(handler.cause());
+      }
+    });
+  }
 }

@@ -90,6 +90,7 @@ public class Constants {
 
   public static final String MONTHLY_OVERVIEW = "/overview";
   public static final String SUMMARY_ENDPOINT = "/summary";
+  public static final String INGESTION_PATH_ENTITIES = "/ingestion/entities";
 
   /** Accept Headers and CORS */
   public static final String MIME_APPLICATION_JSON = "application/json";
@@ -281,7 +282,6 @@ public class Constants {
       List.of("during", "between");
 
   public static final Pattern VALIDATION_Q_ATTR_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{1,100}$");
-
   // subscriptions queries
   public static final String CREATE_SUB_SQL =
       "INSERT INTO subscriptions"

@@ -4,16 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
-import com.github.sisyphsu.dateparser.DateParserUtils;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class JsonFlatten {
-
   private final Map<String, ValueNode> json = new LinkedHashMap<>();
   private final LinkedHashMap<String, Object> jsonObj = new LinkedHashMap<>();
   private final JsonNode root;
@@ -23,6 +19,10 @@ public class JsonFlatten {
   }
 
   public static void flattenJson(JsonNode node, String parent, Map<String, ValueNode> map) {
+
+    if (node == null) {
+      return;
+    }
     if (node instanceof ValueNode) {
       map.put(parent, (ValueNode) node);
     } else {
@@ -39,30 +39,25 @@ public class JsonFlatten {
           flattenJson(field.getValue(), prefix + field.getKey(), map);
         }
       } else {
-        throw new RuntimeException("unknown json node");
+        throw new RuntimeException("Unknown JSON node type: " + node.getNodeType());
       }
     }
   }
 
   public LinkedHashMap<String, Object> flatten() {
     flattenJson(root, null, json);
-    for (String key : json.keySet()) {
-      if (json.get(key).isInt()) {
-        jsonObj.put(key, json.get(key).asInt());
-      }
-      if (json.get(key).isLong()) {
-        jsonObj.put(key, json.get(key).asLong());
-      }
-      if (json.get(key).isFloat()) {
-        jsonObj.put(key, json.get(key).asDouble());
-      }
-      if (json.get(key).isDouble()) {
-        jsonObj.put(key, json.get(key).asDouble());
-      }
-      if (json.get(key).isBoolean()) {
-        jsonObj.put(key, json.get(key).asBoolean());
-      }
-      if (json.get(key).isTextual()) {
+    for (Map.Entry<String, ValueNode> entry : json.entrySet()) {
+      String key = entry.getKey();
+      ValueNode valueNode = entry.getValue();
+      if (valueNode.isInt()) {
+        jsonObj.put(key, valueNode.asInt());
+      } else if (valueNode.isLong()) {
+        jsonObj.put(key, valueNode.asLong());
+      } else if (valueNode.isFloat() || valueNode.isDouble()) {
+        jsonObj.put(key, valueNode.asDouble());
+      } else if (valueNode.isBoolean()) {
+        jsonObj.put(key, valueNode.asBoolean());
+      } else if (json.get(key).isTextual()) {
         jsonObj.put(key, json.get(key).asText());
       }
     }

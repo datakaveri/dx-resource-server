@@ -45,6 +45,7 @@ info:
           -  /provider/audit
           -  /ingestion
           -  /ingestion/{id}
+          -  /ingestion/entities
           -  /user/resetPassword
           -  /overview
           -  /summary
@@ -1292,6 +1293,70 @@ paths:
         To delete an adapter, the provider must present the `id` and `token`. Delete API validates the request with the Auth server to allow or deny access to the provider.
 
       deprecated: false
+
+  /ingestion/entities:
+    post:
+      tags:
+        - Data Ingestion Adaptor
+      summary: Ingestion adapter
+      operationId: ingestionAdaptor
+      parameters:
+        - name: token
+          in: header
+          description: 'data exchange auth token for accessing API and the resource.'
+          required: true
+          style: simple
+          schema:
+            type: string
+            maxLength: 512
+            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+
+      x-codeSamples:
+        - lang: 'cURL'
+          label: 'ingestion'
+          source: |
+            curl --location --request POST 'https://example.com/ngsi-ld/v1/ingestion/entities' \
+            --header 'token: <tokenValue>'
+            --header 'Content-Type: application/json' \
+            --data-raw '<payload>'
+
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ingestionEntityRequest'
+        required: true
+      responses:
+        200:
+          description: 'Successful registration of ingestion adapter'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/adapterIngestionEntities'
+
+
+        401:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/standardInvalidTokenErrorResponse"
+          description: |-
+            - Unauthorized
+
+        404:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/standardResourceNotFoundErrorResponse"
+          description: 'Not Found'
+
+
+      description: |
+        Ingestion Entities API allows a publish data into DX(Data exchange) Resource Server. Based on the input provided, the API validates the access control of the user with DX(Data exchange) Auth server to allow or deny access to the API. Enitiy should be registered with DX through the adaptor /ingestion API.
+
+      deprecated: false
+
 
   /subscription:
     get:
@@ -3174,6 +3239,30 @@ components:
         entities:
           - UUID
 
+    ingestionEntityRequest:
+      title: ingestion entity
+      required:
+        - entities
+      type: object
+      properties:
+        entities:
+          type: array
+          items:
+            type: string
+      example:
+        {
+          "currentLevel": 1.16,
+          "referenceLevel": 15.9,
+          "measuredDistance": 14.74,
+          "entities": [
+            "695e222b-3fae-4325-8db0-3e29d01c4fc0"
+          ],
+          "observationDateTime": "2020-09-22T18:30:00+05:30",
+          "deviceInfo": {
+            "deviceID": "FWR055"
+          }
+        }
+
     entityresponse:
       title: entityresponse
       type: object
@@ -3247,6 +3336,31 @@ components:
             "vHost": "IUDX"
           }
         ]
+
+    adapterIngestionEntities:
+      title: ingestion
+      required:
+        - username
+        - apiKey
+        - id
+        - URL
+        - port
+        - vHost
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        results:
+          description: An array of objects
+          type: array
+          items:
+            type: object
+      example:
+        type: urn:dx:rs:success,
+        title: success,
+        detail: "Item Published"
 
     retrieveadapter:
       title: retrieveadapter
