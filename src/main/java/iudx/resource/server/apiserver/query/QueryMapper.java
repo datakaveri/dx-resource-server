@@ -29,9 +29,11 @@ public class QueryMapper {
   private boolean isResponseFilter = false;
   private boolean isAttributeSearch = false;
   private RoutingContext context;
+  private int timeLimit;
 
-  public QueryMapper(RoutingContext context) {
+  public QueryMapper(RoutingContext context, int timeLimit) {
     this.context = context;
+    this.timeLimit = timeLimit;
   }
 
   public JsonObject toJson(NgsildQueryParams params, boolean isTemporal) {
@@ -186,21 +188,20 @@ public class QueryMapper {
         this.context.fail(400, exc);
       }
     }
-    if (isAsyncQuery
-        && totalDaysAllowed > Constants.VALIDATION_MAX_DAYS_INTERVAL_ALLOWED_FOR_ASYNC) {
+    if (isAsyncQuery && totalDaysAllowed > timeLimit) {
       DxRuntimeException ex =
           new DxRuntimeException(
               BAD_REQUEST.getValue(),
               ResponseUrn.INVALID_TEMPORAL_PARAM_URN,
-              "time interval greater than 1 year is not allowed");
+              "time interval greater than " + timeLimit + " days is not allowed");
       this.context.fail(400, ex);
     }
-    if (!isAsyncQuery && totalDaysAllowed > Constants.VALIDATION_MAX_DAYS_INTERVAL_ALLOWED) {
+    if (!isAsyncQuery && totalDaysAllowed > timeLimit) {
       DxRuntimeException ex =
           new DxRuntimeException(
               BAD_REQUEST.getValue(),
               ResponseUrn.INVALID_TEMPORAL_PARAM_URN,
-              "time interval greater than 10 days is not allowed");
+              "time interval greater than " + timeLimit + " days is not allowed");
       this.context.fail(400, ex);
     }
   }
