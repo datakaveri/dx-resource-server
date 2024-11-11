@@ -14,7 +14,7 @@ consumes:
 
 info:
   title: "Data exchange Resource Server APIs"
-  version: 5.5.0
+  version: 5.6.0
   description: |
     # Introduction
     The Resource Server is DXs'(Data exchange) data store which allows publication, subscription and discovery of data.

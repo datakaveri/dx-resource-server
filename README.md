@@ -41,12 +41,15 @@ serving protected data. Additionally, the resource server offers an interface wi
 ## Understanding Resource Server
 - The section available [here](./docs/Solution_Architecture.md) explains the components/services used in implementing the Resource Server
 - To try out the APIs, import the API collection, postman environment files in postman
-- Reference : [postman-collection](src/test/resources/IUDX-Resource-Server-Consumer-APIs-V5.5.0.postman_collection.json), [postman-environment](src/test/resources/IUDX-Resource-Server-Consumer-APIs-V5.5.0.postman_collection.json)
+- Reference : [postman-collection](src/test/resources/DX-Resource-Server-Consumer-APIs.postman_collection.json), [postman-environment](src/test/resources/DX-Resource-Server-Consumer-APIs.environment.json)
 
 
 # How To Guide
 ## Setup and Installation
 Setup and Installation guide is available [here](./docs/SETUP-and-Installation.md)
+
+# Tutorial
+[Watch Video](https://github.com/user-attachments/assets/d9c49fc7-a96d-484b-bbeb-ec13343c7a7c)
 
 
 # Reference
