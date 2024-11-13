@@ -504,6 +504,9 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
           LOGGER.error("fail");
           promise.fail("incorrect providerUserId");
         }
+      } else {
+        LOGGER.error("fail");
+        promise.fail("invalid role");
       }
     } catch (Exception e) {
       LOGGER.error("exception occurred while validating provider user : " + e.getMessage());
