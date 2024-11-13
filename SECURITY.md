@@ -9,7 +9,7 @@ by adding the following content in the email:
 
 ```
 From: <email-ID>
-To: DX Admin <admin@iudx.org.in>, DX Support <support@iudx.org.in>
+To: DX Admin <admin@iudx.org.in>, DX Support <support@cdpg.org.in>
 Subject: Vulnerability report
 Attachement: <screenshots, reports, videos, etc., > 
 Body:

@@ -14,7 +14,7 @@ consumes:
 
 info:
   title: "Data exchange Resource Server APIs"
-  version: 5.5.0
+  version: 5.6.0
   description: |
     # Introduction
     The Resource Server is DXs'(Data exchange) data store which allows publication, subscription and discovery of data.
@@ -92,7 +92,7 @@ info:
 
   contact:
     name: For support contact CDPG Team at
-    email: support@iudx.org.in
+    email: support@cdpg.org.in
     url: https://dataforpublicgood.org.in/
   license:
     name: Apache 2.0
