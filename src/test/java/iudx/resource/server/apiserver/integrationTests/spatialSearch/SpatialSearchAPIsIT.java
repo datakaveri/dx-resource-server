@@ -165,7 +165,7 @@ public class SpatialSearchAPIsIT {
                 .param("geoproperty", "location")
                 .param("georel", "within")
                 .param("geometry", "Polygon")
-                .param("coordinates", "[[[72.76,21.15],[72.76,21.13],[72.78,21.13],[72.78,21.15],[72.76,21.15]]]")
+                .param("coordinates", "[[[72.76,21.15],[72.76,21.13],[72.78,21.13],[72.76,21.15]]]")
                 .header("token", secureResourceToken)
                 .contentType("application/json")
                 .when()

@@ -22,7 +22,7 @@ public class GetAttributeWithFilterIT {
     public void getAttributeWithFilterTest(){
         given()
                 .queryParam("id",filterId)
-                .queryParam("q", q)
+                .queryParam("q", q+";measuredDistance>=14.89")
                 .queryParam("attrs", attrs)
                 .header("Content-Type", "application/json")
                 .header("token", openResourceToken)
@@ -43,7 +43,7 @@ public class GetAttributeWithFilterIT {
     public void getAttributeWithFilterWithOptionalEncryptionTest(){
         given()
                 .queryParam("id",filterId)
-                .queryParam("q", q)
+                .queryParam("q", q+";measuredDistance>=14.89")
                 .queryParam("attrs", attrs)
                 .header("Content-Type", "application/json")
                 .header("token", openResourceToken)
@@ -58,6 +58,22 @@ public class GetAttributeWithFilterIT {
                 .body("results[0].id", notNullValue())
                 .body("results[0].currentLevel", notNullValue())
                 .body("results[0].referenceLevel", greaterThan(15.0f));
+    }
+
+    @Test
+    @DisplayName("413 (Payload too large) attribute > with filter with optional encryption")
+    public void getAttributeWithFilterWithOptionalEncryptionTestPayLoadTooLarge(){
+        given()
+                .queryParam("id",filterId)
+                .queryParam("q", q)
+                .queryParam("attrs", attrs)
+                .header("Content-Type", "application/json")
+                .header("token", openResourceToken)
+                .when()
+                .get("/entities")
+                .then()
+                .statusCode(413)
+                .body("title", equalTo("Payload Too Large"));
     }
     @Test
     @DisplayName("204 (Empty Response) attribute > with filter")

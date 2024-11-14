@@ -1578,6 +1578,10 @@ public class ApiServerVerticle extends AbstractVerticle {
         urn = fromCode(String.valueOf(type));
       }
       // return urn in body
+      if (json.getString("details") != null) {
+        handleResponse(response, status, urn, json.getString("details"));
+        return;
+      }
       response
           .putHeader(CONTENT_TYPE, APPLICATION_JSON)
           .setStatusCode(type)

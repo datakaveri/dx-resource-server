@@ -41,7 +41,7 @@ public class GetAfterTemporalCountIT {
         given()
                 .queryParam("id",temporalId)
                 .queryParam("timerel", "after")
-                .queryParam("time", "2020-01-19T14:20:00Z")
+                .queryParam("time", "2018-01-19T14:20:00Z")
                 .queryParam("options","count")
                 .header("token", openResourceToken)
                 .when()
