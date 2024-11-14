@@ -96,7 +96,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                             JsonObject json = new JsonObject();
                             json.put("type", 413);
                             json.put("title", ResponseUrn.PAYLOAD_TOO_LARGE_URN.getUrn());
-                            json.put("details", ResponseUrn.PAYLOAD_TOO_LARGE_URN.getMessage());
+                            json.put("details", ResponseUrn.PAYLOAD_TOO_LARGE_URN.getMessage()+ " use filters to get value within limit or use async api");
                             return Future.failedFuture(json.toString());
                           }
                           countPlaceHolder.setCount(count);

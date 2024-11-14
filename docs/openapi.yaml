@@ -216,6 +216,13 @@ paths:
                 "$ref": "#/components/schemas/standardResourceNotFoundErrorResponse"
           description: 'Resource not found'
 
+        413:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/payloadTooLarge"
+          description: 'Payload Too Large'
+
       x-codeSamples:
         - lang: 'cURL'
           label: 'get latest data'
@@ -354,6 +361,13 @@ paths:
               schema:
                 "$ref": "#/components/schemas/standardResourceNotFoundErrorResponse"
           description: 'Resource not found'
+
+        413:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/payloadTooLarge"
+          description: 'Payload Too Large'
 
       x-codeSamples:
         - lang: 'cURL'
@@ -617,6 +631,13 @@ paths:
                 "$ref": "#/components/schemas/standardResourceNotFoundErrorResponse"
           description: 'Resource not found'
 
+        413:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/payloadTooLarge"
+          description: 'Payload Too Large'
+
       x-codeSamples:
         - lang: 'cURL'
           label: 'search by between'
@@ -817,6 +838,13 @@ paths:
             - Unauthorized - `token` invalid/expired
             - Unauthorized - `clientId` & `clientSecret` invalid/not match
 
+        413:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/payloadTooLarge"
+          description: 'Payload Too Large'
+
         404:
           content:
             application/json:
@@ -979,6 +1007,13 @@ paths:
           description: |-
             - Unauthorized - `token` invalid/expired
             - Unauthorized - `clientId` & `clientSecret` invalid/not match
+
+        413:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/payloadTooLarge"
+          description: 'Payload Too Large'
 
         404:
           content:
@@ -4176,3 +4211,17 @@ components:
         type: urn:dx:rs:backend
         title: bad request
         detail: bad request
+
+    payloadTooLarge:
+      title: payloadtoolarge
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        detail:
+          type: string
+      example:
+        type: urn:dx:rs:payloadTooLarge
+        title: Payload Too Large
+        detail: Response size exceeds limit use filters to get value within limit or use async api

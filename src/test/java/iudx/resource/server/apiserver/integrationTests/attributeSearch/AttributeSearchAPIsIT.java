@@ -30,7 +30,7 @@ public class AttributeSearchAPIsIT{
     void GetAttributeSearchOp1() {
         Response response = given()
                 .param("id", id)
-                .param("q", "referenceLevel>15.0")
+                .param("q", "referenceLevel>21.0")
                 .header("token", openResourceToken)
                 .contentType("application/json")
                 .when()
@@ -48,7 +48,7 @@ public class AttributeSearchAPIsIT{
     void GetAttributeSearchOptionalEncrypOp1() {
         Response response = given()
                 .param("id", id)
-                .param("q", "referenceLevel>15.0")
+                .param("q", "referenceLevel>21.0")
                 .header("token", openResourceToken)
                 .contentType("application/json")
                 .when()
@@ -151,7 +151,7 @@ public class AttributeSearchAPIsIT{
     void GetAttributeSearchOp2() {
         Response response = given()
                 .param("id", id)
-                .param("q", "referenceLevel<16.0")
+                .param("q", "referenceLevel<16.0;measuredDistance>=14.89")
                 .header("token", openResourceToken)
                 .contentType("application/json")
                 .when()
@@ -255,7 +255,7 @@ public class AttributeSearchAPIsIT{
     void GetAttributeSearchOp3() {
         Response response = given()
                 .param("id", id)
-                .param("q", "referenceLevel>=15.9")
+                .param("q", "referenceLevel>=20.9")
                 .header("token", openResourceToken)
                 .contentType("application/json")
                 .when()
@@ -359,7 +359,7 @@ public class AttributeSearchAPIsIT{
     void GetAttributeSearchOp4() {
         Response response = given()
                 .param("id", id)
-                .param("q", "referenceLevel<=15.9")
+                .param("q", "referenceLevel<=15.9;measuredDistance>=14.89")
                 .header("token", openResourceToken)
                 .contentType("application/json")
                 .when()

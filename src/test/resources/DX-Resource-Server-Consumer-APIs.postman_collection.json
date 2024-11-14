@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "a6c8d8c9-7db4-4518-8911-908dfc6cedee",
-		"name": "IUDX-Resource-Server-Consumer-APIs-V5.5.0",
+		"name": "IUDX-Resource-Server-Consumer-APIs",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "20457128"
 	},
@@ -872,6 +872,76 @@
 									"    pm.expect(body).to.have.property(\"title\", \"Success\");\r",
 									"    const resultsjsonData = body.results[0];\r",
 									"    pm.expect(resultsjsonData).to.have.property(\"id\");\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{secureResourceToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/{{basePath}}/entities?id=83c2e5c2-3574-4e11-9530-2b1fbdfce832&geoproperty=location&georel=within&geometry=Polygon&coordinates=[[[72.76,21.15],[72.76,21.13],[72.78,21.13],[72.76,21.15]]]",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{basePath}}",
+								"entities"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "83c2e5c2-3574-4e11-9530-2b1fbdfce832"
+								},
+								{
+									"key": "geoproperty",
+									"value": "location"
+								},
+								{
+									"key": "georel",
+									"value": "within"
+								},
+								{
+									"key": "geometry",
+									"value": "Polygon"
+								},
+								{
+									"key": "coordinates",
+									"value": "[[[72.76,21.15],[72.76,21.13],[72.78,21.13],[72.76,21.15]]]"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "413 (Payload too large) - Geo-Query (Polygon)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test the response code\r",
+									"pm.test(\"response is 413 (Payload too large)\", function () {\r",
+									"    pm.response.to.have.status(413);\r",
+									"});\r",
+									"\r",
+									"// Test the response header\r",
+									"pm.test(\"Check response header\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\",\"application/json\");\r",
+									"});\r",
+									"\r",
+									"// Test the response\r",
+									"pm.test(\"Check response body\", function () {    \r",
+									"    const body = pm.response.json();\r",
 									"});"
 								],
 								"type": "text/javascript"
@@ -4031,7 +4101,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/{{basePath}}/temporal/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&timerel=before&time=2020-10-19T12:00:00Z",
+							"raw": "{{base_url}}/{{basePath}}/temporal/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&timerel=before&time=2021-09-30T12:00:00Z",
 							"host": [
 								"{{base_url}}"
 							],
@@ -4051,7 +4121,7 @@
 								},
 								{
 									"key": "time",
-									"value": "2020-10-19T12:00:00Z"
+									"value": "2021-09-30T12:00:00Z"
 								},
 								{
 									"key": "offset",
@@ -4521,7 +4591,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/{{basePath}}/temporal/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&timerel=after&time=2020-01-19T12:00:00Z",
+							"raw": "{{base_url}}/{{basePath}}/temporal/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&timerel=after&time=2018-01-19T12:00:00Z",
 							"host": [
 								"{{base_url}}"
 							],
@@ -4541,7 +4611,7 @@
 								},
 								{
 									"key": "time",
-									"value": "2020-01-19T12:00:00Z"
+									"value": "2018-01-19T12:00:00Z"
 								}
 							]
 						}
@@ -5853,7 +5923,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/{{basePath}}/temporal/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&timerel=after&time=2020-01-18T14:20:01Z&options=count",
+							"raw": "{{base_url}}/{{basePath}}/temporal/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&timerel=after&time=2010-01-18T14:20:01Z&options=count",
 							"host": [
 								"{{base_url}}"
 							],
@@ -5873,7 +5943,7 @@
 								},
 								{
 									"key": "time",
-									"value": "2020-01-18T14:20:01Z"
+									"value": "2010-01-18T14:20:01Z"
 								},
 								{
 									"key": "options",
@@ -6224,7 +6294,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel>15.0",
+							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel>20.0",
 							"host": [
 								"{{base_url}}"
 							],
@@ -6239,7 +6309,7 @@
 								},
 								{
 									"key": "q",
-									"value": "referenceLevel>15.0"
+									"value": "referenceLevel>20.0"
 								},
 								{
 									"key": "",
@@ -6305,7 +6375,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel>15.0",
+							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel>20.0",
 							"host": [
 								"{{base_url}}"
 							],
@@ -6320,7 +6390,7 @@
 								},
 								{
 									"key": "q",
-									"value": "referenceLevel>15.0"
+									"value": "referenceLevel>20.0"
 								},
 								{
 									"key": "",
@@ -6704,7 +6774,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel<16.0",
+							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel<16.0;measuredDistance>=14.89",
 							"host": [
 								"{{base_url}}"
 							],
@@ -6719,7 +6789,7 @@
 								},
 								{
 									"key": "q",
-									"value": "referenceLevel<16.0"
+									"value": "referenceLevel<16.0;measuredDistance>=14.89"
 								}
 							]
 						}
@@ -7053,7 +7123,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel>=15.9",
+							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel>=15.9;measuredDistance>=14.89",
 							"host": [
 								"{{base_url}}"
 							],
@@ -7068,7 +7138,7 @@
 								},
 								{
 									"key": "q",
-									"value": "referenceLevel>=15.9"
+									"value": "referenceLevel>=15.9;measuredDistance>=14.89"
 								}
 							]
 						}
@@ -7402,7 +7472,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel<=15.9",
+							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel<=15.9;measuredDistance>=14.89",
 							"host": [
 								"{{base_url}}"
 							],
@@ -7417,7 +7487,7 @@
 								},
 								{
 									"key": "q",
-									"value": "referenceLevel<=15.9"
+									"value": "referenceLevel<=15.9;measuredDistance>=14.89"
 								}
 							]
 						}
@@ -11431,7 +11501,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel>15.0&attrs=id,currentLevel,referenceLevel",
+							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel>21.0&attrs=id,currentLevel,referenceLevel",
 							"host": [
 								"{{base_url}}"
 							],
@@ -11446,7 +11516,7 @@
 								},
 								{
 									"key": "q",
-									"value": "referenceLevel>15.0"
+									"value": "referenceLevel>21.0"
 								},
 								{
 									"key": "attrs",
@@ -11510,7 +11580,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel>15.0&attrs=id,currentLevel,referenceLevel",
+							"raw": "{{base_url}}/{{basePath}}/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&q=referenceLevel>21.0&attrs=id,currentLevel,referenceLevel",
 							"host": [
 								"{{base_url}}"
 							],
@@ -11525,7 +11595,7 @@
 								},
 								{
 									"key": "q",
-									"value": "referenceLevel>15.0"
+									"value": "referenceLevel>21.0"
 								},
 								{
 									"key": "attrs",
@@ -12985,7 +13055,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"type\": \"Query\",\n    \"entities\": [\n        {\n            \"id\": \"b58da193-23d9-43eb-b98a-a103d4b6103c\"\n        }\n    ],\n    \"temporalQ\": {\n        \"timerel\": \"before\",\n        \"time\": \"2020-10-19T14:20:00Z\",\n        \"timeProperty\": \"observationDateTime\"\n    }\n}",
+							"raw": "{\n    \"type\": \"Query\",\n    \"entities\": [\n        {\n            \"id\": \"b58da193-23d9-43eb-b98a-a103d4b6103c\"\n        }\n    ],\n    \"temporalQ\": {\n        \"timerel\": \"before\",\n        \"time\": \"2021-09-30T12:00:00Z\",\n        \"timeProperty\": \"observationDateTime\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -13289,7 +13359,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"type\": \"Query\",\n    \"entities\": [\n        {\n            \"id\": \"b58da193-23d9-43eb-b98a-a103d4b6103c\"\n        }\n    ],\n    \"temporalQ\": {\n        \"timerel\": \"before\",\n        \"time\": \"2020-10-19T14:20:00Z\",\n        \"timeProperty\": \"observationDateTime\"\n    },\n    \"attrs\":\"id\"\n}",
+							"raw": "{\n    \"type\": \"Query\",\n    \"entities\": [\n        {\n            \"id\": \"b58da193-23d9-43eb-b98a-a103d4b6103c\"\n        }\n    ],\n    \"temporalQ\": {\n        \"timerel\": \"before\",\n        \"time\": \"2021-09-30T12:00:00Z\",\n        \"timeProperty\": \"observationDateTime\"\n    },\n    \"attrs\":\"id\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -13927,7 +13997,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"type\": \"Query\",\n    \"entities\": [\n        {\n            \"id\": \"83c2e5c2-3574-4e11-9530-2b1fbdfce832\"\n        }\n    ],\n    \"geoQ\": {\n        \"geometry\": \"Polygon\",\n        \"coordinates\": [[[72.76,21.15],[72.76,21.13],[72.78,21.13],[72.78,21.15],[72.76,21.15]]],\n        \"georel\": \"within\",\n        \"geoproperty\": \"location\"\n    }\n}",
+							"raw": "{\n    \"type\": \"Query\",\n    \"entities\": [\n        {\n            \"id\": \"83c2e5c2-3574-4e11-9530-2b1fbdfce832\"\n        }\n    ],\n    \"geoQ\": {\n        \"geometry\": \"Polygon\",\n        \"coordinates\": [[[72.76,21.15],[72.76,21.13],[72.78,21.13],[72.76,21.15]]],\n        \"georel\": \"within\",\n        \"geoproperty\": \"location\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -19062,7 +19132,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/{{basePath}}/temporal/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&timerel=between&time=2020-09-01T14:20:00Z&endtime=2020-09-19T14:20:00Z",
+							"raw": "{{base_url}}/{{basePath}}/temporal/entities?id=b58da193-23d9-43eb-b98a-a103d4b6103c&timerel=between&time=2020-09-01T14:20:00Z&endtime=2021-09-19T14:20:00Z",
 							"host": [
 								"{{base_url}}"
 							],
@@ -19086,7 +19156,7 @@
 								},
 								{
 									"key": "endtime",
-									"value": "2020-09-19T14:20:00Z"
+									"value": "2021-09-19T14:20:00Z"
 								}
 							]
 						}
