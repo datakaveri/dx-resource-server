@@ -1,9 +1,12 @@
 package iudx.resource.server.authenticator.model;
 
+import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import iudx.resource.server.authenticator.authorization.IudxRole;
 
+
+@DataObject (generateConverter = true)
 public class AuthInfo {
   private String userid;
   private String resourceId;
@@ -18,6 +21,11 @@ public class AuthInfo {
   private JsonObject access;
   private JsonArray attributes;
   private String accessPolicy;
+
+
+  public AuthInfo(JsonObject json) {
+    AuthInfoConverter.fromJson(json, this);
+  }
 
   public JsonObject getAccess() {
     return access;
