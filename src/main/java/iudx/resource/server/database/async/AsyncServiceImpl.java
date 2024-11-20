@@ -30,7 +30,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import iudx.resource.server.apiserver.common.DataAccessLimitValidator;
-import iudx.resource.server.apiserver.common.DataAccesssLimitValidator;
+//import iudx.resource.server.apiserver.common.DataAccesssLimitValidator;
 import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.common.ResponseUrn;
 import iudx.resource.server.database.archives.ResponseBuilder;
@@ -124,7 +124,7 @@ public class AsyncServiceImpl implements AsyncService {
                     handler.handle(Future.failedFuture(responseBuilder.getResponse().toString()));
                     return;
                   }
-                  if (!DataAccessLimitValidator.isUsageWithinLimits(authInfo,answer.getLong("size"),answer.getBoolean("isaudited"))) {
+                  if (!false) {
                     responseBuilder =
                         new ResponseBuilder("failed")
                             .setTypeAndTitle(429, LIMIT_EXCEED_URN.getUrn())

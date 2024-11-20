@@ -1,7 +1,6 @@
 package iudx.resource.server.database.redis;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.redis.client.RedisOptions;

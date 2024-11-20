@@ -6,8 +6,7 @@ import static iudx.resource.server.apiserver.util.Util.errorResponse;
 import static iudx.resource.server.authenticator.Constants.ACCESSIBLE_ATTRS;
 import static iudx.resource.server.authenticator.Constants.ROLE;
 import static iudx.resource.server.cache.cachelmpl.CacheType.CATALOGUE_CACHE;
-import static iudx.resource.server.common.Constants.CACHE_SERVICE_ADDRESS;
-import static iudx.resource.server.common.Constants.PG_SERVICE_ADDRESS;
+import static iudx.resource.server.common.Constants.*;
 import static iudx.resource.server.common.HttpStatusCode.BAD_REQUEST;
 import static iudx.resource.server.common.HttpStatusCode.NOT_FOUND;
 import static iudx.resource.server.common.HttpStatusCode.UNAUTHORIZED;
@@ -44,7 +43,6 @@ import io.vertx.ext.web.handler.TimeoutHandler;
 import iudx.resource.server.apiserver.common.ContextHelper;
 import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
 import iudx.resource.server.apiserver.handlers.AuthHandler;
-import iudx.resource.server.apiserver.handlers.DataAccessHandler;
 import iudx.resource.server.apiserver.handlers.FailureHandler;
 import iudx.resource.server.apiserver.handlers.ValidationHandler;
 import iudx.resource.server.apiserver.management.ManagementApi;
@@ -60,20 +58,18 @@ import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.common.Api;
 import iudx.resource.server.common.HttpStatusCode;
 import iudx.resource.server.common.ResponseUrn;
+import iudx.resource.server.dataLimitService.handler.DataAccessHandler;
 import iudx.resource.server.database.archives.DatabaseService;
 import iudx.resource.server.database.latest.LatestDataService;
 import iudx.resource.server.database.postgres.PostgresService;
+import iudx.resource.server.database.redis.RedisService;
 import iudx.resource.server.databroker.DataBrokerService;
 import iudx.resource.server.encryption.EncryptionService;
 import iudx.resource.server.metering.MeteringService;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
@@ -129,6 +125,10 @@ public class ApiServerVerticle extends AbstractVerticle {
   private LatestDataService latestDataService;
   private CacheService cacheService;
   private int timeLimit;
+
+  private RedisService redisService;
+  private DataAccessHandler dataAccessHandler;
+//  private final boolean isLimitEnabled=config().getBoolean("isLimitEnable");
 
   /**
    * This method is used to start the Verticle. It deploys a verticle in a cluster, reads the
@@ -222,7 +222,6 @@ public class ApiServerVerticle extends AbstractVerticle {
     FailureHandler validationsFailureHandler = new FailureHandler();
     /* NGSI-LD api endpoints */
     ValidationHandler entityValidationHandler = new ValidationHandler(vertx, RequestType.ENTITY);
-    DataAccessHandler dataAccessHandler = new DataAccessHandler(vertx, config().getBoolean("isLimitEnable"));
     router
         .get(api.getEntitiesUrl())
         .handler(entityValidationHandler)
@@ -430,6 +429,7 @@ public class ApiServerVerticle extends AbstractVerticle {
 
     /* Get a handler for the Service Discovery interface. */
 
+    redisService = RedisService.createProxy(vertx,REDIS_SERVICE_ADDRESS);
     database = DatabaseService.createProxy(vertx, DATABASE_SERVICE_ADDRESS);
     databroker = DataBrokerService.createProxy(vertx, BROKER_SERVICE_ADDRESS);
     meteringService = MeteringService.createProxy(vertx, METERING_SERVICE_ADDRESS);
@@ -439,7 +439,7 @@ public class ApiServerVerticle extends AbstractVerticle {
     subsService = new SubscriptionService();
     catalogueService = new CatalogueService(cacheService);
     validator = new ParamsValidator(catalogueService);
-
+    dataAccessHandler = new DataAccessHandler(vertx,true,null,redisService);
     postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
     encryptionService = EncryptionService.createProxy(vertx, ENCRYPTION_SERVICE_ADDRESS);
 
@@ -877,6 +877,8 @@ public class ApiServerVerticle extends AbstractVerticle {
           if (handler.succeeded()) {
             LOGGER.info("Success: Search Success");
             if (context.request().getHeader(HEADER_PUBLIC_KEY) == null) {
+
+//                      if(true) to test comment down below line and uncomment this one
                 handleSuccessResponse(
                         response, ResponseType.Ok.getCode(), handler.result().toString());
                 context.data().put(RESPONSE_SIZE, response.bytesWritten());
@@ -888,6 +890,9 @@ public class ApiServerVerticle extends AbstractVerticle {
               future.onComplete(
                   encryptionHandler -> {
                     if (encryptionHandler.succeeded()) {
+
+//                      if(true) to test comment down below line and uncomment this one
+
                         JsonObject result = encryptionHandler.result();
                         handler.result().put("results", result);
                         handleSuccessResponse(
@@ -916,6 +921,10 @@ public class ApiServerVerticle extends AbstractVerticle {
           if (handler.succeeded()) {
             LOGGER.info("Latest data search succeeded");
             if (context.request().getHeader(HEADER_PUBLIC_KEY) == null) {
+
+
+              //                      if(true) to test comment down below line and uncomment this one
+
                 handleSuccessResponse(
                         response, ResponseType.Ok.getCode(), handler.result().toString());
                 context.data().put(RESPONSE_SIZE, response.bytesWritten());
@@ -927,6 +936,9 @@ public class ApiServerVerticle extends AbstractVerticle {
               future.onComplete(
                   encryptionHandler -> {
                     if (encryptionHandler.succeeded()) {
+
+//                      if(true) to test comment down below line and uncomment this one
+
                         JsonObject result = encryptionHandler.result();
                         handler.result().put("results", result);
                         handleSuccessResponse(
