@@ -337,7 +337,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                 .put("entities", new JsonArray().add(new JsonObject().put("id", "b58da193-23d9-43eb-b98a-a103d4b6103c")))
                 .put("temporalQ", new JsonObject()
                         .put("timerel", "before")
-                        .put("time", "2020-10-19T14:20:00Z")
+                        .put("time", "2021-09-30T12:00:00Z")
                         .put("timeProperty", "observationDateTime"));
 
         Response response = given()
@@ -458,7 +458,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                 .put("entities", new JsonArray().add(new JsonObject().put("id", "b58da193-23d9-43eb-b98a-a103d4b6103c")))
                 .put("temporalQ", new JsonObject()
                         .put("timerel", "before")
-                        .put("time", "2020-10-19T14:20:00Z")
+                        .put("time", "2021-09-30T12:00:00Z")
                         .put("timeProperty", "observationDateTime"))
                 .put("attrs", "id");
 
@@ -771,7 +771,6 @@ public class ComplexSearchPostQueriesAPIsIT {
                                 new JsonArray().add(new JsonArray().add(72.76).add(21.15))
                                         .add(new JsonArray().add(72.76).add(21.13))
                                         .add(new JsonArray().add(72.78).add(21.13))
-                                        .add(new JsonArray().add(72.78).add(21.15))
                                         .add(new JsonArray().add(72.76).add(21.15))
                         ))
                         .put("georel", "within")

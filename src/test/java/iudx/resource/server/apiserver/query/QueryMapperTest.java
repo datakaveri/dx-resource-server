@@ -68,7 +68,7 @@ public class QueryMapperTest {
 
   @BeforeEach
   public void setup(Vertx vertx, VertxTestContext testContext) {
-    qm = new QueryMapper(context);
+    qm = new QueryMapper(context,10);
     testContext.completeNow();
   }
 

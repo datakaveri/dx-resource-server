@@ -136,54 +136,6 @@ public interface DataBrokerService {
       JsonObject request, Handler<AsyncResult<JsonObject>> handler);
 
   /**
-   * The registerCallbackSubscription implements the registration of callback subscription operation
-   * with the data broker.
-   *
-   * @param request which is a JsonObject
-   * @param handler which is a Request Handler
-   * @return DataBrokerService which is a Service
-   */
-  @Fluent
-  DataBrokerService registerCallbackSubscription(
-      JsonObject request, Handler<AsyncResult<JsonObject>> handler);
-
-  /**
-   * The updateCallbackSubscription implements the updation of callback subscription operation with
-   * the data broker.
-   *
-   * @param request which is a JsonObject
-   * @param handler which is a Request Handler
-   * @return DataBrokerService which is a Service
-   */
-  @Fluent
-  DataBrokerService updateCallbackSubscription(
-      JsonObject request, Handler<AsyncResult<JsonObject>> handler);
-
-  /**
-   * The deleteCallbackSubscription implements the deletion of callback subscription operation with
-   * the data broker.
-   *
-   * @param request which is a JsonObject
-   * @param handler which is a Request Handler
-   * @return DataBrokerService which is a Service
-   */
-  @Fluent
-  DataBrokerService deleteCallbackSubscription(
-      JsonObject request, Handler<AsyncResult<JsonObject>> handler);
-
-  /**
-   * The listCallbackSubscription implements the listing of callback subscription operation with the
-   * data broker.
-   *
-   * @param request which is a JsonObject
-   * @param handler which is a Request Handler
-   * @return DataBrokerService which is a Service
-   */
-  @Fluent
-  DataBrokerService listCallbackSubscription(
-      JsonObject request, Handler<AsyncResult<JsonObject>> handler);
-
-  /**
    * The createExchange implements the creation of exchange operation with the data broker.
    *
    * @param request which is a JsonObject

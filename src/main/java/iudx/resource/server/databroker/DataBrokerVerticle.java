@@ -22,26 +22,28 @@ import iudx.resource.server.databroker.listeners.AsyncQueryListener;
 import iudx.resource.server.databroker.listeners.RevokeClientQlistener;
 import iudx.resource.server.databroker.listeners.RmqListeners;
 import iudx.resource.server.databroker.listeners.UniqueAttribQlistener;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * The Data Broker Verticle.
  *
  * <h1>Data Broker Verticle</h1>
  *
- * <p>The Data Broker Verticle implementation in the the IUDX Resource Server exposes the {@link
+ * <p>The Data Broker Verticle implementation in the IUDX Resource Server exposes the {@link
  * iudx.resource.server.databroker.DataBrokerService} over the Vert.x Event Bus.
  *
  * @version 1.0
  * @since 2020-05-31
  */
 public class DataBrokerVerticle extends AbstractVerticle {
-
+  private static final Logger LOGGER = LogManager.getLogger(DataBrokerVerticle.class);
+  /*RabbitMQOptions iudxConfig;*/
   private DataBrokerService databroker;
   private RabbitMQOptions config;
   private String dataBrokerIp;
   private int dataBrokerPort;
   private int dataBrokerManagementPort;
-  private String dataBrokerVhost;
   private String dataBrokerUserName;
   private String dataBrokerPassword;
   private int connectionTimeout;
@@ -66,6 +68,7 @@ public class DataBrokerVerticle extends AbstractVerticle {
   private PostgresClient pgClient;
   private CacheService cache;
   private AsyncService asyncService;
+  private RabbitMQClient iudxRabbitMqClient;
 
   /**
    * This method is used to start the Verticle. It deploys a verticle in a cluster, registers the
@@ -79,7 +82,6 @@ public class DataBrokerVerticle extends AbstractVerticle {
     dataBrokerIp = config().getString("dataBrokerIP");
     dataBrokerPort = config().getInteger("dataBrokerPort");
     dataBrokerManagementPort = config().getInteger("dataBrokerManagementPort");
-    dataBrokerVhost = config().getString("dataBrokerVhost");
     dataBrokerUserName = config().getString("dataBrokerUserName");
     dataBrokerPassword = config().getString("dataBrokerPassword");
     connectionTimeout = config().getInteger("connectionTimeout");
@@ -101,13 +103,17 @@ public class DataBrokerVerticle extends AbstractVerticle {
     config.setPassword(dataBrokerPassword);
     config.setHost(dataBrokerIp);
     config.setPort(dataBrokerPort);
-    config.setVirtualHost(dataBrokerVhost);
     config.setConnectionTimeout(connectionTimeout);
     config.setRequestedHeartbeat(requestedHeartbeat);
     config.setHandshakeTimeout(handshakeTimeout);
     config.setRequestedChannelMax(requestedChannelMax);
     config.setNetworkRecoveryInterval(networkRecoveryInterval);
     config.setAutomaticRecoveryEnabled(true);
+
+    RabbitMQOptions iudxConfig = new RabbitMQOptions(config);
+    String prodVhost = config().getString(Vhosts.IUDX_PROD.value);
+
+    iudxConfig.setVirtualHost(prodVhost);
 
     webConfig = new WebClientOptions();
     webConfig.setKeepAlive(true);
@@ -149,7 +155,6 @@ public class DataBrokerVerticle extends AbstractVerticle {
 
     propObj.put("userName", dataBrokerUserName);
     propObj.put("password", dataBrokerPassword);
-    propObj.put("vHost", dataBrokerVhost);
     propObj.put("databaseIP", databaseIp);
     propObj.put("databasePort", databasePort);
     propObj.put("databaseName", databaseName);
@@ -164,7 +169,20 @@ public class DataBrokerVerticle extends AbstractVerticle {
     rabbitClient = new RabbitClient(vertx, config, rabbitWebClient, pgClient, config());
     cache = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
     binder = new ServiceBinder(vertx);
-    databroker = new DataBrokerServiceImpl(rabbitClient, pgClient, config(), cache);
+    iudxRabbitMqClient = RabbitMQClient.create(vertx, iudxConfig);
+    iudxRabbitMqClient
+        .start()
+        .onSuccess(
+            iudxRabbitClientStart -> {
+              LOGGER.info("RMQ client started for Prod Vhost");
+            })
+        .onFailure(
+            iudxRabbitClientStart -> {
+              LOGGER.fatal("RMQ client startup failed");
+            });
+    databroker =
+        new DataBrokerServiceImpl(
+            rabbitClient, pgClient, config(), cache, /*iudxConfig, vertx,*/ iudxRabbitMqClient);
     asyncService = AsyncService.createProxy(vertx, ASYNC_SERVICE_ADDRESS);
 
     String internalVhost = config().getString(Vhosts.IUDX_INTERNAL.value);

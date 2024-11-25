@@ -7,7 +7,11 @@
   "commonConfig": {
     "dxApiBasePath": "/ngsi-ld/v1",
     "dxCatalogueBasePath": "/iudx/cat/v1",
-    "dxAuthBasePath": "/auth/v1"
+    "dxAuthBasePath": "/auth/v1",
+    "catServerHost": "",
+    "catServerPort": 443,
+    "timeLimit": "test,2020-10-22T00:00:00Z,365",
+    "timeLimitForAsync": 365
   },
   "modules": [
     {
@@ -18,8 +22,7 @@
       "databaseIP": "",
       "databasePort": 24034,
       "dbUser": "",
-      "dbPassword": "",
-      "timeLimit": ""
+      "dbPassword": ""
     },
     {
       "id": "iudx.resource.server.authenticator.AuthenticationVerticle",
@@ -64,9 +67,7 @@
       "keystore": "configs/keystore.jks",
       "keystorePassword": "",
       "httpPort": 8443,
-      "verticleInstances": 8,
-      "catServerHost": "",
-      "catServerPort": 443
+      "verticleInstances": 8
     },
     {
       "id": "iudx.resource.server.database.latest.LatestVerticle",
@@ -76,7 +77,10 @@
       "redisMode": "",
       "redisUsername": "",
       "redisPassword": "",
+      "redisMaxPoolSize": 30,
+      "redisMaxPoolWaiting": 200,
       "redisMaxWaitingHandlers": 1024,
+      "redisPoolRecycleTimeout": 1500,
       "redisHost": "",
       "redisPort": 1234
     },
@@ -99,8 +103,6 @@
     {
       "id": "iudx.resource.server.cache.CacheVerticle",
       "isWorkerVerticle": false,
-      "catServerHost": "cat-api",
-      "catServerPort": 123,
       "verticleInstances": 1
     },
     {
@@ -114,7 +116,6 @@
       "databasePort": 998,
       "dbUser": "",
       "dbPassword": "",
-      "timeLimit": "",
       "filePath": "/home/kailash/Downloads/",
       "bucketName": ""
     },

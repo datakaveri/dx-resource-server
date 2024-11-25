@@ -11,7 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class EsResponseFormatterToJson extends AbstractEsSearchResponseFormatter {
-  private static final Logger LOGGER = LogManager.getLogger(EsResponseFormatterToJson.class);
+  /*private static final Logger LOGGER = LogManager.getLogger(EsResponseFormatterToJson.class);*/
   FileWriter fileWriter;
 
   /**

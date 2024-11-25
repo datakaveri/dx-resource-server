@@ -12,6 +12,7 @@ import static iudx.resource.server.common.HttpStatusCode.NOT_FOUND;
 import static iudx.resource.server.common.HttpStatusCode.UNAUTHORIZED;
 import static iudx.resource.server.common.ResponseUrn.*;
 import static iudx.resource.server.database.archives.Constants.ITEM_TYPES;
+import static iudx.resource.server.database.archives.Constants.TIME_LIMIT;
 import static iudx.resource.server.metering.util.Constants.DELEGATOR_ID;
 import static iudx.resource.server.metering.util.Constants.EPOCH_TIME;
 import static iudx.resource.server.metering.util.Constants.ISO_TIME;
@@ -39,7 +40,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.TimeoutHandler;
-//import iudx.resource.server.apiserver.common.DataAccesssLimitValidator;
+import iudx.resource.server.apiserver.common.ContextHelper;
 import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
 import iudx.resource.server.apiserver.handlers.AuthHandler;
 import iudx.resource.server.apiserver.handlers.FailureHandler;
@@ -103,7 +104,7 @@ public class ApiServerVerticle extends AbstractVerticle {
   private static final String LATEST_SEARCH_ADDRESS = "iudx.rs.latest.service";
   private static final String METERING_SERVICE_ADDRESS = "iudx.rs.metering.service";
   private static final String ENCRYPTION_SERVICE_ADDRESS = "iudx.rs.encryption.service";
-
+  int timeLimitForAsync;
   private HttpServer server;
   private Router router;
   private int port;
@@ -123,9 +124,12 @@ public class ApiServerVerticle extends AbstractVerticle {
   private Api api;
   private LatestDataService latestDataService;
   private CacheService cacheService;
+  private int timeLimit;
+
   private RedisService redisService;
   private DataAccessHandler dataAccessHandler;
 //  private final boolean isLimitEnabled=config().getBoolean("isLimitEnable");
+
   /**
    * This method is used to start the Verticle. It deploys a verticle in a cluster, reads the
    * configuration, obtains a proxy for the Event bus services exposed through service discovery,
@@ -158,6 +162,9 @@ public class ApiServerVerticle extends AbstractVerticle {
     allowedMethods.add(HttpMethod.PUT);
 
     /* Create a reference to HazelcastClusterManager. */
+    String[] timeLimitConfig = config().getString(TIME_LIMIT).split(",");
+    timeLimit = Integer.valueOf(timeLimitConfig[2]);
+    timeLimitForAsync = config().getInteger("timeLimitForAsync");
 
     router = Router.router(vertx);
 
@@ -436,7 +443,7 @@ public class ApiServerVerticle extends AbstractVerticle {
     postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
     encryptionService = EncryptionService.createProxy(vertx, ENCRYPTION_SERVICE_ADDRESS);
 
-    router.route(api.getAsyncPath() + "/*").subRouter(new AsyncRestApi(vertx, router, api, dataAccessHandler).init());
+    router.route(api.getAsyncPath() + "/*").subRouter(new AsyncRestApi(vertx, router, api,timeLimitForAsync, dataAccessHandler).init());
 
     router.route(ADMIN + "/*").subRouter(new AdminRestApi(vertx, router, api).init());
 
@@ -717,7 +724,7 @@ public class ApiServerVerticle extends AbstractVerticle {
             }
             // create json
             JsonObject json;
-            QueryMapper queryMapper = new QueryMapper(routingContext);
+            QueryMapper queryMapper = new QueryMapper(routingContext, timeLimit);
             json = queryMapper.toJson(ngsildquery, false);
             /* HTTP request instance/host details */
             String instanceId = request.getHeader(HEADER_HOST);
@@ -773,7 +780,7 @@ public class ApiServerVerticle extends AbstractVerticle {
           if (validationHandler.succeeded()) {
             // parse query params
             NgsildQueryParams ngsildquery = new NgsildQueryParams(requestJson);
-            QueryMapper queryMapper = new QueryMapper(routingContext);
+            QueryMapper queryMapper = new QueryMapper(routingContext, timeLimit);
             JsonObject json = queryMapper.toJson(ngsildquery, requestJson.containsKey("temporalQ"));
             String instanceId = request.getHeader(HEADER_HOST);
             json.put(JSON_INSTANCEID, instanceId);
@@ -870,20 +877,12 @@ public class ApiServerVerticle extends AbstractVerticle {
           if (handler.succeeded()) {
             LOGGER.info("Success: Search Success");
             if (context.request().getHeader(HEADER_PUBLIC_KEY) == null) {
+
 //                      if(true) to test comment down below line and uncomment this one
-              if(DataAccesssLimitValidator.isUsageWithinLimits(authInfo,handler.result().size(),false))
-              {
                 handleSuccessResponse(
                         response, ResponseType.Ok.getCode(), handler.result().toString());
                 context.data().put(RESPONSE_SIZE, response.bytesWritten());
                 Future.future(fu -> updateAuditTable(context));
-              }
-              else {
-                LOGGER.error("Usage limit exceeded");
-                processBackendResponse(response, "Usage limit exceeded");
-                return;
-              }
-
             } else {
               // Encryption
               Future<JsonObject> future =
@@ -891,22 +890,15 @@ public class ApiServerVerticle extends AbstractVerticle {
               future.onComplete(
                   encryptionHandler -> {
                     if (encryptionHandler.succeeded()) {
+
 //                      if(true) to test comment down below line and uncomment this one
-                      if(DataAccesssLimitValidator.isUsageWithinLimits(authInfo,handler.result().size(),false))
-                      {
+
                         JsonObject result = encryptionHandler.result();
                         handler.result().put("results", result);
                         handleSuccessResponse(
                                 response, ResponseType.Ok.getCode(), handler.result().encode());
                         context.data().put(RESPONSE_SIZE, response.bytesWritten());
                         Future.future(fu -> updateAuditTable(context));
-                      }
-                      else {
-                        LOGGER.error("Usage limit exceeded");
-                        processBackendResponse(response, "Usage limit exceeded");
-                        return;
-                      }
-
                     } else {
                       LOGGER.error("Encryption not completed");
                       processBackendResponse(response, encryptionHandler.cause().getMessage());
@@ -930,20 +922,13 @@ public class ApiServerVerticle extends AbstractVerticle {
             LOGGER.info("Latest data search succeeded");
             if (context.request().getHeader(HEADER_PUBLIC_KEY) == null) {
 
+
               //                      if(true) to test comment down below line and uncomment this one
-              if(DataAccesssLimitValidator.isUsageWithinLimits(authInfo,handler.result().size(),false))
-              {
+
                 handleSuccessResponse(
                         response, ResponseType.Ok.getCode(), handler.result().toString());
                 context.data().put(RESPONSE_SIZE, response.bytesWritten());
                 Future.future(fu -> updateAuditTable(context));
-              }
-              else {
-                LOGGER.error("Usage limit exceeded");
-                processBackendResponse(response, "Usage limit exceeded");
-                return;
-              }
-
             } else {
               //                Encryption
               Future<JsonObject> future =
@@ -951,22 +936,15 @@ public class ApiServerVerticle extends AbstractVerticle {
               future.onComplete(
                   encryptionHandler -> {
                     if (encryptionHandler.succeeded()) {
+
 //                      if(true) to test comment down below line and uncomment this one
-//                      if(DataAccesssLimitValidator.isUsageWithinLimits(authInfo,handler.result().size(),false))
-                      {
+
                         JsonObject result = encryptionHandler.result();
                         handler.result().put("results", result);
                         handleSuccessResponse(
                                 response, ResponseType.Ok.getCode(), handler.result().encode());
                         context.data().put(RESPONSE_SIZE, response.bytesWritten());
                         Future.future(fu -> updateAuditTable(context));
-                      }
-                      else {
-                        LOGGER.error("Usage limit exceeded");
-                        processBackendResponse(response, "Usage limit exceeded");
-                        return;
-                      }
-
                     } else {
                       LOGGER.error("Encryption not completed");
                       processBackendResponse(response, encryptionHandler.cause().getMessage());
@@ -1033,7 +1011,7 @@ public class ApiServerVerticle extends AbstractVerticle {
             // parse query params
             NgsildQueryParams ngsildquery = new NgsildQueryParams(params);
             // create json
-            QueryMapper queryMapper = new QueryMapper(routingContext);
+            QueryMapper queryMapper = new QueryMapper(routingContext, timeLimit);
 
             JsonObject json = queryMapper.toJson(ngsildquery, true);
             json.put(JSON_INSTANCEID, instanceId);
@@ -1527,10 +1505,10 @@ public class ApiServerVerticle extends AbstractVerticle {
     JsonObject requestJson = routingContext.body().asJsonObject();
     HttpServerRequest request = routingContext.request();
     HttpServerResponse response = routingContext.response();
-    String instanceId = request.getHeader(HEADER_HOST);
+    /*String instanceId = request.getHeader(HEADER_HOST);*/
     JsonObject authenticationInfo = new JsonObject();
     authenticationInfo.put(API_ENDPOINT, "/iudx/v1/adapter");
-    requestJson.put(JSON_INSTANCEID, instanceId);
+    /*requestJson.put(JSON_INSTANCEID, instanceId);*/
     if (request.headers().contains(HEADER_TOKEN)) {
       authenticationInfo.put(HEADER_TOKEN, request.getHeader(HEADER_TOKEN));
 
@@ -1627,6 +1605,10 @@ public class ApiServerVerticle extends AbstractVerticle {
         urn = fromCode(String.valueOf(type));
       }
       // return urn in body
+      if (json.getString("details") != null) {
+        handleResponse(response, status, urn, json.getString("details"));
+        return;
+      }
       response
           .putHeader(CONTENT_TYPE, APPLICATION_JSON)
           .setStatusCode(type)

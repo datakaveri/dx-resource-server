@@ -40,16 +40,25 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   JsonObject finalResponse =
       Util.getResponseJson(BAD_REQUEST_CODE, BAD_REQUEST_DATA, BAD_REQUEST_DATA);
   CacheService cacheService;
+  /*RabbitMQOptions iudxRabbitMQOptions;*/
   private JsonObject config;
   private RabbitClient webClient;
+  private RabbitMQClient iudxRabbitMqClient;
 
   public DataBrokerServiceImpl(
       RabbitClient webClient,
       PostgresClient pgClient,
       JsonObject config,
-      CacheService cacheService) {
+      CacheService cacheService,
+      /*RabbitMQOptions iudxConfig,
+      Vertx vertx,*/
+      RabbitMQClient iudxRabbitMqClient) {
     this.webClient = webClient;
     this.config = config;
+    /*this.iudxRabbitMQOptions = iudxConfig;
+    this.iudxRabbitMqClient = RabbitMQClient.create(vertx,iudxConfig);*/
+
+    this.iudxRabbitMqClient = iudxRabbitMqClient;
     this.subscriptionService =
         new SubscriptionService(this.webClient, pgClient, config, cacheService);
     this.cacheService = cacheService;
@@ -286,98 +295,6 @@ public class DataBrokerServiceImpl implements DataBrokerService {
             if (resultHandler.failed()) {
               LOGGER.error(
                   "listStreamingSubscription - resultHandler failed : " + resultHandler.cause());
-              handler.handle(Future.failedFuture(resultHandler.cause().getMessage()));
-            }
-          });
-    } else {
-      handler.handle(Future.failedFuture(finalResponse.toString()));
-    }
-    return this;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public DataBrokerService registerCallbackSubscription(
-      JsonObject request, Handler<AsyncResult<JsonObject>> handler) {
-    if (request != null && !request.isEmpty()) {
-      Future<JsonObject> result = subscriptionService.registerCallbackSubscription(request);
-      result.onComplete(
-          resultHandler -> {
-            if (resultHandler.succeeded()) {
-              handler.handle(Future.succeededFuture(resultHandler.result()));
-            }
-            if (resultHandler.failed()) {
-              LOGGER.error(
-                  "registerCallbackSubscription - resultHandler failed : " + resultHandler.cause());
-              handler.handle(Future.failedFuture(resultHandler.cause().getMessage()));
-            }
-          });
-    } else {
-      handler.handle(Future.failedFuture(finalResponse.toString()));
-    }
-    return this;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public DataBrokerService updateCallbackSubscription(
-      JsonObject request, Handler<AsyncResult<JsonObject>> handler) {
-    if (request != null && !request.isEmpty()) {
-      Future<JsonObject> result = subscriptionService.updateCallbackSubscription(request);
-      result.onComplete(
-          resultHandler -> {
-            if (resultHandler.succeeded()) {
-              handler.handle(Future.succeededFuture(resultHandler.result()));
-            }
-            if (resultHandler.failed()) {
-              LOGGER.error(
-                  "updateCallbackSubscription - resultHandler failed : " + resultHandler.cause());
-              handler.handle(Future.failedFuture(resultHandler.cause().getMessage()));
-            }
-          });
-    } else {
-      handler.handle(Future.failedFuture(finalResponse.toString()));
-    }
-    return this;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public DataBrokerService deleteCallbackSubscription(
-      JsonObject request, Handler<AsyncResult<JsonObject>> handler) {
-    if (request != null && !request.isEmpty()) {
-      Future<JsonObject> result = subscriptionService.deleteCallbackSubscription(request);
-      result.onComplete(
-          resultHandler -> {
-            if (resultHandler.succeeded()) {
-              handler.handle(Future.succeededFuture(resultHandler.result()));
-            }
-            if (resultHandler.failed()) {
-              LOGGER.error(
-                  "deleteCallbackSubscription - resultHandler failed : " + resultHandler.cause());
-              handler.handle(Future.failedFuture(resultHandler.cause().getMessage()));
-            }
-          });
-    } else {
-      handler.handle(Future.failedFuture(finalResponse.toString()));
-    }
-    return this;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public DataBrokerService listCallbackSubscription(
-      JsonObject request, Handler<AsyncResult<JsonObject>> handler) {
-    if (request != null && !request.isEmpty()) {
-      Future<JsonObject> result = subscriptionService.listCallbackSubscription(request);
-      result.onComplete(
-          resultHandler -> {
-            if (resultHandler.succeeded()) {
-              handler.handle(Future.succeededFuture(resultHandler.result()));
-            }
-            if (resultHandler.failed()) {
-              LOGGER.error(
-                  "listCallbackSubscription - resultHandler failed : " + resultHandler.cause());
               handler.handle(Future.failedFuture(resultHandler.cause().getMessage()));
             }
           });
@@ -659,11 +576,9 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   public DataBrokerService publishFromAdaptor(
       JsonObject request, String vhost, Handler<AsyncResult<JsonObject>> handler) {
     JsonObject finalResponse = new JsonObject();
-    JsonObject json = new JsonObject();
     LOGGER.debug("request Json " + request);
 
     if (request != null && !request.isEmpty()) {
-      json.put("body", request.toString());
 
       JsonObject cacheRequestJson = new JsonObject();
       cacheRequestJson.put("type", CATALOGUE_CACHE);
@@ -680,27 +595,26 @@ public class DataBrokerServiceImpl implements DataBrokerService {
                           : cacheResult.getString(ID);
                   LOGGER.debug("Info : resourceGroupId  " + resourceGroupId);
                   String routingKey = request.getJsonArray("entities").getString(0);
+                  request.remove("entities");
+                  request.put("id", routingKey);
                   if (resourceGroupId != null && !resourceGroupId.isBlank()) {
                     LOGGER.debug("Info : routingKey  " + routingKey);
-                    Buffer buffer = Buffer.buffer(json.toString());
-                    webClient
-                        .getRabbitmqClient()
-                        .basicPublish(
-                            resourceGroupId,
-                            routingKey,
-                            buffer,
-                            resultHandler -> {
-                              if (resultHandler.succeeded()) {
-                                finalResponse.put(STATUS, HttpStatus.SC_OK);
-                                LOGGER.info("Success : Message published to queue");
-                                handler.handle(Future.succeededFuture(finalResponse));
-                              } else {
-                                finalResponse.put(TYPE, HttpStatus.SC_BAD_REQUEST);
-                                LOGGER.error("Fail : " + resultHandler.cause().toString());
-                                handler.handle(
-                                    Future.failedFuture(resultHandler.cause().getMessage()));
-                              }
-                            });
+                    Buffer buffer = Buffer.buffer(request.encode());
+                    iudxRabbitMqClient.basicPublish(
+                        resourceGroupId,
+                        routingKey,
+                        buffer,
+                        resultHandler -> {
+                          if (resultHandler.succeeded()) {
+                            finalResponse.put(STATUS, HttpStatus.SC_OK);
+                            LOGGER.info("Success : Message published to queue");
+                            handler.handle(Future.succeededFuture(finalResponse));
+                          } else {
+                            finalResponse.put(TYPE, HttpStatus.SC_BAD_REQUEST);
+                            LOGGER.error("Fail : " + resultHandler.cause().toString());
+                            handler.handle(Future.failedFuture(resultHandler.cause().getMessage()));
+                          }
+                        });
                   }
                 } else {
                   LOGGER.error("Item not found");

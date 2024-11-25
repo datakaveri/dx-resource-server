@@ -82,6 +82,8 @@ public class AdapterEntitiesTest {
   private static PostgresClient pgClient;
   private static Configuration appConfig;
   @Mock static CacheService cacheService;
+  @Mock
+  static RabbitMQClient iudxRabbitMQClient;
 
   private static final Logger LOGGER = LogManager.getLogger(AdapterEntitiesTest.class);
 
@@ -142,7 +144,9 @@ public class AdapterEntitiesTest {
     webConfig.setDefaultHost(dataBrokerIP);
     webConfig.setDefaultPort(dataBrokerManagementPort);
     webConfig.setKeepAliveTimeout(86400000);
-
+    RabbitMQOptions iudxConfig = new RabbitMQOptions(config);
+    String prodVhost = "IUDX";
+    iudxConfig.setVirtualHost(prodVhost);
 
     /* Create a RabbitMQ Clinet with the configuration and vertx cluster instance. */
     client = RabbitMQClient.create(vertx, config);
@@ -181,7 +185,7 @@ public class AdapterEntitiesTest {
     rabbitMQWebClient = new RabbitWebClient(vertx, webConfig, propObj);
     pgClient = new PostgresClient(vertx, connectOptions, poolOptions);
     rabbitMQStreamingClient = new RabbitClient(vertx, config, rabbitMQWebClient, pgClient, brokerConfig);
-    databroker = new DataBrokerServiceImpl(rabbitMQStreamingClient, pgClient, brokerConfig,cacheService);
+    databroker = new DataBrokerServiceImpl(rabbitMQStreamingClient, pgClient, brokerConfig,cacheService, /*iudxConfig, vertx,*/ iudxRabbitMQClient);
 
     resourceGroup = brokerConfig.getString("testResourceGroup");
     resourceServer = brokerConfig.getString("testResourceServer");

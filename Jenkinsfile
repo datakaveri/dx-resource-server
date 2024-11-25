@@ -73,7 +73,7 @@ pipeline {
         script{
           sh 'scp Jmeter/ResourceServer.jmx jenkins@jenkins-master:/var/lib/jenkins/iudx/rs/Jmeter/'
           sh 'docker compose -f docker-compose.test.yml up -d perfTest'
-          sh 'sleep 120'
+          sh 'sleep 60'
         }
       }
       post{
@@ -181,7 +181,7 @@ pipeline {
           steps {
             script {
               sh "ssh azureuser@docker-swarm 'docker service update rs_rs --image ghcr.io/datakaveri/rs-depl:5.6.0-alpha-${env.GIT_HASH}'"
-              sh 'sleep 10'
+              sh 'sleep 60'
             }
           }
           post{

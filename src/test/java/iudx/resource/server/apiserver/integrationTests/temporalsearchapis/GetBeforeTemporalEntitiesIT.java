@@ -20,7 +20,7 @@ public class GetBeforeTemporalEntitiesIT {
         given()
                 .queryParam("id",temporalId)
                 .queryParam("timerel", "before")
-                .queryParam("time", "2020-10-19T12:00:00Z")
+                .queryParam("time", "2021-09-30T12:00:00Z")
                 .header("Content-Type", "application/json")
                 .header("token", openResourceToken)
                 .when()

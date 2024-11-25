@@ -14,7 +14,7 @@ consumes:
 
 info:
   title: "Data exchange Resource Server APIs"
-  version: 5.5.0
+  version: 5.6.0
   description: |
     # Introduction
     The Resource Server is DXs'(Data exchange) data store which allows publication, subscription and discovery of data.
@@ -91,9 +91,9 @@ info:
     The application should address them accordingly.
 
   contact:
-    name: For support contact IUDX Team at
-    email: support@iudx.org.in
-    url: https://iudx.org.in/
+    name: For support contact CDPG Team at
+    email: support@cdpg.org.in
+    url: https://dataforpublicgood.org.in/
   license:
     name: Apache 2.0
 
@@ -215,6 +215,13 @@ paths:
               schema:
                 "$ref": "#/components/schemas/standardResourceNotFoundErrorResponse"
           description: 'Resource not found'
+
+        413:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/payloadTooLarge"
+          description: 'Payload Too Large'
 
       x-codeSamples:
         - lang: 'cURL'
@@ -354,6 +361,13 @@ paths:
               schema:
                 "$ref": "#/components/schemas/standardResourceNotFoundErrorResponse"
           description: 'Resource not found'
+
+        413:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/payloadTooLarge"
+          description: 'Payload Too Large'
 
       x-codeSamples:
         - lang: 'cURL'
@@ -617,6 +631,13 @@ paths:
                 "$ref": "#/components/schemas/standardResourceNotFoundErrorResponse"
           description: 'Resource not found'
 
+        413:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/payloadTooLarge"
+          description: 'Payload Too Large'
+
       x-codeSamples:
         - lang: 'cURL'
           label: 'search by between'
@@ -817,6 +838,13 @@ paths:
             - Unauthorized - `token` invalid/expired
             - Unauthorized - `clientId` & `clientSecret` invalid/not match
 
+        413:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/payloadTooLarge"
+          description: 'Payload Too Large'
+
         404:
           content:
             application/json:
@@ -980,6 +1008,13 @@ paths:
             - Unauthorized - `token` invalid/expired
             - Unauthorized - `clientId` & `clientSecret` invalid/not match
 
+        413:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/payloadTooLarge"
+          description: 'Payload Too Large'
+
         404:
           content:
             application/json:
@@ -1070,7 +1105,7 @@ paths:
       parameters:
         - name: token
           in: header
-          description: 'IUDX auth token for accessing the API'
+          description: 'DX auth token for accessing the API'
           required: true
           style: simple
           schema:
@@ -1373,7 +1408,7 @@ paths:
       parameters:
         - name: token
           in: header
-          description: 'IUDX auth token for accessing the API'
+          description: 'DX auth token for accessing the API'
           required: true
           style: simple
           schema:
@@ -4219,3 +4254,17 @@ components:
         type: urn:dx:rs:backend
         title: bad request
         detail: bad request
+
+    payloadTooLarge:
+      title: payloadtoolarge
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        detail:
+          type: string
+      example:
+        type: urn:dx:rs:payloadTooLarge
+        title: Payload Too Large
+        detail: Response size exceeds limit use filters to get value within limit or use async api
