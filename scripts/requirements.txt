@@ -1,4 +1,4 @@
 requests==2.22.0
 schedule==1.1.0
 psycopg2==2.9.3
-urllib3==1.26.5
+urllib3==1.26.19
