@@ -195,11 +195,15 @@ pipeline {
         stage('Integration test on swarm deployment') {
           steps {
               script{
+                sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
                 sh 'mvn test-compile failsafe:integration-test -DskipUnitTests=true -DintTestDepl=true'
               }
           }
           post{
             always{
+             script{
+                sh 'sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java'
+             }
              xunit (
                thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
                tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
