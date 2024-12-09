@@ -243,7 +243,7 @@ public class Deployer {
             .setClusterManager(mgr)
             .setEventBusOptions(ebOptions)
             .setMetricsOptions(getMetricsOptions());
-    logger.debug("metrics-options" + options.getMetricsOptions());
+    logger.debug("metrics-options " + options.getMetricsOptions());
     Vertx.clusteredVertx(
         options,
         res -> {
@@ -257,7 +257,7 @@ public class Deployer {
               recursiveDeploy(vertx, configuration, modules);
             }
           } else {
-            logger.fatal("Could not join cluster");
+            logger.fatal("Could not join cluster " + res.cause());
           }
         });
   }
@@ -358,6 +358,11 @@ public class Deployer {
                     .setDescription(
                         "comma separated list of verticle names to deploy. "
                             + "If omitted, or if `all` is passed, all verticles are deployed"));
+
+    /*cli.getOptions().forEach(option ->
+            logger.debug("Option defined: longName={}, shortName={}, description={}",
+                    option.getLongName(), option.getShortName(), option.getDescription())
+    );*/
 
     StringBuilder usageString = new StringBuilder();
     cli.usage(usageString);
