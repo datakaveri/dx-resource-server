@@ -680,6 +680,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
           .onComplete(
               cacheHandler -> {
                 if (cacheHandler.succeeded()) {
+                  LOGGER.debug("cache result" + cacheHandler.result());
                   JsonObject cacheResult = cacheHandler.result();
                   String resourceGroupId =
                       cacheResult.containsKey(RESOURCE_GROUP)
