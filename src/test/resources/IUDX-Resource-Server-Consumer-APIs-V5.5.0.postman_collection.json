@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "a6c8d8c9-7db4-4518-8911-908dfc6cedee",
+		"_postman_id": "acdc1e56-cac2-45be-930c-c9ae69335a65",
 		"name": "IUDX-Resource-Server-Consumer-APIs-V5.5.0",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "20457128"
@@ -23482,7 +23482,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"currentLevel\": 1.16,\n    \"referenceLevel\": 15.9,\n    \"measuredDistance\": 14.74,\n    \"entities\": [\n        \"695e222b-3fae-4325-8db0-3e29d01c4fc0\"\n    ],\n    \"observationDateTime\": \"2020-09-22T18:30:00+05:30\",\n    \"deviceInfo\": {\n        \"deviceID\": \"FWR055\"\n    }\n}"
+							"raw": "[{\n    \"currentLevel\": 1.16,\n    \"referenceLevel\": 15.9,\n    \"measuredDistance\": 14.74,\n    \"entities\": [\n        \"695e222b-3fae-4325-8db0-3e29d01c4fc0\"\n    ],\n    \"observationDateTime\": \"2020-09-22T18:30:00+05:30\",\n    \"deviceInfo\": {\n        \"deviceID\": \"FWR055\"\n    }\n}]"
 						},
 						"url": {
 							"raw": "{{base_url}}/{{basePath}}/ingestion/entities",
@@ -23539,13 +23539,13 @@
 							},
 							{
 								"key": "token",
-								"value": "{{secureResourceToken}}",
+								"value": "{{adaptorToken}}",
 								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"currentLevel\": 1.16,\n    \"referenceLevel\": 15.9,\n    \"measuredDistance\": 14.74,\n    \"entities\": [\n        \"83c2e5c2-3574-4e11-9530-2b1fbdfce832\"\n    ],\n    \"observationDateTime\": \"2020-09-22T18:30:00+05:30\",\n    \"deviceInfo\": {\n        \"deviceID\": \"FWR055\"\n    }\n}"
+							"raw": "[{\n    \"currentLevel\": 1.16,\n    \"referenceLevel\": 15.9,\n    \"measuredDistance\": 14.74,\n    \"entities\": [\n        \"83c2e5c2-3574-4e11-9530-2b1fbdfce832\"\n    ],\n    \"observationDateTime\": \"2020-09-22T18:30:00+05:30\",\n    \"deviceInfo\": {\n        \"deviceID\": \"FWR055\"\n    }\n}]"
 						},
 						"url": {
 							"raw": "{{base_url}}/{{basePath}}/ingestion/entities",
@@ -23603,7 +23603,61 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"currentLevel\": 1.16,\n    \"referenceLevel\": 15.9,\n    \"measuredDistance\": 14.74,\n    \"entities\": [\n        \"695e222b-3ae-4325-8db0-3e29d01c4fc0\"\n    ],\n    \"observationDateTime\": \"2020-09-22T18:30:00+05:30\",\n    \"deviceInfo\": {\n        \"deviceID\": \"FWR055\"\n    }\n}"
+							"raw": "[{\n    \"currentLevel\": 1.16,\n    \"referenceLevel\": 15.9,\n    \"measuredDistance\": 14.74,\n    \"entities\": [\n        \"695e222b-3ae-4325-8db0-3e29d01c4fc0\"\n    ],\n    \"observationDateTime\": \"2020-09-22T18:30:00+05:30\",\n    \"deviceInfo\": {\n        \"deviceID\": \"FWR055\"\n    }\n}]"
+						},
+						"url": {
+							"raw": "{{base_url}}/{{basePath}}/ingestion/entities",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"{{basePath}}",
+								"ingestion",
+								"entities"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "400 - Bad Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test the response code",
+									"pm.test(\"response is 400 (Bad Request)\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"// Test the response header",
+									"pm.test(\"Check response header\", function () {",
+									"    pm.response.to.have.header(\"Content-Type\",\"application/json\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "{{adaptorToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[{\n    \"currentLevel\": 1.16,\n    \"referenceLevel\": 15.9,\n    \"measuredDistance\": 14.74,\n    \"entities\": [\n        \"695e222b-3fae-4325-8db0-3e29d01c4fc0\"\n    ],\n    \"observationDateTime\": \"2020-09-22T18:30:00+05:30\",\n    \"deviceInfo\": {\n        \"deviceID\": \"FWR055\"\n    }\n},\n{\n    \"currentLevel\": 1.16,\n    \"referenceLevel\": 15.9,\n    \"measuredDistance\": 14.74,\n    \"entities\": [\n        \"695e222b-2ffe-4325-8db0-3e29d01c4fc0\"\n    ],\n    \"observationDateTime\": \"2020-09-22T18:30:00+05:30\",\n    \"deviceInfo\": {\n        \"deviceID\": \"FWR055\"\n    }\n}]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
 							"raw": "{{base_url}}/{{basePath}}/ingestion/entities",

@@ -194,7 +194,7 @@ public class AdaptorResourceLevelAPIsIT {
                 .put("entities", new JsonArray().add(adapter_id_RL2));
         Response response = given()
                 .header("token", adaptorToken)
-                .body(requestBody.toString())
+                .body(new JsonArray().add(requestBody).toString())
                 .contentType("application/json")
                 .when()
                 .post("/ingestion/entities")
@@ -213,7 +213,7 @@ public class AdaptorResourceLevelAPIsIT {
                 .put("entities", new JsonArray().add(adapter_id_RL2));
         Response response = given()
                 .header("token", secureResourceToken)
-                .body(requestBody.toString())
+                .body(new JsonArray().add(requestBody).toString())
                 .contentType("application/json")
                 .when()
                 .post("/ingestion/entities")
@@ -232,13 +232,33 @@ public class AdaptorResourceLevelAPIsIT {
                 .put("entities", new JsonArray().add("adapter_id_RL2"));
         Response response = given()
                 .header("token", secureResourceToken)
-                .body(requestBody.toString())
+                .body(new JsonArray().add(requestBody).toString())
                 .contentType("application/json")
                 .when()
                 .post("/ingestion/entities")
                 .then()
                 .statusCode(404)
                 .body("title", equalTo("Not Found"))
+                .extract()
+                .response();
+    }
+    @Test
+    @Order(12)
+    @DisplayName("testing adaptor resource level  - 400 (Bad Request) Ingestion Entities Adaptor")
+    void PostIngestionEntitiesAdaptorBadRequest() {
+        JsonObject requestBody = new JsonObject()
+                .put("entities", new JsonArray().add("adapter_id_RL2"));
+        JsonObject requestBody2 = new JsonObject()
+                .put("entities", new JsonArray().add(adapter_id_RL2));
+        Response response = given()
+                .header("token", adaptorToken)
+                .body(new JsonArray().add(requestBody).add(requestBody2).toString())
+                .contentType("application/json")
+                .when()
+                .post("/ingestion/entities")
+                .then()
+                .statusCode(400)
+                .body("title", equalTo("Bad Request"))
                 .extract()
                 .response();
     }
