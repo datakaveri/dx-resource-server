@@ -1351,6 +1351,13 @@ paths:
                 "$ref": "#/components/schemas/standardResourceNotFoundErrorResponse"
           description: 'Not Found'
 
+        400:
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/asyncBadRequestErrorResponse"
+          description: 'Not Found'
+
 
       description: |
         Ingestion Entities API allows a publish data into DX(Data exchange) Resource Server. Based on the input provided, the API validates the access control of the user with DX(Data exchange) Auth server to allow or deny access to the API. Enitiy should be registered with DX through the adaptor /ingestion API.
@@ -3250,7 +3257,7 @@ components:
           items:
             type: string
       example:
-        {
+        [{
           "currentLevel": 1.16,
           "referenceLevel": 15.9,
           "measuredDistance": 14.74,
@@ -3261,7 +3268,7 @@ components:
           "deviceInfo": {
             "deviceID": "FWR055"
           }
-        }
+        }]
 
     entityresponse:
       title: entityresponse

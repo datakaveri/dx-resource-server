@@ -716,7 +716,7 @@ public class ApiServerVerticle extends AbstractVerticle {
             }
             // create json
             JsonObject json;
-            QueryMapper queryMapper = new QueryMapper(routingContext,timeLimit);
+            QueryMapper queryMapper = new QueryMapper(routingContext, timeLimit);
             json = queryMapper.toJson(ngsildquery, false);
             /* HTTP request instance/host details */
             String instanceId = request.getHeader(HEADER_HOST);
@@ -772,7 +772,7 @@ public class ApiServerVerticle extends AbstractVerticle {
           if (validationHandler.succeeded()) {
             // parse query params
             NgsildQueryParams ngsildquery = new NgsildQueryParams(requestJson);
-            QueryMapper queryMapper = new QueryMapper(routingContext,timeLimit);
+            QueryMapper queryMapper = new QueryMapper(routingContext, timeLimit);
             JsonObject json = queryMapper.toJson(ngsildquery, requestJson.containsKey("temporalQ"));
             String instanceId = request.getHeader(HEADER_HOST);
             json.put(JSON_INSTANCEID, instanceId);
@@ -986,7 +986,7 @@ public class ApiServerVerticle extends AbstractVerticle {
             // parse query params
             NgsildQueryParams ngsildquery = new NgsildQueryParams(params);
             // create json
-            QueryMapper queryMapper = new QueryMapper(routingContext,timeLimit);
+            QueryMapper queryMapper = new QueryMapper(routingContext, timeLimit);
 
             JsonObject json = queryMapper.toJson(ngsildquery, true);
             json.put(JSON_INSTANCEID, instanceId);
@@ -1477,7 +1477,7 @@ public class ApiServerVerticle extends AbstractVerticle {
    */
   public void publishDataFromAdapter(RoutingContext routingContext) {
     LOGGER.trace("Info: publishDataFromAdapter method started;");
-    JsonObject requestJson = routingContext.body().asJsonObject();
+    JsonArray requestJson = routingContext.body().asJsonArray();
     HttpServerRequest request = routingContext.request();
     HttpServerResponse response = routingContext.response();
     /*String instanceId = request.getHeader(HEADER_HOST);*/

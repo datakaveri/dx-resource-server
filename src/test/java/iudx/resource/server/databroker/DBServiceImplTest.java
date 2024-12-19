@@ -124,6 +124,7 @@ public class DBServiceImplTest {
         request.put("routingKey", "routingKeyValue");
         request.put("type", HttpStatus.SC_OK);
         request.put("entities", new JsonArray().add("5b7556b5-0779-4c47-9cf2-3f209779aa22"));
+        JsonArray jsonArray = new JsonArray().add(request);
         /*when(webClient.getRabbitmqClient()).thenReturn(rabbitMQClient);*/
         when(asyncResult1.succeeded()).thenReturn(true);
 
@@ -144,7 +145,7 @@ public class DBServiceImplTest {
         }).when(iudxRabbitMQClient).basicPublish(anyString(), anyString(), any(Buffer.class), any(Handler.class));
         expected.put("status", 200);
 
-        databroker.publishFromAdaptor(request, vHost, handler -> {
+        databroker.publishFromAdaptor(jsonArray, vHost, handler -> {
             if (handler.succeeded()) {
                 assertEquals(expected, handler.result());
                 assertEquals(200, handler.result().getInteger("status"));
@@ -853,6 +854,7 @@ public class DBServiceImplTest {
         request.put("routingKey", "routingKeyValue");
         request.put("type", HttpStatus.SC_OK);
         request.put("entities", new JsonArray().add("5b7556b5-0779-4c47-9cf2-3f209779aa22"));
+        JsonArray jsonArray = new JsonArray().add(request);
         lenient().when(webClient.getRabbitmqClient()).thenReturn(rabbitMQClient);
         when(asyncResult1.succeeded()).thenReturn(false);
         when(asyncResult1.cause()).thenReturn(throwable);
@@ -873,7 +875,7 @@ public class DBServiceImplTest {
                         .put("resourceGroup", "dummy_resource");
 
         when(cacheService.get(any())).thenReturn(Future.succeededFuture(providerJson));
-        databroker.publishFromAdaptor(request, vHost, handler -> {
+        databroker.publishFromAdaptor(jsonArray, vHost, handler -> {
             if (handler.failed()) {
                 assertEquals("Dummy failure message", handler.cause().getMessage());
                 vertxTestContext.completeNow();
