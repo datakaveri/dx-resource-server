@@ -615,7 +615,7 @@ public class DataBrokerServiceTest {
     request.put("NO2", 50.62);
 
     String vhost= Vhosts.IUDX_PROD.name();
-    databroker.publishFromAdaptor(request,vhost, handler -> {
+    databroker.publishFromAdaptor(new JsonArray().add(request),vhost, handler -> {
       if (handler.succeeded()) {
         JsonObject response = handler.result();
         LOGGER.debug("Message from adaptor response is : " + response);

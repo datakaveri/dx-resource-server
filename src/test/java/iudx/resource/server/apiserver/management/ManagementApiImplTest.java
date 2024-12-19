@@ -457,7 +457,7 @@ JsonObject jsonObject = new JsonObject()
             }
         }).when(dataBrokerService).publishFromAdaptor(any(),anyString(),any());
 
-        managementApi.publishDataFromAdapter(json,dataBrokerService).onComplete(handler -> {
+        managementApi.publishDataFromAdapter(new JsonArray().add(json),dataBrokerService).onComplete(handler -> {
             if(handler.succeeded())
             {
                 assertEquals("urn:dx:rs:success",handler.result().getString("type"));
@@ -485,7 +485,7 @@ JsonObject jsonObject = new JsonObject()
             }
         }).when(dataBrokerService).publishFromAdaptor(any(),anyString(),any());
 
-        managementApi.publishDataFromAdapter(json,dataBrokerService).onComplete(handler -> {
+        managementApi.publishDataFromAdapter(new JsonArray().add(json),dataBrokerService).onComplete(handler -> {
             if(handler.failed())
             {
                 assertEquals("Dummy throwable message",handler.cause().getMessage());

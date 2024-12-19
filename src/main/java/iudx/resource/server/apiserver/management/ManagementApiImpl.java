@@ -232,7 +232,7 @@ public class ManagementApiImpl implements ManagementApi {
 
   /** {@inheritDoc} */
   @Override
-  public Future<JsonObject> publishDataFromAdapter(JsonObject json, DataBrokerService databroker) {
+  public Future<JsonObject> publishDataFromAdapter(JsonArray json, DataBrokerService databroker) {
     Promise<JsonObject> promise = Promise.promise();
     databroker.publishFromAdaptor(
         json,

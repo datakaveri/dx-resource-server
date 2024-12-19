@@ -1,6 +1,7 @@
 package iudx.resource.server.apiserver.management;
 
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.database.postgres.PostgresService;
@@ -59,7 +60,7 @@ public interface ManagementApi {
    * @param databroker DataBrokerService object
    * @return Future
    */
-  Future<JsonObject> publishDataFromAdapter(JsonObject json, DataBrokerService databroker);
+  Future<JsonObject> publishDataFromAdapter(JsonArray json, DataBrokerService databroker);
 
   /**
    * publish all adapter from exchange.

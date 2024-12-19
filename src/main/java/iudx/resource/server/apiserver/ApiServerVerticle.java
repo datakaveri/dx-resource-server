@@ -1475,7 +1475,7 @@ public class ApiServerVerticle extends AbstractVerticle {
    */
   public void publishDataFromAdapter(RoutingContext routingContext) {
     LOGGER.trace("Info: publishDataFromAdapter method started;");
-    JsonObject requestJson = routingContext.body().asJsonObject();
+    JsonArray requestJson = routingContext.body().asJsonArray();
     HttpServerRequest request = routingContext.request();
     HttpServerResponse response = routingContext.response();
     /*String instanceId = request.getHeader(HEADER_HOST);*/
