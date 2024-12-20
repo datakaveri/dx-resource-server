@@ -17,8 +17,10 @@ import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.common.Api;
 import iudx.resource.server.common.HttpStatusCode;
 import iudx.resource.server.common.ResponseUrn;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -41,16 +43,45 @@ public class AuthHandler implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext context) {
     request = context.request();
+
+    LOGGER.debug("Info : path " + request.path());
+
     RequestBody requestBody = context.body();
     JsonObject requestJson = null;
-    if (requestBody != null && requestBody.asJsonObject() != null) {
-      requestJson = requestBody.asJsonObject().copy();
+    if (request.path().equalsIgnoreCase(api.getIngestionPathEntities())) {
+
+      try {
+        JsonArray requestJsonArray = requestBody.asJsonArray();
+        Set<String> entityIds = new HashSet<>();
+
+        for (int i = 0; i < requestJsonArray.size(); i++) {
+          JsonObject entity = requestJsonArray.getJsonObject(i);
+          entityIds.add(entity.getString("entities"));
+        }
+
+        if (entityIds.size() == 1) {
+          LOGGER.debug("All entity IDs match: " + entityIds.iterator().next());
+        } else {
+          LOGGER.error("Entity IDs do not match: " + entityIds);
+          processAuthFailure(context, "Entity IDs do not match");
+          return;
+          // throw new DxRuntimeException(400, BAD_REQUEST_URN,"Entity IDs do not match.");
+        }
+      } catch (Exception e) {
+        /*LOGGER.error("Error processing the request body: ", e);*/
+        processAuthFailure(context, "Error processing the request body");
+      }
+
+    } else {
+      if (requestBody != null && requestBody.asJsonObject() != null) {
+        requestJson = requestBody.asJsonObject().copy();
+      }
     }
+
     if (requestJson == null) {
       requestJson = new JsonObject();
     }
 
-    LOGGER.debug("Info : path " + request.path());
     // bypassing auth for RDocs
     if (noAuthRequired.contains(request.path())) {
       context.next();
@@ -83,7 +114,6 @@ public class AuthHandler implements Handler<RoutingContext> {
       ids = requestJson.getJsonArray(JSON_ENTITIES);
     }
     requestJson.put(IDS, ids);
-
     authenticator.tokenInterospect(
         requestJson,
         authInfo,
@@ -113,6 +143,14 @@ public class AuthHandler implements Handler<RoutingContext> {
           .putHeader(CONTENT_TYPE, APPLICATION_JSON)
           .setStatusCode(statusCode.getValue())
           .end(generateResponse(RESOURCE_NOT_FOUND_URN, statusCode).toString());
+    } else if (result.contains("Entity IDs do not match")
+        || result.contains("Error processing the request body")) {
+      LOGGER.error("Entity IDs do not match");
+      HttpStatusCode statusCode = HttpStatusCode.getByValue(400);
+      ctx.response()
+          .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+          .setStatusCode(statusCode.getValue())
+          .end(generateResponse(BAD_REQUEST_URN, statusCode).toString());
     } else {
       LOGGER.error("Error : Authentication Failure");
       HttpStatusCode statusCode = HttpStatusCode.getByValue(401);
@@ -180,7 +218,13 @@ public class AuthHandler implements Handler<RoutingContext> {
   }
 
   private String getId4rmBody(RoutingContext context, String endpoint) {
-    JsonObject body = context.body().asJsonObject();
+    JsonObject body;
+    if (endpoint.equalsIgnoreCase(api.getIngestionPathEntities())) {
+      body = context.body().asJsonArray().getJsonObject(0);
+    } else {
+      body = context.body().asJsonObject();
+    }
+
     String id = null;
     if (body != null) {
       JsonArray array = body.getJsonArray(JSON_ENTITIES);
