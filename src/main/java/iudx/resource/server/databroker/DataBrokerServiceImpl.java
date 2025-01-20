@@ -574,15 +574,15 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   /** {@inheritDoc} */
   @Override
   public DataBrokerService publishFromAdaptor(
-      JsonObject request, String vhost, Handler<AsyncResult<JsonObject>> handler) {
+      JsonArray request, String vhost, Handler<AsyncResult<JsonObject>> handler) {
     JsonObject finalResponse = new JsonObject();
-    LOGGER.debug("request Json " + request);
+    LOGGER.debug("request JsonArray " + request);
 
     if (request != null && !request.isEmpty()) {
 
       JsonObject cacheRequestJson = new JsonObject();
       cacheRequestJson.put("type", CATALOGUE_CACHE);
-      cacheRequestJson.put("key", request.getJsonArray("entities").getString(0));
+      cacheRequestJson.put("key", request.getJsonObject(0).getJsonArray("entities").getValue(0));
       cacheService
           .get(cacheRequestJson)
           .onComplete(
@@ -594,9 +594,17 @@ public class DataBrokerServiceImpl implements DataBrokerService {
                           ? cacheResult.getString(RESOURCE_GROUP)
                           : cacheResult.getString(ID);
                   LOGGER.debug("Info : resourceGroupId  " + resourceGroupId);
-                  String routingKey = request.getJsonArray("entities").getString(0);
+                  String id =
+                      request.getJsonObject(0).getJsonArray("entities").getValue(0).toString();
+                  String routingKey = resourceGroupId + "/." + id;
                   request.remove("entities");
-                  request.put("id", routingKey);
+
+                  for (int i = 0; i < request.size(); i++) {
+                    JsonObject jsonObject = request.getJsonObject(i);
+                    jsonObject.remove("entities");
+                    jsonObject.put("id", id);
+                  }
+                  LOGGER.trace(request);
                   if (resourceGroupId != null && !resourceGroupId.isBlank()) {
                     LOGGER.debug("Info : routingKey  " + routingKey);
                     Buffer buffer = Buffer.buffer(request.encode());

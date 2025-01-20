@@ -99,7 +99,7 @@ public class DBServiceImplTest {
     request.put("entities", new JsonArray().add("5b7556b5-0779-4c47-9cf2-3f209779aa22"));
     /*when(webClient.getRabbitmqClient()).thenReturn(rabbitMQClient);*/
     when(asyncResult1.succeeded()).thenReturn(true);
-
+      JsonArray jsonArray = new JsonArray().add(request);
     JsonObject providerJson =
         new JsonObject()
             .put("provider", "8b95ab80-2aaf-4636-a65e-7f2563d0d371")
@@ -121,7 +121,7 @@ public class DBServiceImplTest {
     expected.put("status", 200);
 
     databroker.publishFromAdaptor(
-        request,
+        jsonArray,
         vHost,
         handler -> {
           if (handler.succeeded()) {
@@ -998,6 +998,7 @@ public class DBServiceImplTest {
     request.put("routingKey", "routingKeyValue");
     request.put("type", HttpStatus.SC_OK);
     request.put("entities", new JsonArray().add("5b7556b5-0779-4c47-9cf2-3f209779aa22"));
+    JsonArray jsonArray = new JsonArray().add(request);
     lenient().when(webClient.getRabbitmqClient()).thenReturn(rabbitMQClient);
     when(asyncResult1.succeeded()).thenReturn(false);
     when(asyncResult1.cause()).thenReturn(throwable);
@@ -1022,7 +1023,7 @@ public class DBServiceImplTest {
 
     when(cacheService.get(any())).thenReturn(Future.succeededFuture(providerJson));
     databroker.publishFromAdaptor(
-        request,
+        jsonArray,
         vHost,
         handler -> {
           if (handler.failed()) {
