@@ -11,7 +11,6 @@ public class Constants {
   public static final String KEYSTORE_PASSWORD = "keystorePassword";
   public static final String AUTH_SERVER_HOST = "authServerHost";
   public static final String AUTH_CERTINFO_PATH = "/auth/v1/certificate-info";
-  public static final String PUBLIC_TOKEN = "public";
 
   public static final String AUTH_CERTIFICATE_PATH = "/cert";
   public static final List<String> OPEN_ENDPOINTS =

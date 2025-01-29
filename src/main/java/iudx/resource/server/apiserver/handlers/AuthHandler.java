@@ -21,6 +21,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import iudx.resource.server.common.RoutingContextHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -31,8 +33,6 @@ public class AuthHandler implements Handler<RoutingContext> {
   static AuthenticationService authenticator;
   private static Api api;
   private final String authInfo = "authInfo";
-  private final List<String> noAuthRequired = bypassEndpoint;
-  private HttpServerRequest request;
 
   public static AuthHandler create(Vertx vertx, Api apis) {
     authenticator = AuthenticationService.createProxy(vertx, AUTH_SERVICE_ADDRESS);
@@ -42,13 +42,12 @@ public class AuthHandler implements Handler<RoutingContext> {
 
   @Override
   public void handle(RoutingContext context) {
-    request = context.request();
 
-    LOGGER.debug("Info : path " + request.path());
+    LOGGER.debug("Info : path " + RoutingContextHelper.getRequestPath(context));
 
     RequestBody requestBody = context.body();
-    JsonObject requestJson = null;
-    if (request.path().equalsIgnoreCase(api.getIngestionPathEntities())) {
+    JsonObject requestJson  = new JsonObject();
+    if (RoutingContextHelper.getRequestPath(context).equalsIgnoreCase(api.getIngestionPathEntities())) {
 
       try {
         JsonArray requestJsonArray = requestBody.asJsonArray();
@@ -78,23 +77,12 @@ public class AuthHandler implements Handler<RoutingContext> {
       }
     }
 
-    if (requestJson == null) {
-      requestJson = new JsonObject();
-    }
 
-    // bypassing auth for RDocs
-    if (noAuthRequired.contains(request.path())) {
-      context.next();
-      return;
-    }
 
-    String token = request.headers().get(HEADER_TOKEN);
-    final String path = getNormalizedPath(request.path());
+    String token = RoutingContextHelper.getToken(context);
+    final String path = getNormalizedPath(RoutingContextHelper.getRequestPath(context));
     final String method = context.request().method().toString();
 
-    if (token == null) {
-      token = "public";
-    }
 
     JsonObject authInfo =
         new JsonObject().put(API_ENDPOINT, path).put(HEADER_TOKEN, token).put(API_METHOD, method);
@@ -131,7 +119,6 @@ public class AuthHandler implements Handler<RoutingContext> {
             return;
           }
           context.next();
-          return;
         });
   }
 
@@ -178,7 +165,7 @@ public class AuthHandler implements Handler<RoutingContext> {
   private String getId(RoutingContext context, String path, String method) {
 
     String pathId = getId4rmPath(context);
-    String paramId = getId4rmRequest();
+    String paramId = getId4rmRequest(context);
     String bodyId = getId4rmBody(context, path);
     String id;
     if (pathId != null && !pathId.isBlank()) {
@@ -213,8 +200,8 @@ public class AuthHandler implements Handler<RoutingContext> {
     return id != null ? id.toString() : null;
   }
 
-  private String getId4rmRequest() {
-    return request.getParam(ID);
+  private String getId4rmRequest(RoutingContext routingContext) {
+    return routingContext.request().getParam(ID);
   }
 
   private String getId4rmBody(RoutingContext context, String endpoint) {

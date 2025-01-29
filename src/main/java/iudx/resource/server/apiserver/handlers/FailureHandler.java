@@ -20,6 +20,8 @@ public class FailureHandler implements Handler<RoutingContext> {
   public void handle(RoutingContext context) {
     Throwable failure = context.failure();
     LOGGER.debug("exception caught");
+    //TODO: Delete this
+    failure.printStackTrace();
     if (failure instanceof DxRuntimeException) {
       DxRuntimeException exception = (DxRuntimeException) failure;
       LOGGER.error(exception.getUrn().getUrn() + " : " + exception.getMessage());

@@ -219,10 +219,12 @@ public class ApiServerVerticle extends AbstractVerticle {
     FailureHandler validationsFailureHandler = new FailureHandler();
     /* NGSI-LD api endpoints */
     ValidationHandler entityValidationHandler = new ValidationHandler(vertx, RequestType.ENTITY);
+    AuthHandler authHandler = AuthHandler.create(vertx, api);
+
     router
         .get(api.getEntitiesUrl())
         .handler(entityValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::handleEntitiesQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -230,7 +232,7 @@ public class ApiServerVerticle extends AbstractVerticle {
     router
         .get(api.getEntitiesUrl() + "/*")
         .handler(latestValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::handleLatestEntitiesQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -240,7 +242,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .post(api.getPostTemporalQueryPath())
         .consumes(APPLICATION_JSON)
         .handler(postTemporalValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::handlePostEntitiesQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -250,7 +252,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .post(api.getPostEntitiesQueryPath())
         .consumes(APPLICATION_JSON)
         .handler(postEntitiesValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::handlePostEntitiesQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -259,7 +261,7 @@ public class ApiServerVerticle extends AbstractVerticle {
     router
         .get(api.getTemporalUrl())
         .handler(temporalValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::handleTemporalQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -269,38 +271,38 @@ public class ApiServerVerticle extends AbstractVerticle {
     router
         .post(api.getSubscriptionUrl())
         .handler(subsValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::handleSubscriptions)
         .failureHandler(validationsFailureHandler);
     // append sub
     router
         .patch(api.getSubscriptionUrl() + "/:userid/:alias")
         .handler(subsValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::appendSubscription)
         .failureHandler(validationsFailureHandler);
     // update sub
     router
         .put(api.getSubscriptionUrl() + "/:userid/:alias")
         .handler(subsValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::updateSubscription)
         .failureHandler(validationsFailureHandler);
     // get sub
     router
         .get(api.getSubscriptionUrl() + "/:userid/:alias")
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::getSubscription);
 
     // get sub for all queue
     router
         .get(api.getSubscriptionUrl())
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::getAllSubscriptionForUser);
     // delete sub
     router
         .delete(api.getSubscriptionUrl() + "/:userid/:alias")
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::deleteSubscription);
 
     /* Management Api endpoints */
@@ -308,53 +310,53 @@ public class ApiServerVerticle extends AbstractVerticle {
 
     router
         .get(api.getIudxConsumerAuditUrl())
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::getConsumerAuditDetail);
     router
         .get(api.getIudxProviderAuditUrl())
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::getProviderAuditDetail);
 
     // adapter
     router
         .post(api.getIngestionPath())
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::registerAdapter);
 
     router
         .delete(api.getIngestionPath() + "/*")
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::deleteAdapter);
 
     router
         .get(api.getIngestionPath() + "/:UUID")
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::getAdapterDetails);
 
     router
         .post(api.getIngestionPath() + "/heartbeat")
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::publishHeartbeat);
     router
         .post(api.getIngestionPathEntities())
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::publishDataFromAdapter);
     router
         .get(api.getIngestionPath())
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::getAllAdaptersForUsers);
 
     // Metering extension
     router
         .get(api.getMonthlyOverview())
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::getMonthlyOverview)
         .failureHandler(validationsFailureHandler);
 
     // Metering Summary
     router
         .get(api.getSummaryPath())
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(this::getAllSummaryHandler)
         .failureHandler(validationsFailureHandler);
 
@@ -441,7 +443,7 @@ public class ApiServerVerticle extends AbstractVerticle {
 
     router
         .post(dxApiBasePath + RESET_PWD)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(authHandler)
         .handler(
             handler -> {
               new ManagementRestApi(databroker).resetPassword(handler);
