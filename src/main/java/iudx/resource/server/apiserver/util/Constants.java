@@ -79,7 +79,6 @@ public class Constants {
   public static final String ROUTE_STATIC_SPEC = "/apis/spec";
 
   public static final String ROUTE_DOC = "/apis";
-  public static final List<String> bypassEndpoint = List.of(ROUTE_STATIC_SPEC, ROUTE_DOC);
   public static final List<String> openEndPoints =
       List.of("/temporal/entities", "/entities", "/entityOperations/query");
   public static final String REVOKE_TOKEN = "/revokeToken";
@@ -123,6 +122,7 @@ public class Constants {
 
   // Header params
   public static final String HEADER_TOKEN = "token";
+  public static final String HEADER_BEARER_AUTHORIZATION = "Bearer";
   public static final String HEADER_CSV = "csv";
   public static final String HEADER_JSON = "json";
   public static final String HEADER_PARQUET = "parquet";
@@ -136,7 +136,6 @@ public class Constants {
   public static final String HEADER_OPTIONS = "options";
 
   public static final String COUNT_HEADER = "Count";
-  public static final String PUBLIC_TOKEN = "public";
   public static final String HEADER_PUBLIC_KEY = "publicKey";
   public static final String HEADER_RESPONSE_FILE_FORMAT = "format";
 
