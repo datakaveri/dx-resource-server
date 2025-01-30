@@ -4,7 +4,6 @@ import static iudx.resource.server.apiserver.response.ResponseUtil.generateRespo
 import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.apiserver.util.Constants.ID;
 import static iudx.resource.server.apiserver.util.Constants.USER_ID;
-import static iudx.resource.server.authenticator.Constants.ROLE;
 import static iudx.resource.server.common.Constants.*;
 import static iudx.resource.server.common.HttpStatusCode.*;
 import static iudx.resource.server.common.HttpStatusCode.SUCCESS;
@@ -16,6 +15,7 @@ import static iudx.resource.server.metering.util.Constants.API;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
@@ -23,7 +23,12 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import iudx.resource.server.apiserver.handlers.AuthHandler;
+import iudx.resource.server.apiserver.handlers.*;
+import iudx.resource.server.authenticator.AuthenticationService;
+import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
+import iudx.resource.server.authenticator.handler.authorization.GetIdHandler;
+import iudx.resource.server.authenticator.handler.authorization.TokenInterospectionForAdminApis;
+import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.cache.cachelmpl.CacheType;
 import iudx.resource.server.common.*;
@@ -34,6 +39,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -49,6 +55,7 @@ public final class AdminRestApi {
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final CacheService cacheService;
   private Api api;
+  private AuthenticationService authenticator;
 
   AdminRestApi(Vertx vertx, Router router, Api api) {
     this.vertx = vertx;
@@ -57,29 +64,48 @@ public final class AdminRestApi {
     this.auditService = MeteringService.createProxy(vertx, METERING_SERVICE_ADDRESS);
     this.pgService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
     this.api = api;
+    this.authenticator = AuthenticationService.createProxy(vertx, AUTH_SERVICE_ADDRESS);
     cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
   }
 
   public Router init() {
+
+    AuthHandler authHandler = new AuthHandler(api, authenticator);
+    GetIdHandler getIdHandler = new GetIdHandler(api);
+    Handler<RoutingContext> validateToken = new TokenInterospectionForAdminApis();
+    FailureHandler validationsFailureHandler = new FailureHandler();
+
     router
         .post(REVOKE_TOKEN)
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::handleRevokeTokenRequest);
+        .handler(getIdHandler.withNormalisedPath(api.getAdminRevokeToken()))
+        .handler(authHandler)
+        .handler(validateToken)
+        .handler(this::handleRevokeTokenRequest)
+        .failureHandler(validationsFailureHandler);
 
     router
         .post(RESOURCE_ATTRIBS)
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::createUniqueAttribute);
+        .handler(getIdHandler.withNormalisedPath(api.getAdminUniqueAttributeOfResource()))
+        .handler(authHandler)
+        .handler(validateToken)
+        .handler(this::createUniqueAttribute)
+        .failureHandler(validationsFailureHandler);
 
     router
         .put(RESOURCE_ATTRIBS)
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::updateUniqueAttribute);
+        .handler(getIdHandler.withNormalisedPath(api.getAdminUniqueAttributeOfResource()))
+        .handler(authHandler)
+        .handler(validateToken)
+        .handler(this::updateUniqueAttribute)
+        .failureHandler(validationsFailureHandler);
 
     router
         .delete(RESOURCE_ATTRIBS)
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::deleteUniqueAttribute);
+        .handler(getIdHandler.withNormalisedPath(api.getAdminUniqueAttributeOfResource()))
+        .handler(authHandler)
+        .handler(validateToken)
+        .handler(this::deleteUniqueAttribute)
+        .failureHandler(validationsFailureHandler);
 
     return router;
   }
@@ -90,6 +116,7 @@ public final class AdminRestApi {
 
     //    context.queryParam(ID).add("admin_op");
 
+    String id = requestBody.getString("sub");
     StringBuilder query =
         new StringBuilder(
             INSERT_REVOKE_TOKEN_SQL
@@ -326,11 +353,17 @@ public final class AdminRestApi {
   }
 
   private Future<Void> updateAuditTable(RoutingContext context) {
-    JsonObject authInfo = (JsonObject) context.data().get("authInfo");
+    JwtData jwtData = RoutingContextHelper.getJwtData(context);
+    String sub = jwtData.getSub();
+    String role = jwtData.getRole();
+    String did = jwtData.getDid();
+    String drl = jwtData.getDrl();
+    String id = RoutingContextHelper.getId(context);
+    String endPoint = RoutingContextHelper.getEndPoint(context);
 
     JsonObject request = new JsonObject();
-    if (authInfo.containsKey(ID) && authInfo.getString(ID) != null) {
-      request.put(ID, authInfo.getValue(ID));
+    if (StringUtils.isNotBlank(id)) {
+      request.put(ID, id);
     } else {
       request.put(ID, RESOURCE_ID_DEFAULT);
     }
@@ -351,12 +384,10 @@ public final class AdminRestApi {
                         ? cacheResult.getString(RESOURCE_GROUP)
                         : cacheResult.getString(ID);
                 ZonedDateTime zst = ZonedDateTime.now(ZoneId.of("Asia/Kolkata"));
-                String role = authInfo.getString(ROLE);
-                String drl = authInfo.getString(DRL);
                 if (role.equalsIgnoreCase("delegate") && drl != null) {
-                  request.put(DELEGATOR_ID, authInfo.getString(DID));
+                  request.put(DELEGATOR_ID, did);
                 } else {
-                  request.put(DELEGATOR_ID, authInfo.getString(USER_ID));
+                  request.put(DELEGATOR_ID, sub);
                 }
                 String providerId = cacheResult.getString("provider");
                 long time = zst.toInstant().toEpochMilli();
@@ -366,9 +397,9 @@ public final class AdminRestApi {
                 request.put(PROVIDER_ID, providerId);
                 request.put(EPOCH_TIME, time);
                 request.put(ISO_TIME, isoTime);
-                request.put(API, authInfo.getValue(API_ENDPOINT));
+                request.put(API, endPoint);
                 request.put(RESPONSE_SIZE, 0);
-                request.put(USER_ID, authInfo.getValue(USER_ID));
+                request.put(USER_ID, sub);
                 LOGGER.debug("request : " + request.encode());
                 auditService.insertMeteringValuesInRmq(
                     request,

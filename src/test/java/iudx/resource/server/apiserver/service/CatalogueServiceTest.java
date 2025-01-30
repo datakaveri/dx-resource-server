@@ -3,6 +3,7 @@ package iudx.resource.server.apiserver.service;
 import static org.mockito.Mockito.*;
 
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
@@ -23,10 +24,12 @@ public class CatalogueServiceTest {
   JsonObject config;
   CatalogueService catalogueService;
   @Mock CacheService cache;
+  Vertx vertx;
 
   @BeforeEach
   public void setUp(VertxTestContext vertxTestContext) {
     config = new JsonObject();
+    vertx = Vertx.vertx();
     config.put("catServerHost", "guest");
     config.put("catServerPort", 8443);
     JsonObject jsonObject = new JsonObject();
@@ -56,7 +59,7 @@ public class CatalogueServiceTest {
     //                return null;
     //            }
     //        }).when(httpRequest).send(any());
-    catalogueService = new CatalogueService(cache);
+    catalogueService = new CatalogueService(cache,config, vertx);
     vertxTestContext.completeNow();
   }
 

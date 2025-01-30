@@ -1,13 +1,12 @@
 package iudx.resource.server.authenticator;
 
-import io.vertx.codegen.annotations.Fluent;
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import iudx.resource.server.authenticator.model.JwtData;
 
 /**
  * The Authentication Service.
@@ -45,14 +44,11 @@ public interface AuthenticationService {
    * APIs. It caches the result of the TIP from the auth server for a duration specified by the
    * Constants TIP_CACHE_TIMEOUT_AMOUNT and TIP_CACHE_TIMEOUT_UNIT.
    *
-   * @param request which is a JsonObject containing ids: [String]
    * @param authenticationInfo which is a JsonObject containing token: String and apiEndpoint:
-   *        String
-   * @param handler which is a request handler
+   *                           String
    * @return AuthenticationService which is a service
    */
 
-  @Fluent
-  AuthenticationService tokenInterospect(JsonObject request, JsonObject authenticationInfo,
-      Handler<AsyncResult<JsonObject>> handler);
+  Future<JwtData> tokenIntrospect(JsonObject authenticationInfo);
+
 }

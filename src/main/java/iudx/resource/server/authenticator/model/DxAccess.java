@@ -1,8 +1,8 @@
-package iudx.resource.server.authenticator.authorization;
+package iudx.resource.server.authenticator.model;
 
 import java.util.stream.Stream;
 
-public enum IudxAccess {
+public enum DxAccess {
 
   API("api"),
   SUBSCRIPTION("sub"),
@@ -12,7 +12,7 @@ public enum IudxAccess {
 
   private final String access;
 
-  IudxAccess(String access) {
+  DxAccess(String access) {
     this.access = access;
   }
 
@@ -20,11 +20,11 @@ public enum IudxAccess {
     return this.access;
   }
 
-  public static IudxAccess fromAccess(final String access) {
+  public static DxAccess fromAccess(final String constraint) {
     return Stream.of(values())
-        .filter(v -> v.access.equalsIgnoreCase(access))
-        .findAny()
-        .orElse(null);
+            .filter(v -> v.access.equalsIgnoreCase(constraint))
+            .findAny()
+            .orElse(null);
   }
 
 }

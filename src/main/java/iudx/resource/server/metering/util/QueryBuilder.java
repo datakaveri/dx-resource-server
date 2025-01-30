@@ -1,11 +1,9 @@
 package iudx.resource.server.metering.util;
 
-import static iudx.resource.server.apiserver.util.Constants.ENDT;
-import static iudx.resource.server.apiserver.util.Constants.STARTT;
-import static iudx.resource.server.authenticator.Constants.ROLE;
 import static iudx.resource.server.metering.util.Constants.*;
 
 import io.vertx.core.json.JsonObject;
+import iudx.resource.server.authenticator.model.JwtData;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -78,8 +76,8 @@ public class QueryBuilder {
     return query.toString();
   }
 
-  public String buildMonthlyOverview(JsonObject request) {
-    String role = request.getString(ROLE);
+  public String buildMonthlyOverview(JwtData jwtData, DateValidation.Time time, String providerId) {
+    String role = jwtData.getRole();
 
     String current = ZonedDateTime.now().toString();
     LOGGER.debug("zone IST =" + ZonedDateTime.now());
@@ -99,115 +97,118 @@ public class QueryBuilder {
             .withSecond(0)
             .toString();
     LOGGER.debug("Year back =" + timeYearBack);
-    String startTime = request.getString(STARTT);
-    String endTime = request.getString(ENDT);
-    if (startTime != null && endTime != null) {
-      ZonedDateTime timeSeries = ZonedDateTime.parse(startTime);
-      String timeSeriesToFirstDay = String.valueOf(timeSeries.withDayOfMonth(1));
-      LOGGER.debug("Time series = " + timeSeriesToFirstDay);
-      if (role.equalsIgnoreCase("admin")) {
-        monthQuery =
-            new StringBuilder(
-                OVERVIEW_QUERY
-                    .concat(GROUPBY)
-                    .replace("$0", timeSeriesToFirstDay)
-                    .replace("$1", endTime)
-                    .replace("$2", startTime)
-                    .replace("$3", endTime));
-      } else if (role.equalsIgnoreCase("consumer")) {
-        String userId = request.getString(USER_ID);
-        monthQuery =
-            new StringBuilder(
-                OVERVIEW_QUERY
-                    .concat(" and userid = '$4' ")
-                    .concat(GROUPBY)
-                    .replace("$0", timeSeriesToFirstDay)
-                    .replace("$1", endTime)
-                    .replace("$2", startTime)
-                    .replace("$3", endTime)
-                    .replace("$4", userId));
-      } else if (role.equalsIgnoreCase("provider") || role.equalsIgnoreCase("delegate")) {
-        String providerId = request.getString("providerid");
-        LOGGER.debug("Provider = {}", providerId);
-        monthQuery =
-            new StringBuilder(
-                OVERVIEW_QUERY
-                    .concat(" and providerid = '$4' ")
-                    .concat(GROUPBY)
-                    .replace("$0", timeSeriesToFirstDay)
-                    .replace("$1", endTime)
-                    .replace("$2", startTime)
-                    .replace("$3", endTime)
-                    .replace("$4", providerId));
+
+    if (time != null) {
+      String startTime = time.getStartTime();
+      String endTime = time.getEndTime();
+      if (startTime != null && endTime != null) {
+        ZonedDateTime timeSeries = ZonedDateTime.parse(startTime);
+        String timeSeriesToFirstDay = String.valueOf(timeSeries.withDayOfMonth(1));
+        LOGGER.debug("Time series = " + timeSeriesToFirstDay);
+        if (role.equalsIgnoreCase("admin")) {
+          monthQuery =
+              new StringBuilder(
+                  OVERVIEW_QUERY
+                      .concat(GROUPBY)
+                      .replace("$0", timeSeriesToFirstDay)
+                      .replace("$1", endTime)
+                      .replace("$2", startTime)
+                      .replace("$3", endTime));
+        } else if (role.equalsIgnoreCase("consumer")) {
+          String userId = jwtData.getSub();
+          monthQuery =
+              new StringBuilder(
+                  OVERVIEW_QUERY
+                      .concat(" and userid = '$4' ")
+                      .concat(GROUPBY)
+                      .replace("$0", timeSeriesToFirstDay)
+                      .replace("$1", endTime)
+                      .replace("$2", startTime)
+                      .replace("$3", endTime)
+                      .replace("$4", userId));
+        } else if (role.equalsIgnoreCase("provider") || role.equalsIgnoreCase("delegate")) {
+
+          LOGGER.debug("Provider = {}", providerId);
+          monthQuery =
+              new StringBuilder(
+                  OVERVIEW_QUERY
+                      .concat(" and providerid = '$4' ")
+                      .concat(GROUPBY)
+                      .replace("$0", timeSeriesToFirstDay)
+                      .replace("$1", endTime)
+                      .replace("$2", startTime)
+                      .replace("$3", endTime)
+                      .replace("$4", providerId));
+        }
       }
-    } else {
-      if (role.equalsIgnoreCase("admin")) {
-        monthQuery =
-            new StringBuilder(
-                OVERVIEW_QUERY
-                    .concat(GROUPBY)
-                    .replace("$0", timeYearBack)
-                    .replace("$1", utcTime.toString())
-                    .replace("$2", timeYearBack)
-                    .replace("$3", utcTime.toString()));
-      } else if (role.equalsIgnoreCase("consumer")) {
-        String userId = request.getString(USER_ID);
-        monthQuery =
-            new StringBuilder(
-                OVERVIEW_QUERY
-                    .concat(" and userid = '$4' ")
-                    .concat(GROUPBY)
-                    .replace("$0", timeYearBack)
-                    .replace("$1", utcTime.toString())
-                    .replace("$2", timeYearBack)
-                    .replace("$3", utcTime.toString())
-                    .replace("$4", userId));
-      } else if (role.equalsIgnoreCase("provider") || role.equalsIgnoreCase("delegate")) {
-        String providerId = request.getString("providerid");
-        LOGGER.debug("Provider = {}", providerId);
-        monthQuery =
-            new StringBuilder(
-                OVERVIEW_QUERY
-                    .concat(" and providerid = '$4' ")
-                    .concat(GROUPBY)
-                    .replace("$0", timeYearBack)
-                    .replace("$1", utcTime.toString())
-                    .replace("$2", timeYearBack)
-                    .replace("$3", utcTime.toString())
-                    .replace("$4", providerId));
+      } else {
+        if (role.equalsIgnoreCase("admin")) {
+          monthQuery =
+              new StringBuilder(
+                  OVERVIEW_QUERY
+                      .concat(GROUPBY)
+                      .replace("$0", timeYearBack)
+                      .replace("$1", utcTime.toString())
+                      .replace("$2", timeYearBack)
+                      .replace("$3", utcTime.toString()));
+        } else if (role.equalsIgnoreCase("consumer")) {
+          String userId = jwtData.getSub();
+          monthQuery =
+              new StringBuilder(
+                  OVERVIEW_QUERY
+                      .concat(" and userid = '$4' ")
+                      .concat(GROUPBY)
+                      .replace("$0", timeYearBack)
+                      .replace("$1", utcTime.toString())
+                      .replace("$2", timeYearBack)
+                      .replace("$3", utcTime.toString())
+                      .replace("$4", userId));
+        } else if (role.equalsIgnoreCase("provider") || role.equalsIgnoreCase("delegate")) {
+          LOGGER.debug("Provider = {}", providerId);
+          monthQuery =
+              new StringBuilder(
+                  OVERVIEW_QUERY
+                      .concat(" and providerid = '$4' ")
+                      .concat(GROUPBY)
+                      .replace("$0", timeYearBack)
+                      .replace("$1", utcTime.toString())
+                      .replace("$2", timeYearBack)
+                      .replace("$3", utcTime.toString())
+                      .replace("$4", providerId));
+        }
       }
-    }
+
 
     return monthQuery.toString();
   }
 
-  public String buildSummaryOverview(JsonObject request) {
-    String startTime = request.getString(STARTT);
-    String endTime = request.getString(ENDT);
-    String role = request.getString(ROLE);
-
+  public String buildSummaryOverview(JwtData jwtData, DateValidation.Time time, String providerId) {
+    String role = jwtData.getRole();
     StringBuilder summaryQuery = new StringBuilder(SUMMARY_QUERY_FOR_METERING);
-    if (startTime != null && endTime != null) {
-      summaryQuery.append(
-          " where time between '$2' AND '$3' ".replace("$2", startTime).replace("$3", endTime));
-      if (role.equalsIgnoreCase("provider") || role.equalsIgnoreCase("delegate")) {
-        String providerId = request.getString("providerid");
-        LOGGER.debug("Provider = {}", providerId);
-        summaryQuery.append(PROVIDERID_SUMMARY.replace("$8", providerId));
-      }
-      if (role.equalsIgnoreCase("consumer")) {
-        String userid = request.getString(USER_ID);
-        summaryQuery.append(USERID_SUMMARY.replace("$9", userid));
+    if (time != null) {
+      String startTime = time.getStartTime();
+      String endTime = time.getEndTime();
+      if (startTime != null && endTime != null) {
+        summaryQuery.append(
+            " where time between '$2' AND '$3' ".replace("$2", startTime).replace("$3", endTime));
+        if (role.equalsIgnoreCase("provider") || role.equalsIgnoreCase("delegate")) {
+          LOGGER.debug("Provider = {}", providerId);
+          summaryQuery.append(PROVIDERID_SUMMARY.replace("$8", providerId));
+        }
+        if (role.equalsIgnoreCase("consumer")) {
+          String userid = jwtData.getSub();
+          summaryQuery.append(USERID_SUMMARY.replace("$9", userid));
+        }
       }
     } else {
       if (role.equalsIgnoreCase("provider") || role.equalsIgnoreCase("delegate")) {
-        String providerId = request.getString("providerid");
+
         LOGGER.debug("Provider = {}", providerId);
         summaryQuery.append(" where ");
         summaryQuery.append(PROVIDERID_SUMMARY_WITHOUT_TIME.replace("$8", providerId));
       }
       if (role.equalsIgnoreCase("consumer")) {
-        String userid = request.getString(USER_ID);
+        String userid = jwtData.getSub();
         summaryQuery.append(" where ");
         summaryQuery.append(USERID_SUMMARY_WITHOUT_TIME.replace("$9", userid));
       }

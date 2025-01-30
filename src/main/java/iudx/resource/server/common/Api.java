@@ -15,13 +15,14 @@ public class Api {
   private StringBuilder iudxAsyncStatusApi;
   private StringBuilder iudxConsumerAuditUrl;
   private StringBuilder iudxProviderAuditUrl;
-  private StringBuilder iudxManagementAdapterUrl;
   private StringBuilder ingestionPath;
   private StringBuilder resetPassword;
   private StringBuilder asyncPath;
   private StringBuilder monthlyOverview;
   private StringBuilder summaryPath;
   private StringBuilder ingestionPathEntities;
+  private StringBuilder adminRevokeToken;
+  private StringBuilder adminResourceAttribute;
 
   private Api(String dxApiBasePath) {
     this.dxApiBasePath = dxApiBasePath;
@@ -39,9 +40,7 @@ public class Api {
     return apiInstance;
   }
 
-  public String getIngestionPathEntities() {
-    return ingestionPathEntities.toString();
-  }
+
 
   private void buildPaths() {
     entitiesUrl = new StringBuilder(dxApiBasePath).append(NGSILD_ENTITIES_URL);
@@ -54,7 +53,6 @@ public class Api {
     iudxAsyncSearchApi = new StringBuilder(dxApiBasePath).append(IUDX_ASYNC_SEARCH_API);
     iudxConsumerAuditUrl = new StringBuilder(dxApiBasePath).append(IUDX_CONSUMER_AUDIT_URL);
     iudxProviderAuditUrl = new StringBuilder(dxApiBasePath).append(IUDX_PROVIDER_AUDIT_URL);
-    iudxManagementAdapterUrl = new StringBuilder(dxApiBasePath).append(IUDX_MANAGEMENT_ADAPTER_URL);
     ingestionPath = new StringBuilder(dxApiBasePath).append(INGESTION_PATH);
     asyncPath = new StringBuilder(dxApiBasePath).append(ASYNC);
     iudxAsyncStatusApi = new StringBuilder(dxApiBasePath).append(ASYNC + STATUS);
@@ -62,6 +60,9 @@ public class Api {
     monthlyOverview = new StringBuilder(dxApiBasePath).append(MONTHLY_OVERVIEW);
     summaryPath = new StringBuilder(dxApiBasePath).append(SUMMARY_ENDPOINT);
     ingestionPathEntities = new StringBuilder(dxApiBasePath).append(INGESTION_PATH_ENTITIES);
+    /*admin REST APIs*/
+    adminRevokeToken = new StringBuilder(ADMIN).append(REVOKE_TOKEN);
+    adminResourceAttribute = new StringBuilder(ADMIN).append(RESOURCE_ATTRIBS);
   }
 
   public String getEntitiesUrl() {
@@ -100,10 +101,6 @@ public class Api {
     return iudxProviderAuditUrl.toString();
   }
 
-  public String getIudxManagementAdapterUrl() {
-    return iudxManagementAdapterUrl.toString();
-  }
-
   public String getIngestionPath() {
     return ingestionPath.toString();
   }
@@ -112,7 +109,7 @@ public class Api {
     return asyncPath.toString();
   }
 
-  public String getManagementBasePath() {
+  public String getManagementApiPath() {
     return resetPassword.toString();
   }
 
@@ -122,5 +119,17 @@ public class Api {
 
   public String getSummaryPath() {
     return summaryPath.toString();
+  }
+
+  public String getAdminRevokeToken() {
+    return adminRevokeToken.toString();
+  }
+
+  public String getAdminUniqueAttributeOfResource() {
+    return adminResourceAttribute.toString();
+  }
+
+  public String getIngestionPathEntities() {
+    return ingestionPathEntities.toString();
   }
 }
