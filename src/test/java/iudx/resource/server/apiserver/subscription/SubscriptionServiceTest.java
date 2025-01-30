@@ -7,11 +7,15 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import iudx.resource.server.authenticator.model.DxRole;
+import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.database.archives.DatabaseService;
 import iudx.resource.server.database.postgres.PostgresService;
 import iudx.resource.server.databroker.DataBrokerService;
 import iudx.resource.server.databroker.DataBrokerServiceImpl;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,8 +49,6 @@ public class SubscriptionServiceTest {
     @Mock
     JsonObject json;
     @Mock
-    JsonObject authInfo;
-    @Mock
     JsonArray jsonArray;
     @Mock
     Future<JsonObject> jsonObjectFuture;
@@ -54,6 +56,17 @@ public class SubscriptionServiceTest {
     Throwable throwable;
     @Mock
     CacheService cacheService;
+    @Mock JwtData jwtData;
+
+    @BeforeEach
+    public void setUp(VertxTestContext vertxTestContext)
+    {
+    lenient().when(jwtData.getRole()).thenReturn(DxRole.CONSUMER.getRole());
+    lenient().when(jwtData.getExpiry()).thenReturn("dummyExpiry");
+    lenient().when(jwtData.getSub()).thenReturn("someUserId");
+
+    vertxTestContext.completeNow();
+    }
 
     @Test
     @DisplayName("Test createSubscription Success")
@@ -67,7 +80,6 @@ public class SubscriptionServiceTest {
         when(jsonArray.getJsonObject(anyInt())).thenReturn(json);
         when(json.getString(anyString())).thenReturn("STREAMING");
         when(jsonArray.getString(anyInt())).thenReturn("Dummy String");
-        when(authInfo.getString(anyString())).thenReturn("Dummy authInfo value");
         when(service.subscription.create(any())).thenReturn(jsonObjectFuture);
 
         doAnswer(new Answer<AsyncResult<JsonObject>>() {
@@ -88,7 +100,7 @@ public class SubscriptionServiceTest {
 
         when(cacheService.get(any())).thenReturn(Future.succeededFuture(json));
 
-        service.createSubscription(json, databroker, pgService, authInfo, cacheService).onComplete(handler -> {
+        service.createSubscription(json, databroker, pgService, jwtData, cacheService).onComplete(handler -> {
             if (handler.succeeded()) {
                 assertEquals(json, handler.result());
                 vertxTestContext.completeNow();
@@ -138,7 +150,7 @@ public class SubscriptionServiceTest {
         }).when(jsonObjectFuture).onComplete(any());
 
 
-        service.createSubscription(json, databroker, pgService, authInfo, cacheService).onComplete(handler -> {
+        service.createSubscription(json, databroker, pgService, jwtData, cacheService).onComplete(handler -> {
             if (handler.failed()) {
                 String throwable = "io.vertx.core.impl.NoStackTraceThrowable: ";
                 String expected = throwable + result;
@@ -158,7 +170,6 @@ public class SubscriptionServiceTest {
         when(json.getString(anyString())).thenReturn("Dummy queueName");
         when(json.getJsonArray(anyString())).thenReturn(jsonArray);
         when(jsonArray.getString(anyInt())).thenReturn("Dummy entity");
-        when(authInfo.getString(anyString())).thenReturn("Dummy authinfo value");
         when(asyncResult.succeeded()).thenReturn(true);
         when(asyncResult.result()).thenReturn(json);
         when(jsonArray.size()).thenReturn(3);
@@ -170,7 +181,7 @@ public class SubscriptionServiceTest {
                 return null;
             }
         }).when(pgService).executeQuery(anyString(), any());
-        service.updateSubscription(json, databroker, pgService, authInfo).onComplete(handler -> {
+        service.updateSubscription(json, databroker, pgService, jwtData).onComplete(handler -> {
             if (handler.succeeded()) {
                 JsonObject expected = new JsonObject("{\"type\":\"urn:dx:rs:success\",\"title\":\"success\",\"results\":[{\"entities\":[\"Dummy entity\"]}]}\n");
                 assertEquals(expected, handler.result());
@@ -187,7 +198,6 @@ public class SubscriptionServiceTest {
         when(json.getString(anyString())).thenReturn("Dummy queueName");
         when(json.getJsonArray(anyString())).thenReturn(jsonArray);
         when(jsonArray.getString(anyInt())).thenReturn("Dummy entity");
-        lenient().when(authInfo.getString(anyString())).thenReturn("Dummy authinfo value");
         when(asyncResult.succeeded()).thenReturn(true);
         when(asyncResult.result()).thenReturn(json);
         when(jsonArray.size()).thenReturn(0);
@@ -199,7 +209,7 @@ public class SubscriptionServiceTest {
                 return null;
             }
         }).when(pgService).executeQuery(anyString(), any());
-        service.updateSubscription(json, databroker, pgService, authInfo).onComplete(handler -> {
+        service.updateSubscription(json, databroker, pgService, jwtData).onComplete(handler -> {
             if (handler.succeeded()) {
                 JsonObject expected = new JsonObject().put("type",400)
                         .put("title","urn:dx:rs:resourceNotFound")
@@ -229,7 +239,7 @@ public class SubscriptionServiceTest {
                 return null;
             }
         }).when(pgService).executeQuery(anyString(), any());
-        service.updateSubscription(json, databroker, pgService, authInfo).onComplete(handler -> {
+        service.updateSubscription(json, databroker, pgService, jwtData).onComplete(handler -> {
             if (handler.failed()) {
                 String throwable = "io.vertx.core.impl.NoStackTraceThrowable: ";
                 String expected = throwable + "{\"type\":409,\"title\":\"Already exists\",\"detail\":\"Subscription Already exists\"}";
@@ -247,6 +257,7 @@ public class SubscriptionServiceTest {
         when(json.getString(anyString())).thenReturn("STREAMING");
         service = new SubscriptionService();
         service.subscription = mock(Subscription.class);
+        var entity = mock(Object.class);
         when(service.subscription.delete(any())).thenReturn(jsonObjectFuture);
         when(asyncResult.succeeded()).thenReturn(true);
         when(asyncResult.result()).thenReturn(json);
@@ -265,7 +276,7 @@ public class SubscriptionServiceTest {
                 return null;
             }
         }).when(pgService).executeQuery(anyString(), any());
-        service.deleteSubscription(json, databroker, pgService).onComplete(handler -> {
+        service.deleteSubscription(json, databroker, pgService,entity).onComplete(handler -> {
             if (handler.succeeded()) {
                 assertEquals(json, handler.result());
                 vertxTestContext.completeNow();
@@ -285,6 +296,7 @@ public class SubscriptionServiceTest {
         when(asyncResult.succeeded()).thenReturn(false);
         when(asyncResult.cause()).thenReturn(throwable);
         when(throwable.getMessage()).thenReturn("{ \"type\":404 }");
+        var entity = mock(Object.class);
 
         doAnswer(new Answer<AsyncResult<JsonObject>>() {
             @Override
@@ -295,7 +307,7 @@ public class SubscriptionServiceTest {
         }).when(jsonObjectFuture).onComplete(any());
 
 
-        service.deleteSubscription(json, databroker, pgService).onComplete(handler -> {
+        service.deleteSubscription(json, databroker, pgService,entity).onComplete(handler -> {
             if (handler.failed()) {
                 String throwable = "io.vertx.core.impl.NoStackTraceThrowable: ";
                 String expected = throwable + "{\"type\":404,\"title\":\"Not Found\",\"detail\":\"Resource not found\"}";
@@ -315,6 +327,7 @@ public class SubscriptionServiceTest {
         when(asyncResult.result()).thenReturn(json);
         service = new SubscriptionService();
         service.subscription = mock(Subscription.class);
+        var entity = mock(Object.class);
         when(service.subscription.get(any())).thenReturn(jsonObjectFuture);
         doAnswer(new Answer<AsyncResult<JsonObject>>() {
             @Override
@@ -323,7 +336,7 @@ public class SubscriptionServiceTest {
                 return null;
             }
         }).when(jsonObjectFuture).onComplete(any());
-        service.getSubscription(json, databroker, pgService).onComplete(handler -> {
+        service.getSubscription(json, databroker, pgService, entity).onComplete(handler -> {
             if (handler.succeeded()) {
                 assertEquals(json, handler.result());
                 vertxTestContext.completeNow();
@@ -341,6 +354,7 @@ public class SubscriptionServiceTest {
         when(asyncResult.cause()).thenReturn(throwable);
         service = new SubscriptionService();
         service.subscription = mock(Subscription.class);
+        var entity = mock(Object.class);
         when(throwable.getMessage()).thenReturn("{ \"type\":200, \"detail\" : \"Dummy detail\" }");
         when(service.subscription.get(any())).thenReturn(jsonObjectFuture);
         doAnswer(new Answer<AsyncResult<JsonObject>>() {
@@ -350,7 +364,7 @@ public class SubscriptionServiceTest {
                 return null;
             }
         }).when(jsonObjectFuture).onComplete(any());
-        service.getSubscription(json, databroker, pgService).onComplete(handler -> {
+        service.getSubscription(json, databroker, pgService, entity).onComplete(handler -> {
             if (handler.failed()) {
                 String throwable = "io.vertx.core.impl.NoStackTraceThrowable: ";
                 String expected = throwable + "{\"type\":200,\"title\":\"Bad Request\",\"detail\":\"Dummy detail\"}";
@@ -370,7 +384,6 @@ public class SubscriptionServiceTest {
         when(asyncResult.result()).thenReturn(json);
         when(json.getJsonArray(anyString())).thenReturn(jsonArray);
         when(jsonArray.getString(anyInt())).thenReturn("Dummy entity");
-        when(authInfo.getString(anyString())).thenReturn("Dummy expiry");
         when(jsonArray.getJsonObject(anyInt())).thenReturn(json);
         service = new SubscriptionService();
         service.subscription = mock(Subscription.class);
@@ -391,7 +404,7 @@ public class SubscriptionServiceTest {
             }
         }).when(pgService).executeQuery(anyString(), any());
         when(cacheService.get(any())).thenReturn(Future.succeededFuture(json));
-        service.appendSubscription(json, databroker, pgService, authInfo,cacheService).onComplete(handler -> {
+        service.appendSubscription(json, databroker, pgService, jwtData,cacheService).onComplete(handler -> {
             if (handler.succeeded()) {
                 assertEquals("success", handler.result().getString("title"));
                 assertEquals("urn:dx:rs:success", handler.result().getString("type"));
@@ -421,7 +434,7 @@ public class SubscriptionServiceTest {
             }
         }).when(jsonObjectFuture).onComplete(any());
 
-        service.appendSubscription(json, databroker, pgService, authInfo,cacheService).onComplete(handler -> {
+        service.appendSubscription(json, databroker, pgService, jwtData,cacheService).onComplete(handler -> {
             if (handler.failed()) {
                 String throwable = "io.vertx.core.impl.NoStackTraceThrowable: ";
                 String expected = throwable + "{\"type\":400,\"title\":\"Bad Request\",\"detail\":\"Dummy detail\"}";

@@ -2,7 +2,7 @@ package iudx.resource.server.common;
 
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import iudx.resource.server.authenticator.authorization.IudxAccess;
+import iudx.resource.server.authenticator.model.DxAccess;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -23,7 +23,7 @@ public class QueryTypeAndIudxAccesTest {
 
     @Test
     public void testAccess(VertxTestContext vertxTestContext) {
-        assertNull(IudxAccess.fromAccess("provider"));
+        assertNull(DxAccess.fromAccess("provider"));
         vertxTestContext.completeNow();
     }
 }

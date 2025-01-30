@@ -8,6 +8,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import iudx.resource.server.authenticator.model.JwtData;
 
 @ProxyGen
 @VertxGen
@@ -26,8 +27,8 @@ public interface MeteringService {
       JsonObject request, Handler<AsyncResult<JsonObject>> handler);
 
   @Fluent
-  MeteringService monthlyOverview(JsonObject request, Handler<AsyncResult<JsonObject>> handler);
+  MeteringService monthlyOverview(JwtData jwtData,String start, String end, Handler<AsyncResult<JsonObject>> handler);
 
   @Fluent
-  MeteringService summaryOverview(JsonObject request, Handler<AsyncResult<JsonObject>> handler);
+  MeteringService summaryOverview(JwtData jwtData, String startTime, String endTime, Handler<AsyncResult<JsonObject>> handler);
 }

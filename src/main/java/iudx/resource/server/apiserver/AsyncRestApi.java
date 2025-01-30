@@ -16,10 +16,7 @@ import static iudx.resource.server.database.postgres.Constants.INSERT_S3_PENDING
 import com.google.common.hash.Hashing;
 import io.netty.handler.codec.http.HttpConstants;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import io.vertx.core.Future;
-import io.vertx.core.MultiMap;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.DecodeException;
@@ -28,18 +25,23 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
-import iudx.resource.server.apiserver.handlers.AuthHandler;
-import iudx.resource.server.apiserver.handlers.FailureHandler;
-import iudx.resource.server.apiserver.handlers.ValidationHandler;
+import iudx.resource.server.apiserver.handlers.*;
 import iudx.resource.server.apiserver.query.NgsildQueryParams;
 import iudx.resource.server.apiserver.query.QueryMapper;
 import iudx.resource.server.apiserver.response.ResponseType;
 import iudx.resource.server.apiserver.service.CatalogueService;
+import iudx.resource.server.authenticator.AuthenticationService;
+import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
+import iudx.resource.server.authenticator.handler.authorization.*;
+import iudx.resource.server.authenticator.model.DxAccess;
+import iudx.resource.server.authenticator.model.DxRole;
+import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.cache.cachelmpl.CacheType;
 import iudx.resource.server.common.Api;
 import iudx.resource.server.common.HttpStatusCode;
 import iudx.resource.server.common.ResponseUrn;
+import iudx.resource.server.common.RoutingContextHelper;
 import iudx.resource.server.database.async.AsyncService;
 import iudx.resource.server.database.async.util.QueryProgress;
 import iudx.resource.server.database.postgres.PostgresService;
@@ -66,30 +68,50 @@ public class AsyncRestApi {
   private EncryptionService encryptionService;
   private Api api;
   private int timeLimitForAsync;
+  private AuthenticationService authenticator;
+  private String audience;
 
-  AsyncRestApi(Vertx vertx, Router router, Api api, int timeLimitForAsync) {
+  AsyncRestApi(Vertx vertx, Router router, Api api, int timeLimitForAsync, JsonObject config) {
     this.vertx = vertx;
     this.router = router;
     this.databroker = DataBrokerService.createProxy(vertx, BROKER_SERVICE_ADDRESS);
     this.cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
-    this.catalogueService = new CatalogueService(cacheService);
+    this.catalogueService = new CatalogueService(cacheService, config, vertx);
+    //    this.catalogueService = new CatalogueService(cacheService);
     this.validator = new ParamsValidator(catalogueService);
     this.postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
     this.encryptionService = EncryptionService.createProxy(vertx, ENCRYPTION_SERVICE_ADDRESS);
+    this.authenticator = AuthenticationService.createProxy(vertx, AUTH_SERVICE_ADDRESS);
     this.api = api;
     this.timeLimitForAsync = timeLimitForAsync;
+    this.audience = config.getString("audience");
   }
 
   Router init() {
     FailureHandler validationsFailureHandler = new FailureHandler();
+    Handler<RoutingContext> asyncConstraint =
+        new ConstraintsHandlerForConsumer().consumerConstraintsForEndpoint(DxAccess.ASYNC);
 
     asyncService = AsyncService.createProxy(vertx, ASYNC_SERVICE_ADDRESS);
+    AuthHandler authHandler = new AuthHandler(api, authenticator);
+    GetIdHandler getIdHandler = new GetIdHandler(api);
+    Handler<RoutingContext> adminAndUserAccessHandler =
+        new AuthorizationHandler()
+            .setUserRolesForEndpoint(
+                DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
+    Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
+    Handler<RoutingContext> validateToken = new AuthValidationHandler(api, cacheService, audience);
 
     ValidationHandler asyncSearchValidation = new ValidationHandler(vertx, ASYNC_SEARCH);
     router
         .get(SEARCH)
         .handler(asyncSearchValidation)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(getIdHandler.withNormalisedPath(api.getIudxAsyncSearchApi()))
+        .handler(authHandler)
+        .handler(validateToken)
+        .handler(adminAndUserAccessHandler)
+        .handler(asyncConstraint)
+        .handler(isTokenRevoked)
         .handler(this::handleAsyncSearchRequest)
         .failureHandler(validationsFailureHandler);
 
@@ -97,7 +119,12 @@ public class AsyncRestApi {
     router
         .get(STATUS)
         .handler(asyncStatusValidation)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(getIdHandler.withNormalisedPath(api.getIudxAsyncStatusApi()))
+        .handler(authHandler)
+        .handler(validateToken)
+        .handler(adminAndUserAccessHandler)
+        .handler(asyncConstraint)
+        .handler(isTokenRevoked)
         .handler(this::handleAsyncStatusRequest)
         .failureHandler(validationsFailureHandler);
 
@@ -160,8 +187,11 @@ public class AsyncRestApi {
   }
 
   private void executeAsyncUrlSearch(RoutingContext routingContext, JsonObject json) {
-    String sub = ((JsonObject) routingContext.data().get("authInfo")).getString(USER_ID);
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    String sub = jwtData.getSub();
+    String role = jwtData.getRole();
+    String did = jwtData.getDid();
+    String drl = jwtData.getDrl();
     String requestId =
         Hashing.sha256().hashString(json.toString(), StandardCharsets.UTF_8).toString();
 
@@ -206,9 +236,9 @@ public class AsyncRestApi {
                       .put("user", sub)
                       .put(HEADER_RESPONSE_FILE_FORMAT, format)
                       .put("query", json)
-                      .put(ROLE, authInfo.getString(ROLE))
-                      .put(DRL, authInfo.getString(DRL))
-                      .put(DID, authInfo.getString(DID));
+                      .put(ROLE, role)
+                      .put(DRL, drl)
+                      .put(DID, did);
 
               postgresService.executeQuery(
                   insertQuery.toString(),
@@ -274,7 +304,9 @@ public class AsyncRestApi {
   private void handleAsyncStatusRequest(RoutingContext routingContext) {
     LOGGER.trace("starting async status");
 
-    String sub = ((JsonObject) routingContext.data().get("authInfo")).getString(USER_ID);
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    String sub = jwtData.getSub();
+
     HttpServerRequest request = routingContext.request();
     HttpServerResponse response = routingContext.response();
 

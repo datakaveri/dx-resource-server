@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.cache.cachelmpl.CacheType;
 import iudx.resource.server.common.Response;
@@ -49,6 +50,7 @@ public class MeteringServiceImpl implements MeteringService {
   JsonArray jsonArray;
   JsonArray resultJsonArray;
   int loopi;
+  DateValidation.Time time;
   private ResponseBuilder responseBuilder;
 
   public MeteringServiceImpl(
@@ -194,27 +196,20 @@ public class MeteringServiceImpl implements MeteringService {
 
   @Override
   public MeteringService monthlyOverview(
-      JsonObject request, Handler<AsyncResult<JsonObject>> handler) {
-    String startTime = request.getString(STARTT);
-    String endTime = request.getString(ENDT);
+          JwtData jwtData, String startTime, String endTime, Handler<AsyncResult<JsonObject>> handler) {
+
     if (startTime != null && endTime == null || startTime == null && endTime != null) {
       handler.handle(Future.failedFuture(new JsonObject().put(JSON_TITLE,"Bad Request").put(JSON_TYPE,400).toString()));
       return this;
     }
     if (startTime != null && endTime != null) {
-      validationCheck = dateValidation.dateParamCheck(request);
+      this.time  = dateValidation.dateParamCheck(startTime, endTime);
 
-      if (validationCheck != null && validationCheck.containsKey(ERROR)) {
-        responseBuilder =
-            new ResponseBuilder().setTypeAndTitle(400).setMessage(validationCheck.getString(ERROR));
-        handler.handle(Future.failedFuture(responseBuilder.getResponse().toString()));
-        return this;
-      }
     }
 
-    String role = request.getString(ROLE);
+    String role = jwtData.getRole();
     if (role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("consumer")) {
-      queryOverview = queryBuilder.buildMonthlyOverview(request);
+      queryOverview = queryBuilder.buildMonthlyOverview(jwtData, getTime(),null);
       LOGGER.debug("query Overview =" + queryOverview);
 
       Future<JsonObject> result = executeQueryDatabaseOperation(queryOverview);
@@ -229,7 +224,7 @@ public class MeteringServiceImpl implements MeteringService {
             }
           });
     } else if (role.equalsIgnoreCase("provider") || role.equalsIgnoreCase("delegate")) {
-      String resourceId = request.getString(IID);
+      String resourceId = jwtData.getIid().split(":")[1];
       JsonObject jsonObject =
           new JsonObject().put("type", CacheType.CATALOGUE_CACHE).put("key", resourceId);
 
@@ -238,9 +233,7 @@ public class MeteringServiceImpl implements MeteringService {
           .onSuccess(
               providerHandler -> {
                 String providerId = providerHandler.getString("provider");
-                request.put("providerid", providerId);
-
-                queryOverview = queryBuilder.buildMonthlyOverview(request);
+                queryOverview = queryBuilder.buildMonthlyOverview(jwtData, getTime(), providerId);
                 LOGGER.debug("query Overview =" + queryOverview);
 
                 Future<JsonObject> result = executeQueryDatabaseOperation(queryOverview);
@@ -262,27 +255,20 @@ public class MeteringServiceImpl implements MeteringService {
 
   @Override
   public MeteringService summaryOverview(
-      JsonObject request, Handler<AsyncResult<JsonObject>> handler) {
-    String startTime = request.getString(STARTT);
-    String endTime = request.getString(ENDT);
+          JwtData jwtData, String startTime, String endTime, Handler<AsyncResult<JsonObject>> handler) {
+
     if (startTime != null && endTime == null || startTime == null && endTime != null) {
       handler.handle(Future.failedFuture(new JsonObject().put(JSON_TITLE,"Bad Request").put(JSON_TYPE,400).toString()));
       return this;
     }
     if (startTime != null && endTime != null) {
-      validationCheck = dateValidation.dateParamCheck(request);
+      this.time = dateValidation.dateParamCheck(startTime, endTime);
 
-      if (validationCheck != null && validationCheck.containsKey(ERROR)) {
-        responseBuilder =
-            new ResponseBuilder().setTypeAndTitle(400).setMessage(validationCheck.getString(ERROR));
-        handler.handle(Future.failedFuture(responseBuilder.getResponse().toString()));
-        return this;
-      }
     }
 
-    String role = request.getString(ROLE);
+    String role = jwtData.getRole();
     if (role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("consumer")) {
-      summaryOverview = queryBuilder.buildSummaryOverview(request);
+      summaryOverview = queryBuilder.buildSummaryOverview(jwtData, getTime(), null);
       LOGGER.debug("summary query =" + summaryOverview);
       Future<JsonObject> result = executeQueryDatabaseOperation(summaryOverview);
       result.onComplete(
@@ -310,7 +296,7 @@ public class MeteringServiceImpl implements MeteringService {
             }
           });
     } else if (role.equalsIgnoreCase("provider") || role.equalsIgnoreCase("delegate")) {
-      String resourceId = request.getString(IID);
+      String resourceId = jwtData.getIid().split(":")[1];
       JsonObject jsonObject =
           new JsonObject().put("type", CacheType.CATALOGUE_CACHE).put("key", resourceId);
       cacheService
@@ -318,8 +304,7 @@ public class MeteringServiceImpl implements MeteringService {
           .onSuccess(
               providerHandler -> {
                 String providerId = providerHandler.getString("provider");
-                request.put("providerid", providerId);
-                summaryOverview = queryBuilder.buildSummaryOverview(request);
+                summaryOverview = queryBuilder.buildSummaryOverview(jwtData,getTime(),providerId);
                 LOGGER.debug("summary query =" + summaryOverview);
                 Future<JsonObject> result = executeQueryDatabaseOperation(summaryOverview);
                 result.onComplete(
@@ -445,4 +430,10 @@ public class MeteringServiceImpl implements MeteringService {
 
     return promise.future();
   }
+
+  public DateValidation.Time getTime() {
+    return time;
+  }
+
+
 }

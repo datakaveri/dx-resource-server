@@ -18,7 +18,7 @@ public enum ResponseUrn {
   UNAUTHORIZED_ENDPOINT_URN(
       "urn:dx:rs:unauthorizedEndpoint", "Access to endpoint is not available"),
   UNAUTHORIZED_RESOURCE_URN(
-      "urn,dx:rs:unauthorizedResource", "Access to resource is not available"),
+      "urn:dx:rs:unauthorizedResource", "Access to resource is not available"),
   EXPIRED_TOKEN_URN("urn:dx:rs:expiredAuthorizationToken", "Token has expired"),
   MISSING_TOKEN_URN("urn:dx:rs:missingAuthorizationToken", "Token needed and not present"),
   INVALID_TOKEN_URN("urn:dx:rs:invalidAuthorizationToken", "Token is invalid"),
@@ -39,6 +39,7 @@ public enum ResponseUrn {
   INVALID_HEADER_VALUE_URN("urn:dx:rs:invalidHeaderValue", "Invalid header value"),
   DB_ERROR_URN("urn:dx:rs:DatabaseError", "Database error"),
   QUEUE_ERROR_URN("urn:dx:rs:QueueError", "Queue error"),
+  INTERNAL_SERVER_ERROR("urn:dx:rs:internalServerError", "Internal Server Error"),
 
   BACKING_SERVICE_FORMAT_URN(
       "urn:dx:rs:backend", "format error from backing service [cat,auth etc.]"),

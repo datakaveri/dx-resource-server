@@ -22,6 +22,9 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.rabbitmq.RabbitMQClient;
+import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
+import iudx.resource.server.authenticator.model.DxRole;
+import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.cache.cachelmpl.CacheType;
 import iudx.resource.server.configuration.Configuration;
@@ -55,6 +58,9 @@ public class MeteringServiceTest {
   private static MeteringServiceImpl meteringService;
   private static Configuration config;
   private static PostgresService postgresService;
+  private JwtData jwtData = new JwtData();
+  private String startTime;
+  private String endTime;
 
   @BeforeAll
   @DisplayName("Deploying Verticle")
@@ -829,9 +835,9 @@ public class MeteringServiceTest {
   public void testOverallMethodAdmin(VertxTestContext vertxTestContext) {
     AsyncResult<JsonObject> asyncResult = mock(AsyncResult.class);
     postgresService = mock(PostgresService.class);
-    JsonObject json = new JsonObject().put("role", "admin");
     JsonObject expected = new JsonObject().put(SUCCESS, "count return");
 
+    jwtData.setRole(DxRole.ADMIN.getRole());
     meteringService = new MeteringServiceImpl(vertxObj, postgresService, cacheService);
     when(asyncResult.succeeded()).thenReturn(true);
     when(asyncResult.result()).thenReturn(expected);
@@ -848,7 +854,7 @@ public class MeteringServiceTest {
         .executeQuery(anyString(), any());
 
     meteringService.monthlyOverview(
-        json,
+        jwtData,startTime,endTime,
         vertxTestContext.succeeding(
             response ->
                 vertxTestContext.verify(
@@ -862,9 +868,10 @@ public class MeteringServiceTest {
   public void testOverallMethodConsumer(VertxTestContext vertxTestContext) {
     AsyncResult<JsonObject> asyncResult = mock(AsyncResult.class);
     postgresService = mock(PostgresService.class);
-    JsonObject json = new JsonObject().put("role", "Consumer");
-    json.put(IID, "15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
-    json.put(USER_ID, "15c7506f-c800-48d6-adeb-0542b03947c6");
+
+    jwtData.setRole(DxRole.CONSUMER.getRole());
+    jwtData.setIid("abcd:15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
+    jwtData.setSub("15c7506f-c800-48d6-adeb-0542b03947c6");
     JsonObject expected = new JsonObject().put(SUCCESS, "count return");
 
     JsonObject providerJson =
@@ -889,7 +896,7 @@ public class MeteringServiceTest {
         .executeQuery(anyString(), any());
 
     meteringService.monthlyOverview(
-        json,
+            jwtData,startTime,endTime,
         vertxTestContext.succeeding(
             response ->
                 vertxTestContext.verify(
@@ -903,9 +910,12 @@ public class MeteringServiceTest {
   public void testOverallMethodProvider(VertxTestContext vertxTestContext) {
     AsyncResult<JsonObject> asyncResult = mock(AsyncResult.class);
     postgresService = mock(PostgresService.class);
-    JsonObject json = new JsonObject().put("role", "Provider");
-    json.put(IID, "15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
-    json.put(USER_ID, "15c7506f-c800-48d6-adeb-0542b03947c6");
+
+    jwtData.setRole(DxRole.PROVIDER.getRole());
+    jwtData.setIid("adkf:15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
+    jwtData.setSub("15c7506f-c800-48d6-adeb-0542b03947c6");
+    startTime = "2022-11-20T00:00:00Z";
+    endTime = "2022-12-20T00:00:00Z";
 
     JsonObject expected = new JsonObject().put(SUCCESS, "count return");
     JsonObject providerJson =
@@ -931,7 +941,7 @@ public class MeteringServiceTest {
         .executeQuery(anyString(), any());
 
     meteringService.monthlyOverview(
-        json,
+            jwtData,startTime,endTime,
         vertxTestContext.succeeding(
             response ->
                 vertxTestContext.verify(
@@ -945,10 +955,11 @@ public class MeteringServiceTest {
   public void testOverallMethodAdminWithETST(VertxTestContext vertxTestContext) {
     AsyncResult<JsonObject> asyncResult = mock(AsyncResult.class);
     postgresService = mock(PostgresService.class);
-    JsonObject json = new JsonObject().put("role", "admin");
-    json.put(STARTT, "2022-11-20T00:00:00Z");
-    json.put(ENDT, "2022-12-20T00:00:00Z");
     JsonObject expected = new JsonObject().put(SUCCESS, "count return");
+
+    jwtData.setRole(DxRole.ADMIN.getRole());
+    startTime = "2022-11-20T00:00:00Z";
+    endTime = "2022-12-20T00:00:00Z";
 
     meteringService = new MeteringServiceImpl(vertxObj, postgresService, cacheService);
     when(asyncResult.succeeded()).thenReturn(true);
@@ -966,7 +977,7 @@ public class MeteringServiceTest {
         .executeQuery(anyString(), any());
 
     meteringService.monthlyOverview(
-        json,
+            jwtData,startTime,endTime,
         vertxTestContext.succeeding(
             response ->
                 vertxTestContext.verify(
@@ -980,11 +991,13 @@ public class MeteringServiceTest {
   public void testOverallMethodConsumerWithSTET(VertxTestContext vertxTestContext) {
     AsyncResult<JsonObject> asyncResult = mock(AsyncResult.class);
     postgresService = mock(PostgresService.class);
-    JsonObject json = new JsonObject().put("role", "Consumer");
-    json.put(IID, "15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
-    json.put(USER_ID, "15c7506f-c800-48d6-adeb-0542b03947c6");
-    json.put(STARTT, "2022-11-20T00:00:00Z");
-    json.put(ENDT, "2022-12-20T00:00:00Z");
+
+    jwtData.setRole(DxRole.CONSUMER.getRole());
+    jwtData.setIid("adkf:15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
+    jwtData.setSub("15c7506f-c800-48d6-adeb-0542b03947c6");
+    startTime = "2022-11-20T00:00:00Z";
+    endTime = "2022-12-20T00:00:00Z";
+
     JsonObject expected = new JsonObject().put(SUCCESS, "count return");
     JsonObject providerJson =
         new JsonObject()
@@ -1008,7 +1021,7 @@ public class MeteringServiceTest {
         .executeQuery(anyString(), any());
 
     meteringService.monthlyOverview(
-        json,
+            jwtData,startTime,endTime,
         vertxTestContext.succeeding(
             response ->
                 vertxTestContext.verify(
@@ -1022,11 +1035,12 @@ public class MeteringServiceTest {
   public void testOverallMethodProviderWithSTET(VertxTestContext vertxTestContext) {
     AsyncResult<JsonObject> asyncResult = mock(AsyncResult.class);
     postgresService = mock(PostgresService.class);
-    JsonObject json = new JsonObject().put("role", "Provider");
-    json.put(IID, "15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
-    json.put(USER_ID, "15c7506f-c800-48d6-adeb-0542b03947c6");
-    json.put(STARTT, "2022-11-20T00:00:00Z");
-    json.put(ENDT, "2022-12-20T00:00:00Z");
+
+    jwtData.setRole(DxRole.PROVIDER.getRole());
+    jwtData.setIid("ajfdh:15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
+    jwtData.setSub("15c7506f-c800-48d6-adeb-0542b03947c6");
+    startTime =  "2022-11-20T00:00:00Z";
+    endTime = "2022-12-20T00:00:00Z";
 
     JsonObject expected = new JsonObject().put(SUCCESS, "count return");
     JsonObject providerJson =
@@ -1053,7 +1067,7 @@ public class MeteringServiceTest {
         .executeQuery(anyString(), any());
 
     meteringService.monthlyOverview(
-        json,
+            jwtData,startTime,endTime,
         vertxTestContext.succeeding(
             response ->
                 vertxTestContext.verify(
@@ -1067,9 +1081,9 @@ public class MeteringServiceTest {
   public void testForSummaryApi(VertxTestContext vertxTestContext) {
     AsyncResult<JsonObject> asyncResult = mock(AsyncResult.class);
     postgresService = mock(PostgresService.class);
-    JsonObject json = new JsonObject().put("role", "consumer");
-    json.put(IID, "5b7556b5-0779-4c47-9cf2-3f209779aa22");
-    json.put(USER_ID, "15c7506f-c800-48d6-adeb-0542b03947c6");
+    jwtData.setRole(DxRole.CONSUMER.getRole());
+    jwtData.setSub("15c7506f-c800-48d6-adeb-0542b03947c6");
+    jwtData.setIid("abcd:5b7556b5-0779-4c47-9cf2-3f209779aa22");
 
     JsonObject jsonObject =
         new JsonObject().put("resourceid", "5b7556b5-0779-4c47-9cf2-3f209779aa22").put("count", 5);
@@ -1114,7 +1128,7 @@ public class MeteringServiceTest {
         .cacheCall(any());
 
     spyMeteringService.summaryOverview(
-        json,
+            jwtData,startTime,endTime,
         vertxTestContext.succeeding(
             response ->
                 vertxTestContext.verify(
@@ -1130,11 +1144,12 @@ public class MeteringServiceTest {
   public void testForSummaryApiWithSTET(VertxTestContext vertxTestContext) {
     AsyncResult<JsonObject> asyncResult = mock(AsyncResult.class);
     postgresService = mock(PostgresService.class);
-    JsonObject json = new JsonObject().put("role", "consumer");
-    json.put(IID, "15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
-    json.put(USER_ID, "15c7506f-c800-48d6-adeb-0542b03947c6");
-    json.put(STARTT, "2022-11-20T00:00:00Z");
-    json.put(ENDT, "2022-12-20T00:00:00Z");
+
+    startTime =  "2022-11-20T00:00:00Z";
+    endTime = "2022-12-20T00:00:00Z";
+    jwtData.setRole(DxRole.CONSUMER.getRole());
+    jwtData.setSub("15c7506f-c800-48d6-adeb-0542b03947c6");
+    jwtData.setIid("abcd:15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
 
     JsonObject jsonObject =
         new JsonObject().put("resourceid", "5b7556b5-0779-4c47-9cf2-3f209779aa22").put("count", 5);
@@ -1180,7 +1195,7 @@ public class MeteringServiceTest {
         .cacheCall(any());
 
     spyMeteringService.summaryOverview(
-        json,
+            jwtData,startTime,endTime,
         vertxTestContext.succeeding(
             response ->
                 vertxTestContext.verify(
@@ -1206,6 +1221,11 @@ public class MeteringServiceTest {
             .put("id", "5b7556b5-0779-4c47-9cf2-3f209779aa22")
             .put("resourceGroup", "dummy_resource");
 
+    jwtData.setRole(DxRole.PROVIDER.getRole());
+    jwtData.setIid("ajfdh:15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
+    jwtData.setSub("5b7556b5-0779-4c47-9cf2-3f209779aa22");
+
+
     when(cacheService.get(any())).thenReturn(Future.succeededFuture(providerJson));
 
     meteringService = new MeteringServiceImpl(vertxObj, postgresService, cacheService);
@@ -1229,7 +1249,7 @@ public class MeteringServiceTest {
     JsonObject jsonObject = readProviderRequest();
 
     meteringService.summaryOverview(
-        jsonObject,
+            jwtData,startTime,endTime,
         vertxTestContext.succeeding(
             response ->
                 vertxTestContext.verify(
@@ -1246,10 +1266,11 @@ public class MeteringServiceTest {
     Future future = mock(Future.class);
     Throwable throwable = mock(Throwable.class);
     postgresService = mock(PostgresService.class);
-    JsonObject json = new JsonObject().put("role", "consumer");
-    json.put(IID, "15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
-    json.put(USER_ID, "15c7506f-c800-48d6-adeb-0542b03947c6");
-    json.put(STARTT, "2022-11-20T00:00:00Z");
+
+    startTime = "2022-11-20T00:00:00Z";
+    jwtData.setRole(DxRole.CONSUMER.getRole());
+    jwtData.setSub("15c7506f-c800-48d6-adeb-0542b03947c6");
+    jwtData.setIid("abcd:15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
 
     lenient().when(future.succeeded()).thenReturn(false);
     JsonObject providerJson =
@@ -1261,7 +1282,7 @@ public class MeteringServiceTest {
     meteringService = new MeteringServiceImpl(vertxObj, postgresService, cacheService);
 
     meteringService.summaryOverview(
-        json,
+            jwtData,startTime,endTime,
         handler -> {
           if (handler.failed()) {
             assertEquals(handler.cause().getMessage(), "{\"title\":\"Bad Request\",\"type\":400}");
@@ -1279,14 +1300,15 @@ public class MeteringServiceTest {
     Future future = mock(Future.class);
     Throwable throwable = mock(Throwable.class);
     postgresService = mock(PostgresService.class);
-    JsonObject json = new JsonObject().put("role", "admin");
-    json.put(IID, "15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
-    json.put(USER_ID, "15c7506f-c800-48d6-adeb-0542b03947c6");
-    json.put(STARTT, "2022-11-20T00:00:00Z");
+
+    startTime = "2022-11-20T00:00:00Z";
+    jwtData.setRole(DxRole.ADMIN.getRole());
+    jwtData.setSub("15c7506f-c800-48d6-adeb-0542b03947c6");
+    jwtData.setIid("abcd:15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
 
     meteringService = new MeteringServiceImpl(vertxObj, postgresService, cacheService);
     meteringService.monthlyOverview(
-        json,
+            jwtData,startTime,endTime,
         handler -> {
           if (handler.failed()) {
             assertEquals(handler.cause().getMessage(), "{\"title\":\"Bad Request\",\"type\":400}");
@@ -1390,11 +1412,12 @@ public class MeteringServiceTest {
   public void testForSummaryApiWithSTETAdmin(VertxTestContext vertxTestContext) {
     AsyncResult<JsonObject> asyncResult = mock(AsyncResult.class);
     postgresService = mock(PostgresService.class);
-    JsonObject json = new JsonObject().put("role", "admin");
-    json.put(IID, "15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
-    json.put(USER_ID, "15c7506f-c800-48d6-adeb-0542b03947c6");
-    json.put(STARTT, "2022-11-20T00:00:00Z");
-    json.put(ENDT, "2022-12-20T00:00:00Z");
+
+    startTime = "2022-11-20T00:00:00Z";
+    endTime = "2022-12-20T00:00:00Z";
+    jwtData.setRole(DxRole.ADMIN.getRole());
+    jwtData.setSub("15c7506f-c800-48d6-adeb-0542b03947c6");
+    jwtData.setIid("abcd:15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
 
     JsonObject jsonObject =
         new JsonObject().put("resourceid", "5b7556b5-0779-4c47-9cf2-3f209779aa22").put("count", 5);
@@ -1435,7 +1458,7 @@ public class MeteringServiceTest {
         .cacheCall(any());
 
     spyMeteringService.summaryOverview(
-        json,
+            jwtData,startTime,endTime,
         vertxTestContext.succeeding(
             response ->
                 vertxTestContext.verify(
@@ -1474,14 +1497,13 @@ public class MeteringServiceTest {
             })
         .when(postgresService)
         .executeQuery(anyString(), any());
-    JsonObject json1 = new JsonObject().put("role", "admin");
-    json.put(IID, "15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
-    json.put(USER_ID, "15c7506f-c800-48d6-adeb-0542b03947c6");
-    json.put(STARTT, "2022-11-20T00:00:00Z");
-    json.put(ENDT, "2022-12-20T00:00:00Z");
-
+    jwtData.setRole(DxRole.ADMIN.getRole());
+    jwtData.setIid("ajfdh:15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
+    jwtData.setSub("15c7506f-c800-48d6-adeb-0542b03947c6");
+    startTime =  "2022-11-20T00:00:00Z";
+    endTime = "2022-12-20T00:00:00Z";
     meteringService.summaryOverview(
-        json1,
+            jwtData,startTime,endTime,
         vertxTestContext.succeeding(
             response ->
                 vertxTestContext.verify(
@@ -1503,22 +1525,28 @@ public class MeteringServiceTest {
 
     meteringService = new MeteringServiceImpl(vertxObj, postgresService, cacheService);
 
-    JsonObject json1 = new JsonObject().put("role", "admin");
-    json1.put(IID, "15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
-    json1.put(USER_ID, "15c7506f-c800-48d6-adeb-0542b03947c6");
-    json1.put(STARTT, "2022-11-20T");
-    json1.put(ENDT, "2022-12-20T00:00:00Z");
+    startTime = "2022-11-20T";
+    endTime = "2022-12-20T00:00:00Z";
+    jwtData.setRole(DxRole.ADMIN.getRole());
+    jwtData.setSub("15c7506f-c800-48d6-adeb-0542b03947c6");
+    jwtData.setIid("abcd:15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
 
-    meteringService.summaryOverview(
-        json1,
-        handler -> {
-          if (handler.failed()) {
-            assertEquals(
-                handler.cause().getMessage(),
-                "{\"type\":400,\"title\":\"urn:dx:rs:badRequest\",\"detail\":\"invalid date-time\"}");
-            vertxTestContext.completeNow();
-          }
-        });
+    try{
+      meteringService.summaryOverview(
+              jwtData,startTime,endTime,
+              handler -> {
+                if (handler.failed()) {
+                  assertEquals(
+                          handler.cause().getMessage(),
+                          "{\"type\":400,\"title\":\"urn:dx:rs:badRequest\",\"detail\":\"invalid date-time\"}");
+                }
+              });
+    }catch (Exception e)
+    {
+      assertEquals(e.getMessage(), "invalid date-time");
+      vertxTestContext.completeNow();
+    }
+
   }
 
   @Test
@@ -1532,23 +1560,28 @@ public class MeteringServiceTest {
     JsonArray jsonArray = mock(JsonArray.class);
 
     meteringService = new MeteringServiceImpl(vertxObj, postgresService, cacheService);
+    startTime = "2022-11-20T";
+    endTime = "2022-12-20T00:00:00Z";
+    jwtData.setRole(DxRole.ADMIN.getRole());
+    jwtData.setSub("15c7506f-c800-48d6-adeb-0542b03947c6");
+    jwtData.setIid("abcd:15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
 
-    JsonObject json1 = new JsonObject().put("role", "admin");
-    json1.put(IID, "15c7506f-c800-48d6-adeb-0542b03947c6/integration-test-alias/");
-    json1.put(USER_ID, "15c7506f-c800-48d6-adeb-0542b03947c6");
-    json1.put(STARTT, "2022-11-20T");
-    json1.put(ENDT, "2022-12-20T00:00:00Z");
+    try{
+      meteringService.monthlyOverview(
+              jwtData,startTime,endTime,
+              handler -> {
+                if (handler.failed()) {
+                  assertEquals(
+                          handler.cause().getMessage(),
+                          "{\"type\":400,\"title\":\"urn:dx:rs:badRequest\",\"detail\":\"invalid date-time\"}");
+                }
+              });
+    }catch (DxRuntimeException e)
+    {
+      assertEquals("invalid date-time",e.getMessage());
+      vertxTestContext.completeNow();
+    }
 
-    meteringService.monthlyOverview(
-        json1,
-        handler -> {
-          if (handler.failed()) {
-            assertEquals(
-                handler.cause().getMessage(),
-                "{\"type\":400,\"title\":\"urn:dx:rs:badRequest\",\"detail\":\"invalid date-time\"}");
-            vertxTestContext.completeNow();
-          }
-        });
   }
 
   @Test
@@ -1556,14 +1589,11 @@ public class MeteringServiceTest {
   public void testForSummaryApiWithSTETAdmin2(VertxTestContext vertxTestContext) {
     AsyncResult<JsonObject> asyncResult = mock(AsyncResult.class);
     postgresService = mock(PostgresService.class);
-    JsonObject json =
-        new JsonObject()
-            .put("role", "admin")
-            .put("resourceid", "5b7556b5-0779-4c47-9cf2-3f209779aa22");
-    json.put(IID, "15c7506f-c800-48d6-adeb-0542b03947c6");
-    json.put(USER_ID, "15c7506f-c800-48d6-adeb-0542b03947c6");
-    json.put(STARTT, "2022-11-20T00:00:00Z");
-    json.put(ENDT, "2022-12-20T00:00:00Z");
+    startTime = "2022-11-20T00:00:00Z";
+    endTime = "2022-12-20T00:00:00Z";
+    jwtData.setRole(DxRole.ADMIN.getRole());
+    jwtData.setSub("15c7506f-c800-48d6-adeb-0542b03947c6");
+    jwtData.setIid("abcd:15c7506f-c800-48d6-adeb-0542b03947c6");
 
     JsonObject jsonObject =
         new JsonObject().put("resourceid", "5b7556b5-0779-4c47-9cf2-3f209779aa22").put("count", 1);
@@ -1594,7 +1624,7 @@ public class MeteringServiceTest {
     when(cacheService.get(any())).thenReturn(Future.succeededFuture(postgresJson));
 
     meteringService.summaryOverview(
-        json,
+            jwtData,startTime,endTime,
         handler -> {
           if (handler.succeeded()) {
             assertEquals(handler.result().getString("type"), "urn:dx:dm:Success");

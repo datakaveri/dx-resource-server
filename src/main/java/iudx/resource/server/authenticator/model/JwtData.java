@@ -2,6 +2,9 @@ package iudx.resource.server.authenticator.model;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @DataObject(generateConverter = true, publicConverter = false)
 public final class JwtData {
@@ -17,6 +20,16 @@ public final class JwtData {
   private JsonObject cons;
   private String drl;
   private String did;
+  private String expiry;
+
+  public JwtData() {
+    super();
+  }
+
+  public JwtData(JsonObject json) {
+    JwtDataConverter.fromJson(json, this);
+    setAccessToken(json.getString("access_token"));
+  }
 
   public String getDrl() {
     return drl;
@@ -34,21 +47,20 @@ public final class JwtData {
     this.did = did;
   }
 
-  public JwtData() {
-    super();
-  }
-
-  public JwtData(JsonObject json) {
-    JwtDataConverter.fromJson(json, this);
-    setAccessToken(json.getString("access_token"));
-  }
-
   public JsonObject toJson() {
     JsonObject json = new JsonObject();
     JwtDataConverter.toJson(this, json);
     return json;
   }
 
+  public void setExpiry(String exp)
+  {
+    this.expiry = exp;
+  }
+  public String getExpiry()
+  {
+    return this.expiry;
+  }
   public String getAccessToken() {
     return accessToken;
   }
@@ -145,6 +157,8 @@ public final class JwtData {
         + drl
         + ", did="
         + did
+        +", expiry="
+        + expiry
         + "]";
   }
 }
