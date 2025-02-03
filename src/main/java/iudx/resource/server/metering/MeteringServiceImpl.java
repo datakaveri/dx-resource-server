@@ -198,7 +198,8 @@ public class MeteringServiceImpl implements MeteringService {
     String startTime = request.getString(STARTT);
     String endTime = request.getString(ENDT);
     if (startTime != null && endTime == null || startTime == null && endTime != null) {
-      handler.handle(Future.failedFuture("Bad Request"));
+      handler.handle(Future.failedFuture(new JsonObject().put(JSON_TITLE,"Bad Request").put(JSON_TYPE,400).toString()));
+      return this;
     }
     if (startTime != null && endTime != null) {
       validationCheck = dateValidation.dateParamCheck(request);
@@ -265,7 +266,8 @@ public class MeteringServiceImpl implements MeteringService {
     String startTime = request.getString(STARTT);
     String endTime = request.getString(ENDT);
     if (startTime != null && endTime == null || startTime == null && endTime != null) {
-      handler.handle(Future.failedFuture("Bad Request"));
+      handler.handle(Future.failedFuture(new JsonObject().put(JSON_TITLE,"Bad Request").put(JSON_TYPE,400).toString()));
+      return this;
     }
     if (startTime != null && endTime != null) {
       validationCheck = dateValidation.dateParamCheck(request);

@@ -99,6 +99,7 @@ public class QueryMapper {
                 "incomplete geo-query geoproperty, geometry, georel, "
                     + "coordinates all are mandatory.");
         this.context.fail(400, ex);
+        return null;
       }
     }
     if (isTemporal
