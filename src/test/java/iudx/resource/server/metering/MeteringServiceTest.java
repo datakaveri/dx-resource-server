@@ -1264,7 +1264,7 @@ public class MeteringServiceTest {
         json,
         handler -> {
           if (handler.failed()) {
-            assertEquals(handler.cause().getMessage(), "Bad Request");
+            assertEquals(handler.cause().getMessage(), "{\"title\":\"Bad Request\",\"type\":400}");
             vertxTestContext.completeNow();
           } else {
             vertxTestContext.failNow("failed");
@@ -1289,7 +1289,7 @@ public class MeteringServiceTest {
         json,
         handler -> {
           if (handler.failed()) {
-            assertEquals(handler.cause().getMessage(), "Bad Request");
+            assertEquals(handler.cause().getMessage(), "{\"title\":\"Bad Request\",\"type\":400}");
             vertxTestContext.completeNow();
           } else {
             vertxTestContext.failNow("failed");
