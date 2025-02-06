@@ -57,7 +57,7 @@ import org.apache.logging.log4j.core.LoggerContext;
  * <p>e.g. <i>java -jar ./fatjar.jar --host $(hostname) -c configs/config.json -m
  * iudx.resource.server.database.archives.DatabaseVerticle,
  * iudx.resource.server.authenticator.AuthenticationVerticle
- * ,iudx.resource.server.metering.MeteringVerticle,
+ * ,iudx.resource.server.apiserver.metering.MeteringVerticle,
  * iudx.resource.server.database.postgres.PostgresVerticle</i>
  */
 public class Deployer {

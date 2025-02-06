@@ -2,7 +2,6 @@ package iudx.resource.server.databroker.listeners;
 
 import static iudx.resource.server.apiserver.util.Constants.HEADER_RESPONSE_FILE_FORMAT;
 import static iudx.resource.server.authenticator.Constants.*;
-import static iudx.resource.server.common.Constants.*;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
