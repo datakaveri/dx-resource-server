@@ -1,3 +1,3 @@
 package iudx.resource.server.common;
 
-public class Constants {}
+public class ContextHelper {}

@@ -1,9 +1,7 @@
 package iudx.resource.server.apiserver.subscription.model;
 
-import io.vertx.core.json.JsonObject;
-
 public class SubscriptionData {
-  private JsonObject dataBrokerResult;
+ /* private JsonObject dataBrokerResult;
   private JsonObject cacheResult;
 
   public SubscriptionData(JsonObject dataBrokerResult, JsonObject cacheResult) {
@@ -22,5 +20,5 @@ public class SubscriptionData {
   @Override
   public String toString() {
     return "DataBrokerResult = " + dataBrokerResult + ", cacheResult = " + cacheResult;
-  }
+  }*/
 }
