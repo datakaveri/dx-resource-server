@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(VertxExtension.class)
 @ExtendWith(MockitoExtension.class)
 
-public class StreamingSubscriptionTest {
+public class StreamingSubscriptionTestService {
     @Mock
     DataBrokerService databroker;
     @Mock

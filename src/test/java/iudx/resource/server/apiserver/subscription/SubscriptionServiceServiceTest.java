@@ -34,7 +34,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(VertxExtension.class)
 @ExtendWith(MockitoExtension.class)
-public class SubscriptionServiceTest {
+public class SubscriptionServiceServiceTest {
     SubscriptionService service;
     @Mock
     DataBrokerService databroker;

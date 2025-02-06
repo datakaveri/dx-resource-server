@@ -12,7 +12,7 @@ import static org.hamcrest.Matchers.*;
 
 @ExtendWith(RestAssuredConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class StreamingSubscriptionAPIsIT {
+public class StreamingSubscriptionAPIsITService {
     String appName = "Subscriptions Test 15";
     String inValidAppName="RS-integration-test-alias-RL";
     String entityId ="83c2e5c2-3574-4e11-9530-2b1fbdfce832";

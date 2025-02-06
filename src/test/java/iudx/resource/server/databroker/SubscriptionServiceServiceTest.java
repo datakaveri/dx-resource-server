@@ -32,7 +32,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
 @ExtendWith({VertxExtension.class, MockitoExtension.class})
-public class SubscriptionServiceTest {
+public class SubscriptionServiceServiceTest {
     static JsonObject request;
     @Mock
     RabbitClient rabbitClient;
@@ -73,7 +73,7 @@ public class SubscriptionServiceTest {
     static Stream<Arguments> listCallbackInputValues() {
         return Stream.of(
                 Arguments.of(new JsonObject(), "{\"type\":400,\"title\":\"error\",\"detail\":\"Invalid request payload\"}"),
-                Arguments.of(SubscriptionServiceTest.request, "{\"type\":400,\"title\":\"error\",\"detail\":\"Invalid request payload\"}")
+                Arguments.of(SubscriptionServiceServiceTest.request, "{\"type\":400,\"title\":\"error\",\"detail\":\"Invalid request payload\"}")
         );
     }
 
