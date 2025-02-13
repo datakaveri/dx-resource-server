@@ -1,31 +1,42 @@
 package iudx.resource.server.apiserver.ingestion.controller;
 
-import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import iudx.resource.server.apiserver.RouteBuilder;
 import iudx.resource.server.common.Api;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class IngestionServerRestApi extends AbstractVerticle {
-    private static final Logger LOGGER = LogManager.getLogger(IngestionServerRestApi.class);
-    private final Router router = RouteBuilder.getRouter();
+public class IngestionController {
+  private static final Logger LOGGER = LogManager.getLogger(IngestionController.class);
+  private final Router router;
+  private Vertx vertx;
+  private Api api;
 
-    @Override
-    public void start() throws Exception {
-        LOGGER.debug("Starting ingestion ");
-        router.post(config().getString("dxApiBasePath")+"/ingestion").handler(this::handleIngestion);
-    }
+  public IngestionController(Vertx vertx, Router router, Api api) {
+    this.router = router;
+    this.vertx = vertx;
+    this.api = api;
+  }
 
-    @Override
-    public void stop() throws Exception {
-        LOGGER.debug("Shutting down");
-    }
+  public void init() {
+    router.post(api.getIngestionPath()).handler(this::registerAdapter);
+    router.delete(api.getIngestionPath() + "/*").handler(this::deleteAdapter);
+    router.get(api.getIngestionPath() + "/:UUID").handler(this::getAdapterDetails);
+    router.post(api.getIngestionPath() + "/heartbeat").handler(this::publishHeartbeat);
+    router.post(api.getIngestionPathEntities()).handler(this::publishDataFromAdapter);
+    router.get(api.getIngestionPath()).handler(this::getAllAdaptersForUsers);
+  }
 
-    private void handleIngestion(RoutingContext routingContext) {
-        LOGGER.debug("- handleIngestion() started -" );
+  private void registerAdapter(RoutingContext routingContext) {}
 
-    }
+  private void deleteAdapter(RoutingContext routingContext) {}
+
+  private void publishHeartbeat(RoutingContext routingContext) {}
+
+  private void getAdapterDetails(RoutingContext routingContext) {}
+
+  private void publishDataFromAdapter(RoutingContext routingContext) {}
+
+  private void getAllAdaptersForUsers(RoutingContext routingContext) {}
 }

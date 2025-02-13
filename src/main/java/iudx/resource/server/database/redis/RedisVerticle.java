@@ -1,3 +1,13 @@
 package iudx.resource.server.database.redis;
 
-public class RedisVerticle {}
+import io.vertx.core.AbstractVerticle;
+
+public class RedisVerticle extends AbstractVerticle {
+    @Override
+    public void start() throws Exception {
+    }
+
+    @Override
+    public void stop() throws Exception {
+    }
+}

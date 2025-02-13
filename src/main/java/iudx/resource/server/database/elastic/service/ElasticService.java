@@ -6,16 +6,14 @@ import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.database.archives.DatabaseService;
-import iudx.resource.server.database.archives.DatabaseServiceVertxEBProxy;
 
 @VertxGen
 @ProxyGen
 public interface ElasticService {
 
     @GenIgnore
-    static DatabaseService createProxy(Vertx vertx, String address) {
-        return new DatabaseServiceVertxEBProxy(vertx, address);
+    static ElasticService createProxy(Vertx vertx, String address) {
+        return new ElasticServiceVertxEBProxy(vertx, address);
     }
 
     Future<JsonObject> search(JsonObject request);
