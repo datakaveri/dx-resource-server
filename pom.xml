@@ -108,11 +108,11 @@
             <version>1.11.3</version>
         </dependency>-->
 
-            <dependency>
-                <groupId>net.bytebuddy</groupId>
-                <artifactId>byte-buddy</artifactId>
-                <version>1.14.17</version>
-            </dependency>
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>1.14.17</version>
+        </dependency>
 
         <dependency>
             <groupId>io.vertx</groupId>
@@ -330,6 +330,15 @@
             <version>5.5.0</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.12</version>
+            <scope>provided</scope>
+        </dependency>
+
     </dependencies>
     <build>
         <plugins>
