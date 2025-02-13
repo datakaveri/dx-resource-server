@@ -1,12 +1,17 @@
 package iudx.resource.server.apiserver.subscription.model;
 
-public class SubscriptionData {
- /* private JsonObject dataBrokerResult;
-  private JsonObject cacheResult;
+import io.vertx.core.json.JsonObject;
 
-  public SubscriptionData(JsonObject dataBrokerResult, JsonObject cacheResult) {
+public class SubscriptionData {
+  private JsonObject dataBrokerResult;
+  private JsonObject cacheResult;
+  private JsonObject streamingResult;
+
+  public SubscriptionData(
+      JsonObject dataBrokerResult, JsonObject cacheResult, JsonObject streamingResult) {
     this.dataBrokerResult = dataBrokerResult;
     this.cacheResult = cacheResult;
+    this.streamingResult = streamingResult;
   }
 
   public JsonObject getDataBrokerResult() {
@@ -17,8 +22,17 @@ public class SubscriptionData {
     return cacheResult;
   }
 
+  public JsonObject getStreamingResult() {
+    return streamingResult;
+  }
+
   @Override
   public String toString() {
-    return "DataBrokerResult = " + dataBrokerResult + ", cacheResult = " + cacheResult;
-  }*/
+    return "DataBrokerResult = "
+        + dataBrokerResult
+        + ", cacheResult = "
+        + cacheResult
+        + ", StreamingResult = "
+        + streamingResult;
+  }
 }
