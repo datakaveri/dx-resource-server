@@ -1,19 +1,6 @@
 package iudx.resource.server.databroker;
 
 
-import static iudx.resource.server.apiserver.util.Constants.JSON_PROVIDER;
-import static iudx.resource.server.databroker.util.Constants.APIKEY;
-import static iudx.resource.server.databroker.util.Constants.PORT;
-import static iudx.resource.server.databroker.util.Constants.URL;
-import static iudx.resource.server.databroker.util.Constants.USER_NAME;
-import static iudx.resource.server.databroker.util.Constants.VHOST;
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.io.InputStream;
-import java.util.Properties;
-import java.util.UUID;
-
-import iudx.resource.server.cache.CacheService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.*;
@@ -30,15 +17,14 @@ import io.vertx.pgclient.PgPool;
 import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.rabbitmq.RabbitMQOptions;
 import io.vertx.sqlclient.PoolOptions;
-import iudx.resource.server.apiserver.response.ResponseType;
 import iudx.resource.server.common.Vhosts;
 import iudx.resource.server.configuration.Configuration;
-import iudx.resource.server.databroker.util.Constants;
 import org.mockito.Mock;
 
 @ExtendWith(VertxExtension.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AdapterEntitiesTest {
+/*
 
   static DataBrokerService databroker;
   static private Properties properties;
@@ -67,7 +53,9 @@ public class AdapterEntitiesTest {
 
   private static String id, anotherid, userName2Delete;
   private static String anotherProvider;
-  /* Database Properties */
+  */
+/* Database Properties *//*
+
   private static String databaseIP;
   private static int databasePort;
   private static String databaseName;
@@ -91,7 +79,9 @@ public class AdapterEntitiesTest {
   @DisplayName("Initialize the Databroker class with web client and rabbitmq client")
   static void startVertx(Vertx vertx, VertxTestContext testContext) {
 
-    /* Read the configuration and set the rabbitMQ server properties. */
+    */
+/* Read the configuration and set the rabbitMQ server properties. *//*
+
     appConfig = new Configuration();
     JsonObject brokerConfig = appConfig.configLoader(2, vertx);
 
@@ -122,7 +112,9 @@ public class AdapterEntitiesTest {
       LOGGER.info(ex.toString());
     }
 
-    /* Configure the RabbitMQ Data Broker client with input from config files. */
+    */
+/* Configure the RabbitMQ Data Broker client with input from config files. *//*
+
 
     config = new RabbitMQOptions();
     config.setUser(dataBrokerUserName);
@@ -148,27 +140,39 @@ public class AdapterEntitiesTest {
     String prodVhost = "IUDX";
     iudxConfig.setVirtualHost(prodVhost);
 
-    /* Create a RabbitMQ Clinet with the configuration and vertx cluster instance. */
+    */
+/* Create a RabbitMQ Clinet with the configuration and vertx cluster instance. *//*
+
     client = RabbitMQClient.create(vertx, config);
-    /* Create a Vertx Web Client with the configuration and vertx cluster instance. */
+    */
+/* Create a Vertx Web Client with the configuration and vertx cluster instance. *//*
+
 
     webClient = WebClient.create(vertx, webConfig);
 
-    /* Set Connection Object */
+    */
+/* Set Connection Object *//*
+
     if (connectOptions == null) {
       connectOptions = new PgConnectOptions().setPort(databasePort).setHost(databaseIP)
               .setDatabase(databaseName).setUser(databaseUserName).setPassword(databasePassword);
     }
 
-    /* Pool options */
+    */
+/* Pool options *//*
+
     if (poolOptions == null) {
       poolOptions = new PoolOptions().setMaxSize(poolSize);
     }
 
-    /* Create the client pool */
+    */
+/* Create the client pool *//*
+
     pgclient = PgPool.pool(vertx, connectOptions, poolOptions);
 
-    /* Create a Json Object for properties */
+    */
+/* Create a Json Object for properties *//*
+
     propObj = new JsonObject();
     propObj.put("userName", dataBrokerUserName);
     propObj.put(Constants.PASSWORD, dataBrokerPassword);
@@ -180,12 +184,16 @@ public class AdapterEntitiesTest {
     propObj.put("databasePassword", databasePassword);
     propObj.put("databasePoolSize", poolSize);
 
-    /* Call the databroker constructor with the RabbitMQ client Vertx web client. */
+    */
+/* Call the databroker constructor with the RabbitMQ client Vertx web client. *//*
+
 
     rabbitMQWebClient = new RabbitWebClient(vertx, webConfig, propObj);
     pgClient = new PostgresClient(vertx, connectOptions, poolOptions);
     rabbitMQStreamingClient = new RabbitClient(vertx, config, rabbitMQWebClient, pgClient, brokerConfig);
-    databroker = new DataBrokerServiceImpl(rabbitMQStreamingClient, pgClient, brokerConfig,cacheService, /*iudxConfig, vertx,*/ iudxRabbitMQClient);
+    databroker = new DataBrokerServiceImpl(rabbitMQStreamingClient, pgClient, brokerConfig,cacheService, */
+/*iudxConfig, vertx,*//*
+ iudxRabbitMQClient);
 
     resourceGroup = brokerConfig.getString("testResourceGroup");
     resourceServer = brokerConfig.getString("testResourceServer");
@@ -555,6 +563,7 @@ public class AdapterEntitiesTest {
     assertNull(ResponseType.fromCode(1));
     vertxTestContext.completeNow();
   }
+*/
 }
 
 

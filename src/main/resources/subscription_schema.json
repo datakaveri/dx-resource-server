@@ -21,6 +21,7 @@
             "title": "Entities", 
             "type": "array",
             "default": [],
+            "maxItems": 1,
             "items":{
                 "$id": "#root/entities/items", 
                 "title": "Items", 

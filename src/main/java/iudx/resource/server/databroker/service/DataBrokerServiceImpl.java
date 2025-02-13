@@ -1,75 +1,486 @@
 package iudx.resource.server.databroker.service;
 
-import static iudx.resource.server.apiserver.util.Constants.ID;
-import static iudx.resource.server.apiserver.util.Constants.RESOURCE_GROUP;
-import static iudx.resource.server.cache.cachelmpl.CacheType.CATALOGUE_CACHE;
+import static iudx.resource.server.apiserver.subscription.util.Constants.RESULTS;
+import static iudx.resource.server.apiserver.util.Constants.SUBSCRIPTION_ID;
+import static iudx.resource.server.apiserver.util.Constants.USER_ID;
 import static iudx.resource.server.databroker.util.Constants.*;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rabbitmq.RabbitMQClient;
-import iudx.resource.server.cache.CacheService;
-import iudx.resource.server.common.Response;
+import iudx.resource.server.apiserver.subscription.model.SubscriptionImplModel;
+import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.common.ResponseUrn;
-import iudx.resource.server.common.Vhosts;
-import iudx.resource.server.databroker.RabbitClient;
-import iudx.resource.server.databroker.util.Util;
-import java.util.Map;
-import org.apache.http.HttpStatus;
+import iudx.resource.server.databroker.util.PermissionOpType;
+import iudx.resource.server.databroker.util.RabbitClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-/**
- * The Data Broker Service Implementation.
- *
- * <h1>Data Broker Service Implementation</h1>
- *
- * <p>The Data Broker Service implementation in the DX Resource Server implements the definitions
- * of the {@link DataBrokerService}.
- *
- * @version 1.0
- * @since 2020-05-31
- */
-public class DataBrokerServiceImpl implements DataBrokerService {
+public class DataBrokerServiceImpl implements DataBrokerService{
+    private static final Logger LOGGER = LogManager.getLogger(DataBrokerServiceImpl.class);
+    private final String amqpUrl;
+    private final int amqpPort;
+    CacheService cacheService;
+    private String vhostProd;
+    private String iudxInternalVhost;
+    private String externalVhost;
+    private RabbitClient rabbitClient;
 
-  private static final Logger LOGGER = LogManager.getLogger(DataBrokerServiceImpl.class);
-  static SubscriptionService subscriptionService;
-  JsonObject finalResponse =
-      Util.getResponseJson(BAD_REQUEST_CODE, BAD_REQUEST_DATA, BAD_REQUEST_DATA);
-  CacheService cacheService;
-  /*RabbitMQOptions iudxRabbitMQOptions;*/
-  private JsonObject config;
-  private RabbitClient webClient;
-  private RabbitMQClient iudxRabbitMqClient;
+    public DataBrokerServiceImpl(RabbitClient client, String amqpUrl, int amqpPort, CacheService cacheService, String iudxInternalVhost,String prodVhost,String externalVhost) {
+        this.rabbitClient = client;
+        this.amqpUrl = amqpUrl;
+        this.amqpPort = amqpPort;
+        this.cacheService = cacheService;
+        this.vhostProd = prodVhost;
+        this.iudxInternalVhost = iudxInternalVhost;
+        this.externalVhost = externalVhost;
+    }
 
-  public DataBrokerServiceImpl(
-      RabbitClient webClient,
-      PostgresClient pgClient,
-      JsonObject config,
-      CacheService cacheService,
-      /*RabbitMQOptions iudxConfig,
-      Vertx vertx,*/
-      RabbitMQClient iudxRabbitMqClient) {
-    this.webClient = webClient;
-    this.config = config;
-    /*this.iudxRabbitMQOptions = iudxConfig;
-    this.iudxRabbitMqClient = RabbitMQClient.create(vertx,iudxConfig);*/
+    @Override
+    public Future<JsonObject> deleteStreamingSubscription(JsonObject request) {
+        LOGGER.trace("Info : SubscriptionService#deleteStreamingSubscription() started");
+        Promise<JsonObject> promise = Promise.promise();
+        JsonObject deleteStreamingSubscription = new JsonObject();
+        if (request != null && !request.isEmpty()) {
+            //TODO: To create Model
+            String queueName = request.getString(SUBSCRIPTION_ID);
+            String userid = request.getString("USER_ID");
+            JsonObject requestBody = new JsonObject();
+            requestBody.put(QUEUE_NAME, queueName);
+            Future<JsonObject> result = rabbitClient.deleteQueue(requestBody,vhostProd);
+            result.onComplete(
+                    resultHandler -> {
+                        if (resultHandler.succeeded()) {
+                            JsonObject deleteQueueResponse = (JsonObject) resultHandler.result();
+                            if (deleteQueueResponse.containsKey("TITLE")
+                                    && deleteQueueResponse.getString("TITLE").equalsIgnoreCase("FAILURE")) {
+                                LOGGER.debug("failed :: Response is " + deleteQueueResponse);
+                                promise.fail(deleteQueueResponse.toString());
+                            } else {
+                               /* deleteStreamingSubscription.mergeIn(
+                                        getResponseJson(
+                                                ResponseUrn.SUCCESS_URN.getUrn(),
+                                                HttpStatus.SC_OK,
+                                                SUCCESS,
+                                                "Subscription deleted Successfully"));*/
+                                Future.future(
+                                        fu ->
+                                                rabbitClient.updateUserPermissions(
+                                                        vhostProd, userid, PermissionOpType.DELETE_READ, queueName));
+                                promise.complete(deleteStreamingSubscription);
+                            }
+                        }
 
-    this.iudxRabbitMqClient = iudxRabbitMqClient;
-    this.subscriptionService =
-        new SubscriptionService(this.webClient, pgClient, config, cacheService);
-    this.cacheService = cacheService;
-  }
+                        if (resultHandler.failed()) {
+                            LOGGER.error("failed ::" + resultHandler.cause());
 
-  /**
+                            /*promise.fail(
+                                    getResponseJson(INTERNAL_ERROR_CODE, ERROR, QUEUE_DELETE_ERROR).toString());*/
+
+                        }
+                    });
+        } else {
+            /*promise.fail(finalResponse.toString());*/
+        }
+        return promise.future();
+    }
+
+    @Override
+    public Future<JsonObject> registerStreamingSubscription(SubscriptionImplModel subscriptionImplModel) {
+        LOGGER.trace("Info : SubscriptionService#registerStreamingSubscription() started");
+        Promise<JsonObject> promise = Promise.promise();
+        JsonObject registerStreamingSubscriptionResponse = new JsonObject();
+        JsonObject requestjson = new JsonObject();
+        ResultContainer resultContainer = new ResultContainer();
+        if (subscriptionImplModel != null ) {
+            String userid = subscriptionImplModel.getControllerModel().getUserId();
+            String queueName = userid + "/" + subscriptionImplModel.getControllerModel().getName();
+            /*JsonArray entitites = request.getJsonArray("ENTITIES");*/
+            String entities  = subscriptionImplModel.getControllerModel().getEntities();
+            if(entities==null)
+            {
+                if(entities.isEmpty() || entities.isBlank()){
+
+                }
+                return null;
+                // TODO:throw error or move this check to somewhere else
+            }
+            /*requestjson.put(QUEUE_NAME, queueName);*/
+            LOGGER.debug("queue name is databroker subscription  = {}", queueName);
+
+            Future<JsonObject> resultCreateUser = rabbitClient.createUserIfNotExist(userid, vhostProd).compose(
+                    checkUserExist->{
+                        LOGGER.debug("success :: createUserIfNotExist " + checkUserExist);
+
+                        resultContainer.apiKey = checkUserExist.getString(APIKEY);
+                        resultContainer.userId = checkUserExist.getString(USER_ID);
+
+                        /*return rabbitClient.createQueue(requestjson,vhostProd);*/
+                        return rabbitClient.createQueue(queueName, vhostProd);
+                    }).compose(createQueue->{
+                     resultContainer.isQueueCreated = true;
+
+                    String routingKey = entities;
+                    LOGGER.debug("Info : routingKey is " + routingKey);
+
+                    JsonArray array = new JsonArray();
+                    String exchangeName;
+                    if (isGroupResource(new JsonObject().put("type", subscriptionImplModel.getResourcegroup()))) {
+                        exchangeName = routingKey;
+                        array.add(exchangeName + DATA_WILDCARD_ROUTINGKEY);
+                    } else {
+                        exchangeName = subscriptionImplModel.getResourcegroup();
+                        array.add(exchangeName + "/." + routingKey);
+                    }
+                    LOGGER.debug(" Exchange name = {}", exchangeName);
+                    JsonObject json = new JsonObject();
+                    json.put(EXCHANGE_NAME, exchangeName);
+                    json.put(QUEUE_NAME, queueName);
+                    json.put(/*"ENTITIES"*/"entities", array);
+                    return rabbitClient.bindQueue(json,vhostProd);
+            }).compose(bindQueueSuccess->{
+                if(bindQueueSuccess.containsKey("TITLE")
+                        && bindQueueSuccess.getString("TITLE").equalsIgnoreCase("FAILURE")){
+                    LOGGER.error("failed ::" + bindQueueSuccess.toString());
+                    return rabbitClient.deleteQueue(requestjson,vhostProd);
+                }
+                else{
+                    LOGGER.debug("binding Queue successful");
+                    return rabbitClient.updateUserPermissions(vhostProd,userid,PermissionOpType.ADD_READ,queueName);
+                }
+
+            }).onComplete(updateUserPermissionHandler->{
+                if(updateUserPermissionHandler.succeeded()){
+                    registerStreamingSubscriptionResponse.put(
+                            USER_NAME, resultContainer.userId);
+                    registerStreamingSubscriptionResponse.put(
+                            APIKEY, resultContainer.apiKey);
+                    registerStreamingSubscriptionResponse.put(
+                            ID, queueName);
+                    registerStreamingSubscriptionResponse.put(
+                            URL, this.amqpUrl);
+                    registerStreamingSubscriptionResponse.put(
+                            PORT, this.amqpPort);
+                    registerStreamingSubscriptionResponse.put(
+                            VHOST, vhostProd);
+
+                    JsonObject response = new JsonObject();
+                    response.put(
+                            "TYPE", ResponseUrn.SUCCESS_URN.getUrn());
+                    response.put("TITLE", "success");
+                    response.put(
+                            RESULTS,
+                            new JsonArray()
+                                    .add(
+                                            registerStreamingSubscriptionResponse));
+                    LOGGER.debug("--- Response "+ response);
+                    promise.complete(response);
+                }
+                else{
+                    LOGGER.error("failed ::" + updateUserPermissionHandler.cause());
+                    Future<JsonObject> resultDeletequeue =
+                            rabbitClient.deleteQueue(
+                                    requestjson, vhostProd);
+                    resultDeletequeue.onComplete(
+                            resultHandlerDeletequeue -> {
+                                if (resultHandlerDeletequeue
+                                        .succeeded()) {
+                                        /*promise.fail(
+                                                getResponseJson(
+                                                        BAD_REQUEST_CODE,
+                                                        BAD_REQUEST_DATA,
+                                                        BINDING_FAILED)
+                                                        .toString());*/
+                                }
+                            });
+                }
+            });
+        }
+        return promise.future();
+    }
+
+    /*@Override
+    public Future<JsonObject> registerStreamingSubscription(JsonObject request) {
+        LOGGER.trace("Info : SubscriptionService#registerStreamingSubscription() started");
+        Promise<JsonObject> promise = Promise.promise();
+        JsonObject registerStreamingSubscriptionResponse = new JsonObject();
+        JsonObject requestjson = new JsonObject();
+        ResultContainer resultContainer = new ResultContainer();
+        if (request != null && !request.isEmpty()) {
+            String userid = request.getString("USER_ID");
+            String queueName = userid + "/" + request.getString("name");
+            *//*JsonArray entitites = request.getJsonArray("ENTITIES");*//*
+            String entities  = request.getJsonArray("ENTITIES").getString(0);
+            if(entities==null)
+            {
+                if(entities.isEmpty() || entities.isBlank()){
+
+                }
+                return null;
+                // TODO:throw error or move this check to somewhere else
+            }
+            requestjson.put(QUEUE_NAME, queueName);
+            LOGGER.debug("queue name is databroker subscription  = {}", queueName);
+
+            Future<JsonObject> resultCreateUser = rabbitClient.createUserIfNotExist(userid, vhostProd).compose(
+                    checkUserExist->{
+                        LOGGER.debug("success :: createUserIfNotExist " + checkUserExist);
+
+                        resultContainer.apiKey = checkUserExist.getString(APIKEY);
+                        resultContainer.userId = checkUserExist.getString("USER_ID");
+
+                        return rabbitClient.createQueue(requestjson,vhostProd);
+                    }).compose(createQueue->{
+                        if(createQueue.containsKey("TITLE")
+                                && createQueue.getString("TITLE").equalsIgnoreCase("FAILURE")){
+                            LOGGER.error("failed ::" + createQueue);
+                            promise.fail(createQueue.toString());
+                            return rabbitClient.deleteQueue(requestjson,vhostProd);
+                        }else{
+                            String routingKey = entities;
+                            LOGGER.debug("Info : routingKey is " + routingKey);
+
+                                    JsonArray array = new JsonArray();
+                                    String exchangeName;
+                                    if (isGroupResource(request)) {
+                                        exchangeName = routingKey;
+                                        array.add(exchangeName + DATA_WILDCARD_ROUTINGKEY);
+                                    } else {
+                                        exchangeName = request.getString("resourcegroup");
+                                        LOGGER.debug("exchange name  = {} ", exchangeName);
+                                        array.add(exchangeName + "/." + routingKey);
+                                    }
+                                    LOGGER.debug(" Exchange name = {}", exchangeName);
+                                    JsonObject json = new JsonObject();
+                                    json.put(EXCHANGE_NAME, exchangeName);
+                                    json.put(QUEUE_NAME, queueName);
+                                    json.put("ENTITIES", array);
+                                    return rabbitClient.bindQueue(json,vhostProd);
+                            }
+                    }).compose(bindQueueSuccess->{
+                        if(bindQueueSuccess.containsKey("TITLE")
+                                && bindQueueSuccess.getString("TITLE").equalsIgnoreCase("FAILURE")){
+                            LOGGER.error("failed ::" + bindQueueSuccess.toString());
+                            return rabbitClient.deleteQueue(requestjson,vhostProd);
+                        }
+                        else{
+                                LOGGER.debug("binding Queue successful");
+                                return rabbitClient.updateUserPermissions(vhostProd,userid,PermissionOpType.ADD_READ,queueName);
+                        }
+
+                    }).onComplete(updateUserPermissionHandler->{
+                            if(updateUserPermissionHandler.succeeded()){
+                                registerStreamingSubscriptionResponse.put(
+                                        USER_NAME, resultContainer.userId);
+                                registerStreamingSubscriptionResponse.put(
+                                        APIKEY, resultContainer.apiKey);
+                                registerStreamingSubscriptionResponse.put(
+                                        ID, queueName);
+                                registerStreamingSubscriptionResponse.put(
+                                        URL, this.amqpUrl);
+                                registerStreamingSubscriptionResponse.put(
+                                        PORT, this.amqpPort);
+                                registerStreamingSubscriptionResponse.put(
+                                        VHOST, vhostProd);
+
+                                JsonObject response = new JsonObject();
+                                response.put(
+                                        "TYPE", ResponseUrn.SUCCESS_URN.getUrn());
+                                response.put("TITLE", "success");
+                                response.put(
+                                        "RESULTS",
+                                        new JsonArray()
+                                                .add(
+                                                        registerStreamingSubscriptionResponse));
+
+                                promise.complete(response);
+                    }
+                    else{
+                        LOGGER.error("failed ::" + updateUserPermissionHandler.cause());
+                        Future<JsonObject> resultDeletequeue =
+                                rabbitClient.deleteQueue(
+                                        requestjson, vhostProd);
+                        resultDeletequeue.onComplete(
+                                resultHandlerDeletequeue -> {
+                                    if (resultHandlerDeletequeue
+                                            .succeeded()) {
+                                        *//*promise.fail(
+                                                getResponseJson(
+                                                        BAD_REQUEST_CODE,
+                                                        BAD_REQUEST_DATA,
+                                                        BINDING_FAILED)
+                                                        .toString());*//*
+                                    }
+                                });
+                        }
+                 });
+            }
+        return promise.future();
+    }*/
+
+    @Override
+    public Future<JsonObject> registerAdaptor(JsonObject request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> deleteAdaptor(JsonObject request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> listAdaptor(JsonObject request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> updateStreamingSubscription(JsonObject request) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> appendStreamingSubscription(JsonObject request) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> listStreamingSubscription(String subscriptionID) {
+        LOGGER.trace("Info : SubscriptionService#listStreamingSubscriptions() started");
+        String queueName = subscriptionID;
+
+        Promise<JsonObject> promise = Promise.promise();
+        if (subscriptionID != null && !subscriptionID.isEmpty()) {
+            Future<JsonObject> result = rabbitClient.listQueueSubscribers(queueName,vhostProd).onComplete(
+                    resultHandler -> {
+                        if (resultHandler.succeeded()) {
+                            JsonObject listQueueResponse = (JsonObject) resultHandler.result();
+                            if (listQueueResponse.containsKey("TITLE")
+                                    && listQueueResponse.getString("TITLE").equalsIgnoreCase("FAILURE")) {
+                                LOGGER.error("failed :: Response is " + listQueueResponse);
+                                promise.fail(listQueueResponse.toString());
+                            } else {
+                                LOGGER.debug(listQueueResponse);
+                                JsonObject response = new JsonObject();
+                                response.put("TYPE", ResponseUrn.SUCCESS_URN.getUrn());
+                                response.put("TITLE", "success");
+                                response.put(RESULTS, new JsonArray().add(listQueueResponse));
+
+                                promise.complete(response);
+                            }
+                        }
+                        if (resultHandler.failed()) {
+                            LOGGER.error("failed ::" + resultHandler.cause());
+                            promise.fail(/*getResponseJson(BAD_REQUEST_CODE, ERROR, QUEUE_LIST_ERROR).toString()*/"");
+                        }
+                    });
+        } else {
+            /*handler.handle(Future.failedFuture(finalResponse.toString()));*/
+            promise.fail(/*getResponseJson(BAD_REQUEST_CODE, ERROR, QUEUE_LIST_ERROR).toString()*/"");
+        }
+        return promise.future();
+    }
+
+    @Override
+    public Future<JsonObject> createExchange(JsonObject request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> deleteExchange(JsonObject request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> listExchangeSubscribers(JsonObject request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> createQueue(JsonObject request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> deleteQueue(JsonObject request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> bindQueue(JsonObject request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> unbindQueue(JsonObject request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> createvHost(JsonObject request) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> deletevHost(JsonObject request) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> listvHost(JsonObject request) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> listQueueSubscribers(JsonObject request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> publishFromAdaptor(JsonArray request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> resetPassword(JsonObject request) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> getExchange(JsonObject request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> publishHeartbeat(JsonObject request, String vhost) {
+        return null;
+    }
+
+    @Override
+    public Future<JsonObject> publishMessage(JsonObject body, String toExchange, String routingKey) {
+        return null;
+    }
+
+    private boolean isGroupResource(JsonObject jsonObject) {
+        return jsonObject.getString("type").equalsIgnoreCase("resourceGroup");
+    }
+
+    public class ResultContainer {
+        public String apiKey;
+        public String userId;
+        public boolean isQueueCreated = false;
+    }
+}
+
+
+ /*
+
+  *//**
    * This method creates user, declares exchange and bind with predefined queues.
    *
    * @param request which is a Json object
    * @return response which is a Future object of promise of Json type
-   */
+   *//*
   @Override
   public Future<JsonObject> registerAdaptor(JsonObject request, String vhost) {
     Promise<JsonObject> promise = Promise.promise();
@@ -90,12 +501,12 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return promise.future();
   }
 
-  /**
+  *//**
    * It retrieves exchange is exist
    *
    * @param request which is of type JsonObject
    * @return response which is a Future object of promise of Json type
-   */
+   *//*
   @Override
   public Future<JsonObject> getExchange(JsonObject request, String vhost) {
     Promise<JsonObject> promise = Promise.promise();
@@ -116,16 +527,16 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return promise.future();
   }
 
-  /*
+  *//*
    * overridden method
-   */
+   *//*
 
-  /**
+  *//**
    * The deleteAdaptor implements deletion feature for an adaptor(exchange).
    *
    * @param request which is a Json object
    * @return response which is a Future object of promise of Json type
-   */
+   *//*
   @Override
   public Future<JsonObject> deleteAdaptor(JsonObject request, String vhost) {
     Promise<JsonObject> promise = Promise.promise();
@@ -146,13 +557,13 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return promise.future();
   }
 
-  /**
+  *//**
    * The listAdaptor implements the list of bindings for an exchange (source). This method has
    * similar functionality as listExchangeSubscribers(JsonObject) method
    *
    * @param request which is a Json object
    * @return response which is a Future object of promise of Json type
-   */
+   *//*
   @Override
   public Future<JsonObject> listAdaptor(JsonObject request, String vhost) {
     Promise<JsonObject> promise = Promise.promise();
@@ -177,125 +588,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return promise.future();
   }
 
-  /** {@inheritDoc} */
-  @Override
-  public Future<JsonObject> registerStreamingSubscription(JsonObject request) {
-    Promise<JsonObject> promise = Promise.promise();
-    if (request != null && !request.isEmpty()) {
-      Future<JsonObject> result = subscriptionService.registerStreamingSubscription(request);
-      result.onComplete(
-          resultHandler -> {
-            if (resultHandler.succeeded()) {
-              promise.complete(resultHandler.result());
-            }
-            if (resultHandler.failed()) {
-              LOGGER.error(
-                  "registerStreamingSubscription - resultHandler failed : "
-                      + resultHandler.cause());
-              promise.fail(resultHandler.cause().getMessage());
-            }
-          });
-    } else {
-      promise.fail(finalResponse.toString());
-    }
-    return promise.future();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Future<JsonObject> updateStreamingSubscription(JsonObject request) {
-    Promise<JsonObject> promise = Promise.promise();
-    if (request != null && !request.isEmpty()) {
-      Future<JsonObject> result = subscriptionService.updateStreamingSubscription(request);
-      result.onComplete(
-          resultHandler -> {
-            if (resultHandler.succeeded()) {
-              promise.complete(resultHandler.result());
-            }
-            if (resultHandler.failed()) {
-              LOGGER.error(
-                  "updateStreamingSubscription - resultHandler failed : " + resultHandler.cause());
-              promise.fail(resultHandler.cause().getMessage());
-            }
-          });
-    } else {
-      promise.fail(finalResponse.toString());
-    }
-
-    return promise.future();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Future<JsonObject> appendStreamingSubscription(JsonObject request) {
-    Promise<JsonObject> promise = Promise.promise();
-    if (request != null && !request.isEmpty()) {
-      Future<JsonObject> result = subscriptionService.appendStreamingSubscription(request);
-      result.onComplete(
-          resultHandler -> {
-            if (resultHandler.succeeded()) {
-              promise.complete(resultHandler.result());
-            }
-            if (resultHandler.failed()) {
-              LOGGER.error(
-                  "appendStreamingSubscription - resultHandler failed : " + resultHandler.cause());
-              promise.fail(resultHandler.cause().getMessage());
-            }
-          });
-    } else {
-      promise.fail(finalResponse.toString());
-    }
-    return promise.future();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Future<JsonObject> deleteStreamingSubscription(JsonObject request) {
-    Promise<JsonObject> promise = Promise.promise();
-    if (request != null && !request.isEmpty()) {
-      Future<JsonObject> result = subscriptionService.deleteStreamingSubscription(request);
-      result.onComplete(
-          resultHandler -> {
-            if (resultHandler.succeeded()) {
-              promise.complete(resultHandler.result());
-            }
-            if (resultHandler.failed()) {
-              LOGGER.error(
-                  "deleteStreamingSubscription - resultHandler failed : "
-                      + resultHandler.cause().getMessage());
-              promise.fail(resultHandler.cause().getMessage());
-            }
-          });
-    } else {
-      promise.fail(finalResponse.toString());
-    }
-    return promise.future();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Future<JsonObject> listStreamingSubscription(JsonObject request) {
-    Promise<JsonObject> promise = Promise.promise();
-    if (request != null && !request.isEmpty()) {
-      Future<JsonObject> result = subscriptionService.listStreamingSubscriptions(request);
-      result.onComplete(
-          resultHandler -> {
-            if (resultHandler.succeeded()) {
-              promise.complete(resultHandler.result());
-            }
-            if (resultHandler.failed()) {
-              LOGGER.error(
-                  "listStreamingSubscription - resultHandler failed : " + resultHandler.cause());
-              promise.fail(resultHandler.cause().getMessage());
-            }
-          });
-    } else {
-      promise.fail(finalResponse.toString());
-    }
-    return promise.future();
-  }
-
-  /** {@inheritDoc} */
+  *//** {@inheritDoc} *//*
   @Override
   public Future<JsonObject> createExchange(JsonObject request, String vhost) {
     Promise<JsonObject> promise = Promise.promise();
@@ -316,7 +609,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return promise.future();
   }
 
-  /** {@inheritDoc} */
+  *//** {@inheritDoc} *//*
   @Override
   public Future<JsonObject> deleteExchange(JsonObject request, String vhost) {
     Promise<JsonObject> promise = Promise.promise();
@@ -337,7 +630,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return null;
   }
 
-  /** {@inheritDoc} */
+  *//** {@inheritDoc} *//*
   @Override
   public Future<JsonObject> listExchangeSubscribers(JsonObject request, String vhost) {
     Promise<JsonObject> promise = Promise.promise();
@@ -358,7 +651,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return null;
   }
 
-  /** {@inheritDoc} */
+  *//** {@inheritDoc} *//*
   @Override
   public Future<JsonObject> createQueue(JsonObject request, String vhost) {
     Promise<JsonObject> promise = Promise.promise();
@@ -379,7 +672,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return null;
   }
 
-  /** {@inheritDoc} */
+  *//** {@inheritDoc} *//*
   @Override
   public Future<JsonObject> deleteQueue(JsonObject request, String vhost) {
     Promise<JsonObject> promise = Promise.promise();
@@ -400,7 +693,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return null;
   }
 
-  /** {@inheritDoc} */
+  *//** {@inheritDoc} *//*
   @Override
   public Future<JsonObject> bindQueue(JsonObject request, String vhost) {
     Promise<JsonObject> promise = Promise.promise();
@@ -422,7 +715,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return null;
   }
 
-  /** {@inheritDoc} */
+  *//** {@inheritDoc} *//*
   @Override
   public Future<JsonObject> unbindQueue(JsonObject request, String vhost) {
     Promise<JsonObject> promise = Promise.promise();
@@ -445,7 +738,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return null;
   }
 
-  /** {@inheritDoc} */
+  *//** {@inheritDoc} *//*
   @Override
   public Future<JsonObject> createvHost(JsonObject request) {
     Promise<JsonObject> promise = Promise.promise();
@@ -466,7 +759,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return null;
   }
 
-  /** {@inheritDoc} */
+  *//** {@inheritDoc} *//*
   @Override
   public Future<JsonObject> deletevHost(JsonObject request) {
     Promise<JsonObject> promise = Promise.promise();
@@ -487,7 +780,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return null;
   }
 
-  /** {@inheritDoc} */
+  *//** {@inheritDoc} *//*
   @Override
   public Future<JsonObject> listvHost(JsonObject request) {
     Promise<JsonObject> promise = Promise.promise();
@@ -507,7 +800,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return null;
   }
 
-  /** {@inheritDoc} */
+  *//** {@inheritDoc} *//*
   @Override
   public Future<JsonObject> listQueueSubscribers(JsonObject request, String vhost) {
     Promise<JsonObject> promise = Promise.promise();
@@ -528,7 +821,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return null;
   }
 
-  /** {@inheritDoc} */
+  *//** {@inheritDoc} *//*
   @Override
   public Future<JsonObject> publishFromAdaptor(JsonArray request, String vhost) {
     Promise<JsonObject> promise = Promise.promise();
@@ -749,7 +1042,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     return promise.future();
   }
 
-  /** This method will only publish messages to internal-communication exchanges. */
+  *//** This method will only publish messages to internal-communication exchanges. *//*
   @Override
   public Future<JsonObject> publishMessage(
       JsonObject request, String toExchange, String routingKey) {
@@ -795,4 +1088,4 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     String vhostKey = Vhosts.valueOf(vhost).value;
     return config.getString(vhostKey);
   }
-}
+}*/

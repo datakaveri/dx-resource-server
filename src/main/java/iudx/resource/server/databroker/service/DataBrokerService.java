@@ -7,6 +7,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import iudx.resource.server.apiserver.subscription.model.SubscriptionImplModel;
 
 @VertxGen
 @ProxyGen
@@ -16,7 +17,8 @@ public interface DataBrokerService {
     return new DataBrokerServiceVertxEBProxy(vertx, address);
   }
 
-  Future<JsonObject> registerStreamingSubscription(JsonObject request);
+  /*Future<JsonObject> registerStreamingSubscription(JsonObject request);*/
+  Future<JsonObject> registerStreamingSubscription(SubscriptionImplModel subscriptionImplModel);
 
   Future<JsonObject> registerAdaptor(JsonObject request, String vhost);
 
@@ -30,7 +32,8 @@ public interface DataBrokerService {
 
   Future<JsonObject> deleteStreamingSubscription(JsonObject request);
 
-  Future<JsonObject> listStreamingSubscription(JsonObject request);
+  /*Future<JsonObject> listStreamingSubscription(JsonObject request);*/
+  Future<JsonObject> listStreamingSubscription(String subscriptionID);
 
   Future<JsonObject> createExchange(JsonObject request, String vhost);
 

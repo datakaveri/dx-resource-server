@@ -22,10 +22,10 @@ public final class PostgresServiceImpl implements PostgresService {
 
   private static final Logger LOGGER = LogManager.getLogger(PostgresServiceImpl.class);
 
-  private final PgPool client;
+  private final PgPool pgClient;
 
   public PostgresServiceImpl(final PgPool pgclient) {
-    this.client = pgclient;
+    this.pgClient = pgclient;
   }
 
   @Override
@@ -36,7 +36,7 @@ public final class PostgresServiceImpl implements PostgresService {
     Collector<Row, ?, List<JsonObject>> rowCollector =
         Collectors.mapping(row -> row.toJson(), Collectors.toList());
 
-    client
+    pgClient
         .withConnection(
             connection ->
                 connection.query(query).collecting(rowCollector).execute().map(row -> row.value()))
@@ -79,7 +79,7 @@ public final class PostgresServiceImpl implements PostgresService {
     Collector<Row, ?, List<JsonObject>> rowCollector =
         Collectors.mapping(row -> row.toJson(), Collectors.toList());
 
-    client
+    pgClient
         .withConnection(
             connection ->
                 connection

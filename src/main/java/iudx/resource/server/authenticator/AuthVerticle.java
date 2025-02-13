@@ -1,3 +1,11 @@
 package iudx.resource.server.authenticator;
 
-public class AuthVerticle {}
+import io.vertx.core.AbstractVerticle;
+
+public class AuthVerticle extends AbstractVerticle {
+  @Override
+  public void start() throws Exception {}
+
+  @Override
+  public void stop() throws Exception {}
+}

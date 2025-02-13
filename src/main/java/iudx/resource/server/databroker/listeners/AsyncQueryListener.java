@@ -1,7 +1,7 @@
 package iudx.resource.server.databroker.listeners;
 
 import static iudx.resource.server.apiserver.util.Constants.HEADER_RESPONSE_FILE_FORMAT;
-import static iudx.resource.server.authenticator.Constants.*;
+import static iudx.resource.server.databroker.util.Constants.ASYNC_QUERY_Q;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -11,7 +11,7 @@ import io.vertx.rabbitmq.QueueOptions;
 import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.rabbitmq.RabbitMQConsumer;
 import io.vertx.rabbitmq.RabbitMQOptions;
-import iudx.resource.server.database.async.AsyncService;
+import iudx.resource.server.apiserver.async.service.AsyncService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -53,9 +53,9 @@ public class AsyncQueryListener implements RmqListeners {
                             String searchId = asyncQueryJson.getString("searchId");
                             String user = asyncQueryJson.getString("user");
                             String format = asyncQueryJson.getString(HEADER_RESPONSE_FILE_FORMAT);
-                            String role = asyncQueryJson.getString(ROLE);
-                            String drl = asyncQueryJson.getString(DRL);
-                            String did = asyncQueryJson.getString(DID);
+                            String role = asyncQueryJson.getString("ROLE");
+                            String drl = asyncQueryJson.getString("DRL");
+                            String did = asyncQueryJson.getString("DID");
                             JsonObject query = asyncQueryJson.getJsonObject("query");
                             LOGGER.debug("query received from RMQ : {}", query);
                             asyncService.asyncSearch(

@@ -1,6 +1,5 @@
 package iudx.resource.server.database.elastic;
 
-import static iudx.resource.server.database.archives.Constants.*;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -17,14 +16,15 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.database.archives.ResponseBuilder;
-import iudx.resource.server.database.async.ProgressListener;
-import iudx.resource.server.database.elastic.EsResponseFormatter;
-import iudx.resource.server.database.elastic.EsResponseFormatterFactory;
 import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+
+import iudx.resource.server.database.elastic.util.EsResponseFormatter;
+import iudx.resource.server.database.elastic.util.EsResponseFormatterFactory;
+import iudx.resource.server.database.elastic.util.ProgressListener;
+import iudx.resource.server.database.util.ResponseBuilder;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -34,6 +34,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
+
+import static iudx.resource.server.database.elastic.Constants.*;
 
 public class ElasticClient {
   private static final Logger LOGGER =
