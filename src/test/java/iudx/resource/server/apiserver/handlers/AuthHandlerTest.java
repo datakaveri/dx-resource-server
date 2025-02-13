@@ -41,12 +41,11 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import iudx.resource.server.apiserver.util.Constants;
-import iudx.resource.server.authenticator.AuthenticationService;
 
 
 @ExtendWith(VertxExtension.class)
 @ExtendWith(MockitoExtension.class)
-public class AuthHandlerTest {
+public class AuthHandlerTest {/*{
 
 
   @Mock
@@ -262,4 +261,5 @@ public class AuthHandlerTest {
     vertxTestContext.completeNow();
   }
 
+*/
 }

@@ -1,7 +1,5 @@
 package iudx.resource.server.databroker.listeners;
 
-import static iudx.resource.server.common.Constants.TOKEN_INVALID_Q;
-
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -10,25 +8,25 @@ import io.vertx.rabbitmq.QueueOptions;
 import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.rabbitmq.RabbitMQConsumer;
 import io.vertx.rabbitmq.RabbitMQOptions;
-import iudx.resource.server.cache.CacheService;
-import iudx.resource.server.cache.cachelmpl.CacheType;
+import iudx.resource.server.cache.service.CacheService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class RevokeClientQlistener implements RmqListeners {
+import static iudx.resource.server.databroker.util.Constants.TOKEN_INVALID_Q;
 
-  private static final Logger LOGGER = LogManager.getLogger(RevokeClientQlistener.class);
-  private final CacheService cache;
-  private final QueueOptions options =
-      new QueueOptions().setMaxInternalQueueSize(1000).setKeepMostRecent(true);
-  RabbitMQClient client;
-
-  public RevokeClientQlistener(
-      Vertx vertx, CacheService cache, RabbitMQOptions config, String vhost) {
-    config.setVirtualHost(vhost);
-    this.client = RabbitMQClient.create(vertx, config);
-    this.cache = cache;
-  }
+public class RevokeClientQlistener implements RmqListeners
+{
+    private static final Logger LOGGER = LogManager.getLogger(RevokeClientQlistener.class);
+    private final CacheService cache;
+    private final QueueOptions options =
+            new QueueOptions().setMaxInternalQueueSize(1000).setKeepMostRecent(true);
+    RabbitMQClient client;
+    public RevokeClientQlistener(
+            Vertx vertx, CacheService cache, RabbitMQOptions config, String vhost) {
+        config.setVirtualHost(vhost);
+        this.client = RabbitMQClient.create(vertx, config);
+        this.cache = cache;
+    }
 
   @Override
   public void start() {
@@ -54,7 +52,7 @@ public class RevokeClientQlistener implements RmqListeners {
                             LOGGER.info("message received from RMQ : " + invalidClientJson);
                             JsonObject cacheJson = new JsonObject();
                             String value = invalidClientJson.getString("expiry");
-                            cacheJson.put("type", CacheType.REVOKED_CLIENT);
+                            cacheJson.put("type", "CacheType.REVOKED_CLIENT");
                             cacheJson.put("key", key);
                             cacheJson.put("value", value);
 
