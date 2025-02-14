@@ -5,7 +5,6 @@ import java.util.regex.Pattern;
 
 public class Constants {
 
-  // date-time format
   public static final String APP_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss[.SSSSSS]'Z'";
   public static final String APP_NAME_REGEX = "[a-zA-Z0-9._\\-]*$";
 
@@ -37,14 +36,6 @@ public class Constants {
   public static final String NGSILD_POST_ENTITIES_QUERY_PATH = "/entityOperations/query";
   public static final String ENTITIES_POST_QUERY_URL_REGEX =
       NGSILD_POST_ENTITIES_QUERY_PATH + "(.*)";
-
-  // Async endpoints
-  public static final String STATUS = "/status";
-  public static final String SEARCH = "/search";
-  public static final String IUDX_ASYNC_SEARCH = "(.*)/async/search";
-  public static final String IUDX_ASYNC_STATUS = "(.*)/async/status";
-  public static final String IUDX_ASYNC_SEARCH_API = "/async/search";
-  public static final String ASYNC = "/async";
 
   // IUDX management endpoints
   public static final String IUDX_MANAGEMENT_URL = "/management";
@@ -80,11 +71,6 @@ public class Constants {
   public static final String ROUTE_DOC = "/apis";
   public static final List<String> openEndPoints =
       List.of("/temporal/entities", "/entities", "/entityOperations/query");
-  public static final String REVOKE_TOKEN = "/revokeToken";
-  public static final String REVOKE_TOKEN_REGEX = "/admin/revokeToken" + "(.*)";
-  public static final String RESOURCE_ATTRIBS = "/resourceattribute";
-  public static final String UNIQUE_ATTR_REGEX = "/admin/resourceattribute";
-  public static final String ADMIN = "/admin";
 
   public static final String MONTHLY_OVERVIEW = "/overview";
   public static final String SUMMARY_ENDPOINT = "/summary";
@@ -284,14 +270,7 @@ public class Constants {
       Pattern.compile("^[a-zA-Z0-9_.]{1,100}$");
 
   // subscriptions queries
-  public static final String CREATE_SUB_SQL =
-      "INSERT INTO subscriptions"
-          + "(_id,_type,queue_name,entity,expiry,dataset_name,dataset_json,user_id,"
-          + "resource_group,provider_id,delegator_id,item_type) "
-          + "VALUES('$1','$2','$3','$4','$5','$6','$7','$8','$9','$a','$b','$c')";
 
-  public static final String UPDATE_SUB_SQL =
-      "UPDATE subscriptions SET expiry='$1' where queue_name='$2' and entity='$3'";
 
   public static final String APPEND_SUB_SQL =
       "INSERT INTO subscriptions(_id,_type,queue_name,entity,expiry,dataset_name,dataset_json,user_id,"
@@ -301,16 +280,13 @@ public class Constants {
 
   public static final String DELETE_SUB_SQL = "DELETE FROM subscriptions where queue_name='$1'";
 
-  public static final String SELECT_SUB_SQL =
-      "SELECT * from subscriptions where queue_name='$1' and entity='$2'";
+
 
   public static final String NO_CONTENT = "204";
 
   public static final String STARTT = "starttime";
   public static final String ENDT = "endtime";
-  public static final String GET_ALL_QUEUE =
-      "SELECT queue_name as queueName,entity,dataset_json as catItem "
-          + "FROM subscriptions WHERE user_id ='$1'";
+
   public static final String ENTITY_QUERY =
       "select entity from subscriptions where queue_name='$0'";
   public static final String LIMITPARAM = "limit";

@@ -1,7 +1,5 @@
 package iudx.resource.server.databroker.listeners;
 
-import static iudx.resource.server.common.Constants.UNIQUE_ATTR_Q;
-
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -10,11 +8,12 @@ import io.vertx.rabbitmq.QueueOptions;
 import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.rabbitmq.RabbitMQConsumer;
 import io.vertx.rabbitmq.RabbitMQOptions;
-import iudx.resource.server.cache.CacheService;
-import iudx.resource.server.cache.cachelmpl.CacheType;
-import iudx.resource.server.common.BroadcastEventType;
+import iudx.resource.server.cache.service.CacheService;
+import iudx.resource.server.databroker.util.BroadcastEventType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import static iudx.resource.server.databroker.util.Constants.UNIQUE_ATTR_Q;
 
 public class UniqueAttribQlistener implements RmqListeners {
 
@@ -25,7 +24,7 @@ public class UniqueAttribQlistener implements RmqListeners {
   RabbitMQClient client;
 
   public UniqueAttribQlistener(
-      Vertx vertx, CacheService cache, RabbitMQOptions config, String vhost) {
+          Vertx vertx, CacheService cache, RabbitMQOptions config, String vhost) {
     config.setVirtualHost(vhost);
     this.client = RabbitMQClient.create(vertx, config);
     this.cache = cache;
@@ -57,7 +56,7 @@ public class UniqueAttribQlistener implements RmqListeners {
                             BroadcastEventType event = BroadcastEventType.from(eventType);
                             LOGGER.debug(event);
                             JsonObject cacheJson = new JsonObject();
-                            cacheJson.put("type", CacheType.UNIQUE_ATTRIBUTE);
+                            cacheJson.put("type", "CacheType.UNIQUE_ATTRIBUTE");
 
                             if (event == null) {
                               LOGGER.error("Invalid BroadcastEventType [ null ] ");

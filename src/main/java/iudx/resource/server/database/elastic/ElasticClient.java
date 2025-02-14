@@ -1,16 +1,11 @@
 package iudx.resource.server.database.elastic;
 
-import static iudx.resource.server.database.archives.Constants.*;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch.core.ClearScrollRequest;
-import co.elastic.clients.elasticsearch.core.CountRequest;
-import co.elastic.clients.elasticsearch.core.ScrollRequest;
-import co.elastic.clients.elasticsearch.core.ScrollResponse;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
@@ -21,11 +16,15 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.database.archives.ResponseBuilder;
-import iudx.resource.server.database.async.ProgressListener;
 import java.io.File;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+
+import iudx.resource.server.database.elastic.util.EsResponseFormatter;
+import iudx.resource.server.database.elastic.util.EsResponseFormatterFactory;
+import iudx.resource.server.database.elastic.util.ProgressListener;
+import iudx.resource.server.database.util.ResponseBuilder;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -36,20 +35,16 @@ import org.apache.logging.log4j.Logger;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 
-public class ElasticClient {
+import static iudx.resource.server.database.elastic.Constants.*;
 
-  private static final Logger LOGGER = LogManager.getLogger(ElasticClient.class);
+public class ElasticClient {
+  private static final Logger LOGGER =
+      LogManager.getLogger(iudx.resource.server.database.elastic.ElasticClient.class);
   private final RestClient client;
   ElasticsearchClient esClient;
   ElasticsearchAsyncClient asyncClient;
   private ResponseBuilder responseBuilder;
 
-  /**
-   * ElasticClient - Elastic Low level wrapper.
-   *
-   * @param databaseIp IP of the ElasticDB
-   * @param databasePort Port of the ElasticDB
-   */
   public ElasticClient(String databaseIp, int databasePort, String user, String password) {
     CredentialsProvider credentials = new BasicCredentialsProvider();
     credentials.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));

@@ -2,6 +2,8 @@ package iudx.resource.server.encryption;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.serviceproxy.ServiceBinder;
+import iudx.resource.server.encryption.service.EncryptionService;
+import iudx.resource.server.encryption.service.EncryptionServiceImpl;
 
 /**
  *
@@ -22,4 +24,7 @@ public class EncryptionVerticle extends AbstractVerticle {
         .setAddress(ENCRYPTION_SERVICE_ADDRESS)
         .register(EncryptionService.class, encryptionService);
   }
+
+  @Override
+  public void stop() throws Exception {}
 }

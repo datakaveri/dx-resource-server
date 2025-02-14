@@ -1,5 +1,6 @@
 package iudx.resource.server.common;
 
+import static iudx.resource.server.apiserver.async.util.Constants.*;
 import static iudx.resource.server.apiserver.util.Constants.*;
 
 public class Api {

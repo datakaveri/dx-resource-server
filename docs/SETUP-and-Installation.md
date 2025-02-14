@@ -160,7 +160,7 @@ The JAR requires 3 runtime arguments when running:
 * --modules/-m : comma separated list of module names to deploy
 
 e.g. `java -jar target/iudx.resource.server-cluster-0.0.1-SNAPSHOT-fat.jar  --host $(hostname) -c configs/config.json -m iudx.resource.server.database.archives.DatabaseVerticle,iudx.resource.server.authenticator.AuthenticationVerticle
-,iudx.resource.server.metering.MeteringVerticle,iudx.resource.server.database.postgres.PostgresVerticle`
+,iudx.resource.server.apiserver.metering.MeteringVerticle,iudx.resource.server.database.postgres.PostgresVerticle`
 
 Use the `--help/-h` argument for more information. You may additionally append an `RS_JAVA_OPTS` environment
 variable containing any Java options to pass to the application.
