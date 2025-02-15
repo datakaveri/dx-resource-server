@@ -10,6 +10,7 @@ import com.goterl.lazysodium.utils.KeyPair;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import iudx.resource.server.encryption.service.EncryptionServiceImpl;
 import iudx.resource.server.encryption.util.UrlBase64MessageEncoder;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;

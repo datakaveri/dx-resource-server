@@ -7,9 +7,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import iudx.resource.server.cache.CacheService;
 import java.util.ArrayList;
 import java.util.List;
+
+import iudx.resource.server.cache.service.CacheService;
+import iudx.resource.server.common.CatalogueService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +24,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class CatalogueServiceTest {
   JsonObject config;
   CatalogueService catalogueService;
-  @Mock CacheService cache;
+  @Mock
+  CacheService cache;
 
   @BeforeEach
   public void setUp(VertxTestContext vertxTestContext) {

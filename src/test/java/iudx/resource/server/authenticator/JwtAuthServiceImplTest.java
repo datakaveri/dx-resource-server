@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.vertx.core.Handler;
+import iudx.resource.server.authenticator.service.JwtAuthenticationServiceImpl;
 import iudx.resource.server.common.Api;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

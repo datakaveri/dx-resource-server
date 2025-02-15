@@ -1,7 +1,7 @@
 package iudx.resource.server.metering;
 
 import static iudx.resource.server.apiserver.util.Constants.*;
-import static iudx.resource.server.authenticator.Constants.ROLE;
+import static iudx.resource.server.authenticator.util.Constants.ROLE;
 import static iudx.resource.server.database.archives.Constants.ID;
 import static iudx.resource.server.metering.util.Constants.*;
 import static iudx.resource.server.metering.util.Constants.API;

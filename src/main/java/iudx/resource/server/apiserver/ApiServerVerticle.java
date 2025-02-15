@@ -179,13 +179,13 @@ public class ApiServerVerticle extends AbstractVerticle {
     server = vertx.createHttpServer(serverOptions);
     server.requestHandler(router).listen(port);
 
-    new SubscriptionController(vertx,router,api).init();
-    new SearchController(vertx,router,api).init();
-    new AdminController(vertx,router,api).init();
-    new UserManagementController(router,dxApiBasePath).init();
-    new AsyncController(vertx,router,api).init();
-    new IngestionController(vertx,router,api).init();
-    new MeteringController(vertx,router,api).init();
+    new SubscriptionController(vertx, router, api, config()).init();
+    new SearchController(vertx, router, api, config()).init();
+    new AdminController(vertx, router, api).init();
+    new UserManagementController(router, vertx, api, config()).init();
+    new AsyncController(vertx, router, api, config()).init();
+    new IngestionController(vertx, router, api, config()).init();
+    new MeteringController(vertx, router, api, config()).init();
 
     router
         .route()

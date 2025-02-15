@@ -15,6 +15,8 @@ import static org.mockito.Mockito.doAnswer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Stream;
+
+import iudx.resource.server.common.CatalogueService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +32,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
-import iudx.resource.server.apiserver.service.CatalogueService;
 import iudx.resource.server.configuration.Configuration;
 
 @ExtendWith(VertxExtension.class)

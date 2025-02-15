@@ -7,11 +7,12 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import iudx.resource.server.cache.CacheService;
-import iudx.resource.server.database.archives.DatabaseService;
-import iudx.resource.server.database.postgres.PostgresService;
-import iudx.resource.server.databroker.DataBrokerService;
-import iudx.resource.server.databroker.DataBrokerServiceImpl;
+
+
+import iudx.resource.server.apiserver.subscription.service.SubscriptionService;
+import iudx.resource.server.cache.service.CacheService;
+import iudx.resource.server.database.postgres.service.PostgresService;
+import iudx.resource.server.databroker.service.DataBrokerService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,7 +27,6 @@ import org.mockito.stubbing.Answer;
 
 import java.util.stream.Stream;
 
-import static iudx.resource.server.metering.util.Constants.PROVIDER_ID;
 import static iudx.resource.server.metering.util.Constants.USER_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
