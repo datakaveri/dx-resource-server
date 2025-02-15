@@ -218,12 +218,13 @@ public class ApiServerVerticle extends AbstractVerticle {
     router.route().handler(BodyHandler.create());
     router.route().handler(TimeoutHandler.create(50000, 408));
     FailureHandler validationsFailureHandler = new FailureHandler();
-    /* NGSI-LD api endpoints */
     ValidationHandler entityValidationHandler = new ValidationHandler(vertx, RequestType.ENTITY);
     AuthenticationService authenticator =
         AuthenticationService.createProxy(vertx, AUTH_SERVICE_ADDRESS);
     AuthHandler authHandler = new AuthHandler(api, authenticator);
     GetIdHandler getIdHandler = new GetIdHandler(api);
+    catalogueService = new CatalogueService(cacheService, config(), vertx);
+
     Handler<RoutingContext> userAndAdminAccessHandler =
         new AuthorizationHandler()
             .setUserRolesForEndpoint(
@@ -244,8 +245,10 @@ public class ApiServerVerticle extends AbstractVerticle {
     /*TODO: update example config-dev and config-dev */
     String audience = config().getString("audience");
     Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
-    Handler<RoutingContext> validateToken = new AuthValidationHandler(api, cacheService, audience);
+    Handler<RoutingContext> validateToken =
+        new AuthValidationHandler(api, cacheService, audience, catalogueService);
 
+    /* NGSI-LD api endpoints */
     router
         .get(api.getEntitiesUrl())
         .handler(entityValidationHandler)
@@ -561,7 +564,6 @@ public class ApiServerVerticle extends AbstractVerticle {
     latestDataService = LatestDataService.createProxy(vertx, LATEST_SEARCH_ADDRESS);
     managementApi = new ManagementApiImpl();
     subsService = new SubscriptionService();
-    catalogueService = new CatalogueService(cacheService, config(), vertx);
     validator = new ParamsValidator(catalogueService);
 
     postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
@@ -1679,71 +1681,35 @@ public class ApiServerVerticle extends AbstractVerticle {
    */
   public void publishDataFromAdapter(RoutingContext routingContext) {
     LOGGER.trace("Info: publishDataFromAdapter method started;");
+    JsonArray requestJson = routingContext.body().asJsonArray();
+    HttpServerRequest request = routingContext.request();
     HttpServerResponse response = routingContext.response();
-    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    /*String instanceId = request.getHeader(HEADER_HOST);*/
+    JsonObject authenticationInfo = new JsonObject();
+    authenticationInfo.put(API_ENDPOINT, "/iudx/v1/adapter");
+    /*requestJson.put(JSON_INSTANCEID, instanceId);*/
+    if (request.headers().contains(HEADER_TOKEN)) {
+      authenticationInfo.put(HEADER_TOKEN, request.getHeader(HEADER_TOKEN));
 
-    String id = RoutingContextHelper.getId(routingContext);
-    Future<Boolean> isValidIdFuture = isValidId(jwtData, id);
-    Future<String> providerIdFuture = catalogueService.getProviderUserId(id);
+      Future<JsonObject> brokerResult =
+          managementApi.publishDataFromAdapter(requestJson, databroker);
+      brokerResult.onComplete(
+          brokerResultHandler -> {
+            if (brokerResultHandler.succeeded()) {
+              LOGGER.debug("Success: publishing data from adapter");
+              routingContext.data().put(RESPONSE_SIZE, 0);
+              Future.future(fu -> updateAuditTable(routingContext));
+              handleSuccessResponse(
+                  response, ResponseType.Ok.getCode(), brokerResultHandler.result().toString());
+            } else {
+              LOGGER.debug("Fail: Bad request;" + brokerResultHandler.cause().getMessage());
+              processBackendResponse(response, brokerResultHandler.cause().getMessage());
+            }
+          });
 
-    Future<Boolean> validateProviderFuture =
-        isValidIdFuture
-            .compose(
-                validId -> {
-                  return providerIdFuture;
-                })
-            .compose(
-                providerId -> {
-                  return validateProviderUser(providerId, jwtData);
-                });
-    validateProviderFuture
-        .onSuccess(
-            handler -> {
-              JsonArray requestJson = routingContext.body().asJsonArray();
-              HttpServerRequest request = routingContext.request();
-              /*String instanceId = request.getHeader(HEADER_HOST);*/
-              JsonObject authenticationInfo = new JsonObject();
-              authenticationInfo.put(API_ENDPOINT, "/iudx/v1/adapter");
-              /*requestJson.put(JSON_INSTANCEID, instanceId);*/
-              if (request.headers().contains(HEADER_TOKEN)) {
-                authenticationInfo.put(HEADER_TOKEN, request.getHeader(HEADER_TOKEN));
-
-                Future<JsonObject> brokerResult =
-                    managementApi.publishDataFromAdapter(requestJson, databroker);
-                brokerResult.onComplete(
-                    brokerResultHandler -> {
-                      if (brokerResultHandler.succeeded()) {
-                        LOGGER.debug("Success: publishing data from adapter");
-                        routingContext.data().put(RESPONSE_SIZE, 0);
-                        Future.future(fu -> updateAuditTable(routingContext));
-                        handleSuccessResponse(
-                            response,
-                            ResponseType.Ok.getCode(),
-                            brokerResultHandler.result().toString());
-                      } else {
-                        LOGGER.debug(
-                            "Fail: Bad request;" + brokerResultHandler.cause().getMessage());
-                        processBackendResponse(response, brokerResultHandler.cause().getMessage());
-                      }
-                    });
-
-              } else {
-                LOGGER.debug("Fail: Unauthorized");
-                handleResponse(response, UNAUTHORIZED, MISSING_TOKEN_URN);
-              }
-            })
-        .onFailure(
-            invalidProviderHandler -> {
-              LOGGER.error("Failure : {}", invalidProviderHandler.getCause().getMessage());
-              handleResponse(response, UNAUTHORIZED, UNAUTHORIZED_RESOURCE_URN);
-            });
-    if (providerIdFuture.failed()) {
-      LOGGER.error("Failed to fetch provider Id : {}", providerIdFuture.cause().getMessage());
-      handleResponse(response, UNAUTHORIZED, UNAUTHORIZED_RESOURCE_URN);
-    }
-    if (isValidIdFuture.failed()) {
-      LOGGER.error("Failed to fetch ID : {}", isValidIdFuture.cause().getMessage());
-      handleResponse(response, UNAUTHORIZED, UNAUTHORIZED_RESOURCE_URN);
+    } else {
+      LOGGER.debug("Fail: Unauthorized");
+      handleResponse(response, UNAUTHORIZED, MISSING_TOKEN_URN);
     }
   }
 

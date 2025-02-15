@@ -4,7 +4,6 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RequestBody;
 import io.vertx.ext.web.RoutingContext;
-import iudx.resource.server.authenticator.User;
 import iudx.resource.server.authenticator.model.JwtData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,13 +22,6 @@ public class RoutingContextHelper {
         return routingContext.request().method().toString();
     }
 
-    public static void setUser(RoutingContext routingContext, User user) {
-        routingContext.put(USER, user);
-    }
-
-    public static User getUser(RoutingContext routingContext) {
-        return routingContext.get(USER);
-    }
     public static HttpServerRequest getRequest(RoutingContext routingContext)
     {
         return routingContext.request();

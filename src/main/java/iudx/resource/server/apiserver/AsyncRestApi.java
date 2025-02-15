@@ -77,7 +77,6 @@ public class AsyncRestApi {
     this.databroker = DataBrokerService.createProxy(vertx, BROKER_SERVICE_ADDRESS);
     this.cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
     this.catalogueService = new CatalogueService(cacheService, config, vertx);
-    //    this.catalogueService = new CatalogueService(cacheService);
     this.validator = new ParamsValidator(catalogueService);
     this.postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
     this.encryptionService = EncryptionService.createProxy(vertx, ENCRYPTION_SERVICE_ADDRESS);
@@ -100,7 +99,7 @@ public class AsyncRestApi {
             .setUserRolesForEndpoint(
                 DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
     Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
-    Handler<RoutingContext> validateToken = new AuthValidationHandler(api, cacheService, audience);
+    Handler<RoutingContext> validateToken = new AuthValidationHandler(api, cacheService, audience, catalogueService);
 
     ValidationHandler asyncSearchValidation = new ValidationHandler(vertx, ASYNC_SEARCH);
     router
