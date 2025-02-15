@@ -27,8 +27,10 @@ public interface MeteringService {
       JsonObject request, Handler<AsyncResult<JsonObject>> handler);
 
   @Fluent
-  MeteringService monthlyOverview(JwtData jwtData,String start, String end, Handler<AsyncResult<JsonObject>> handler);
+  MeteringService monthlyOverview(
+      JwtData jwtData, String start, String end, Handler<AsyncResult<JsonObject>> handler);
 
   @Fluent
-  MeteringService summaryOverview(JwtData jwtData, String startTime, String endTime, Handler<AsyncResult<JsonObject>> handler);
+  MeteringService summaryOverview(
+      JwtData jwtData, String startTime, String endTime, Handler<AsyncResult<JsonObject>> handler);
 }

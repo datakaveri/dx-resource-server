@@ -141,43 +141,42 @@ public class QueryBuilder {
                       .replace("$4", providerId));
         }
       }
-      } else {
-        if (role.equalsIgnoreCase("admin")) {
-          monthQuery =
-              new StringBuilder(
-                  OVERVIEW_QUERY
-                      .concat(GROUPBY)
-                      .replace("$0", timeYearBack)
-                      .replace("$1", utcTime.toString())
-                      .replace("$2", timeYearBack)
-                      .replace("$3", utcTime.toString()));
-        } else if (role.equalsIgnoreCase("consumer")) {
-          String userId = jwtData.getSub();
-          monthQuery =
-              new StringBuilder(
-                  OVERVIEW_QUERY
-                      .concat(" and userid = '$4' ")
-                      .concat(GROUPBY)
-                      .replace("$0", timeYearBack)
-                      .replace("$1", utcTime.toString())
-                      .replace("$2", timeYearBack)
-                      .replace("$3", utcTime.toString())
-                      .replace("$4", userId));
-        } else if (role.equalsIgnoreCase("provider") || role.equalsIgnoreCase("delegate")) {
-          LOGGER.debug("Provider = {}", providerId);
-          monthQuery =
-              new StringBuilder(
-                  OVERVIEW_QUERY
-                      .concat(" and providerid = '$4' ")
-                      .concat(GROUPBY)
-                      .replace("$0", timeYearBack)
-                      .replace("$1", utcTime.toString())
-                      .replace("$2", timeYearBack)
-                      .replace("$3", utcTime.toString())
-                      .replace("$4", providerId));
-        }
+    } else {
+      if (role.equalsIgnoreCase("admin")) {
+        monthQuery =
+            new StringBuilder(
+                OVERVIEW_QUERY
+                    .concat(GROUPBY)
+                    .replace("$0", timeYearBack)
+                    .replace("$1", utcTime.toString())
+                    .replace("$2", timeYearBack)
+                    .replace("$3", utcTime.toString()));
+      } else if (role.equalsIgnoreCase("consumer")) {
+        String userId = jwtData.getSub();
+        monthQuery =
+            new StringBuilder(
+                OVERVIEW_QUERY
+                    .concat(" and userid = '$4' ")
+                    .concat(GROUPBY)
+                    .replace("$0", timeYearBack)
+                    .replace("$1", utcTime.toString())
+                    .replace("$2", timeYearBack)
+                    .replace("$3", utcTime.toString())
+                    .replace("$4", userId));
+      } else if (role.equalsIgnoreCase("provider") || role.equalsIgnoreCase("delegate")) {
+        LOGGER.debug("Provider = {}", providerId);
+        monthQuery =
+            new StringBuilder(
+                OVERVIEW_QUERY
+                    .concat(" and providerid = '$4' ")
+                    .concat(GROUPBY)
+                    .replace("$0", timeYearBack)
+                    .replace("$1", utcTime.toString())
+                    .replace("$2", timeYearBack)
+                    .replace("$3", utcTime.toString())
+                    .replace("$4", providerId));
       }
-
+    }
 
     return monthQuery.toString();
   }

@@ -47,7 +47,7 @@ public final class AdminRestApi {
 
   private static final Logger LOGGER = LogManager.getLogger(AdminRestApi.class);
 
-  private final Vertx vertx;
+  //  private final Vertx vertx;
   private final Router router;
   private final DataBrokerService rmqBrokerService;
   private final PostgresService pgService;
@@ -58,7 +58,7 @@ public final class AdminRestApi {
   private AuthenticationService authenticator;
 
   AdminRestApi(Vertx vertx, Router router, Api api) {
-    this.vertx = vertx;
+    //    this.vertx = vertx;
     this.router = router;
     this.rmqBrokerService = DataBrokerService.createProxy(vertx, BROKER_SERVICE_ADDRESS);
     this.auditService = MeteringService.createProxy(vertx, METERING_SERVICE_ADDRESS);
@@ -116,7 +116,6 @@ public final class AdminRestApi {
 
     //    context.queryParam(ID).add("admin_op");
 
-    String id = requestBody.getString("sub");
     StringBuilder query =
         new StringBuilder(
             INSERT_REVOKE_TOKEN_SQL
@@ -353,14 +352,7 @@ public final class AdminRestApi {
   }
 
   private Future<Void> updateAuditTable(RoutingContext context) {
-    JwtData jwtData = RoutingContextHelper.getJwtData(context);
-    String sub = jwtData.getSub();
-    String role = jwtData.getRole();
-    String did = jwtData.getDid();
-    String drl = jwtData.getDrl();
     String id = RoutingContextHelper.getId(context);
-    String endPoint = RoutingContextHelper.getEndPoint(context);
-
     JsonObject request = new JsonObject();
     if (StringUtils.isNotBlank(id)) {
       request.put(ID, id);
@@ -384,11 +376,16 @@ public final class AdminRestApi {
                         ? cacheResult.getString(RESOURCE_GROUP)
                         : cacheResult.getString(ID);
                 ZonedDateTime zst = ZonedDateTime.now(ZoneId.of("Asia/Kolkata"));
+                JwtData jwtData = RoutingContextHelper.getJwtData(context);
+                String role = jwtData.getRole();
+                String drl = jwtData.getDrl();
                 if (role.equalsIgnoreCase("delegate") && drl != null) {
+                  String did = jwtData.getDid();
                   request.put(DELEGATOR_ID, did);
                 } else {
-                  request.put(DELEGATOR_ID, sub);
+                  request.put(DELEGATOR_ID, jwtData.getSub());
                 }
+                String endPoint = RoutingContextHelper.getEndPoint(context);
                 String providerId = cacheResult.getString("provider");
                 long time = zst.toInstant().toEpochMilli();
                 String isoTime = zst.truncatedTo(ChronoUnit.SECONDS).toString();
@@ -399,7 +396,7 @@ public final class AdminRestApi {
                 request.put(ISO_TIME, isoTime);
                 request.put(API, endPoint);
                 request.put(RESPONSE_SIZE, 0);
-                request.put(USER_ID, sub);
+                request.put(USER_ID, jwtData.getSub());
                 LOGGER.debug("request : " + request.encode());
                 auditService.insertMeteringValuesInRmq(
                     request,

@@ -232,13 +232,14 @@ public class ApiServerVerticle extends AbstractVerticle {
     Handler<RoutingContext> providerAndAdminAccessHandler =
         new AuthorizationHandler()
             .setUserRolesForEndpoint(DxRole.DELEGATE, DxRole.PROVIDER, DxRole.ADMIN);
-    Handler<RoutingContext> providerAccessHandler =
-        new AuthorizationHandler().setUserRolesForEndpoint(DxRole.DELEGATE, DxRole.PROVIDER);
+    //    Handler<RoutingContext> providerAccessHandler =
+    //        new AuthorizationHandler().setUserRolesForEndpoint(DxRole.DELEGATE, DxRole.PROVIDER);
 
     Handler<RoutingContext> apiConstraint =
         new ConstraintsHandlerForConsumer().consumerConstraintsForEndpoint(DxAccess.API);
-    Handler<RoutingContext> mgmtConstraint =
-        new ConstraintsHandlerForConsumer().consumerConstraintsForEndpoint(DxAccess.MANAGEMENT);
+    //    Handler<RoutingContext> mgmtConstraint =
+    //        new
+    // ConstraintsHandlerForConsumer().consumerConstraintsForEndpoint(DxAccess.MANAGEMENT);
     Handler<RoutingContext> subscriptionConstraint =
         new ConstraintsHandlerForConsumer().consumerConstraintsForEndpoint(DxAccess.SUBSCRIPTION);
 
@@ -588,7 +589,6 @@ public class ApiServerVerticle extends AbstractVerticle {
               new ManagementRestApi(databroker).resetPassword(handler);
             })
         .failureHandler(validationsFailureHandler);
-    ;
 
     router
         .route()
@@ -608,7 +608,6 @@ public class ApiServerVerticle extends AbstractVerticle {
   }
 
   private void getMonthlyOverview(RoutingContext routingContext) {
-    HttpServerRequest request = routingContext.request();
     LOGGER.trace("Info: getMonthlyOverview Started.");
     HttpServerResponse response = routingContext.response();
     String startTime = RoutingContextHelper.getStartTime(routingContext);
@@ -645,7 +644,6 @@ public class ApiServerVerticle extends AbstractVerticle {
 
   private void getAllSummaryHandler(RoutingContext routingContext) {
     LOGGER.trace("Info: getAllSummary Started.");
-    HttpServerRequest request = routingContext.request();
 
     String startTime = RoutingContextHelper.getStartTime(routingContext);
     String endTime = RoutingContextHelper.getEndTime(routingContext);
@@ -1354,7 +1352,6 @@ public class ApiServerVerticle extends AbstractVerticle {
   private void getSubscription(RoutingContext routingContext) {
     LOGGER.trace("Info: getSubscription method started");
     HttpServerRequest request = routingContext.request();
-    HttpServerResponse response = routingContext.response();
     String domain = request.getParam(USER_ID);
     String alias = request.getParam(JSON_ALIAS);
     String subsId = domain + "/" + alias;
@@ -1381,10 +1378,10 @@ public class ApiServerVerticle extends AbstractVerticle {
                     subsService.getSubscription(jsonObj, databroker, postgresService, entity);
                 subsReq.onComplete(
                     subHandler -> {
+                      HttpServerResponse response = routingContext.response();
                       if (subHandler.succeeded()) {
                         LOGGER.info("Success: Getting subscription");
                         routingContext.data().put(RESPONSE_SIZE, 0);
-
                         Future.future(fu -> updateAuditTable(routingContext));
                         handleSuccessResponse(
                             response, ResponseType.Ok.getCode(), subHandler.result().toString());
@@ -1396,6 +1393,7 @@ public class ApiServerVerticle extends AbstractVerticle {
               })
           .onFailure(
               entityNameFailureHandler -> {
+                HttpServerResponse response = routingContext.response();
                 LOGGER.error("Fail: Bad request from DB ");
                 handleResponse(
                     response,
@@ -1404,6 +1402,7 @@ public class ApiServerVerticle extends AbstractVerticle {
                     entityNameFailureHandler.getLocalizedMessage());
               });
     } else {
+      HttpServerResponse response = routingContext.response();
       LOGGER.error("Fail: Bad request");
       handleResponse(response, BAD_REQUEST, INVALID_PARAM_URN, MSG_SUB_TYPE_NOT_FOUND);
     }
@@ -1834,7 +1833,7 @@ public class ApiServerVerticle extends AbstractVerticle {
     } catch (IllegalArgumentException ex) {
       response
           .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-          .setStatusCode(HttpStatusCode.BAD_REQUEST.getValue())
+          .setStatusCode(BAD_REQUEST.getValue())
           .end(generateResponse(BAD_REQUEST, INVALID_PARAM_URN).toString());
     }
     return Optional.of(queryParams);

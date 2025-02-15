@@ -196,20 +196,21 @@ public class MeteringServiceImpl implements MeteringService {
 
   @Override
   public MeteringService monthlyOverview(
-          JwtData jwtData, String startTime, String endTime, Handler<AsyncResult<JsonObject>> handler) {
+      JwtData jwtData, String startTime, String endTime, Handler<AsyncResult<JsonObject>> handler) {
 
     if (startTime != null && endTime == null || startTime == null && endTime != null) {
-      handler.handle(Future.failedFuture(new JsonObject().put(JSON_TITLE,"Bad Request").put(JSON_TYPE,400).toString()));
+      handler.handle(
+          Future.failedFuture(
+              new JsonObject().put(JSON_TITLE, "Bad Request").put(JSON_TYPE, 400).toString()));
       return this;
     }
     if (startTime != null && endTime != null) {
-      this.time  = dateValidation.dateParamCheck(startTime, endTime);
-
+      this.time = dateValidation.dateParamCheck(startTime, endTime);
     }
 
     String role = jwtData.getRole();
     if (role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("consumer")) {
-      queryOverview = queryBuilder.buildMonthlyOverview(jwtData, getTime(),null);
+      queryOverview = queryBuilder.buildMonthlyOverview(jwtData, getTime(), null);
       LOGGER.debug("query Overview =" + queryOverview);
 
       Future<JsonObject> result = executeQueryDatabaseOperation(queryOverview);
@@ -255,15 +256,16 @@ public class MeteringServiceImpl implements MeteringService {
 
   @Override
   public MeteringService summaryOverview(
-          JwtData jwtData, String startTime, String endTime, Handler<AsyncResult<JsonObject>> handler) {
+      JwtData jwtData, String startTime, String endTime, Handler<AsyncResult<JsonObject>> handler) {
 
     if (startTime != null && endTime == null || startTime == null && endTime != null) {
-      handler.handle(Future.failedFuture(new JsonObject().put(JSON_TITLE,"Bad Request").put(JSON_TYPE,400).toString()));
+      handler.handle(
+          Future.failedFuture(
+              new JsonObject().put(JSON_TITLE, "Bad Request").put(JSON_TYPE, 400).toString()));
       return this;
     }
     if (startTime != null && endTime != null) {
       this.time = dateValidation.dateParamCheck(startTime, endTime);
-
     }
 
     String role = jwtData.getRole();
@@ -304,7 +306,7 @@ public class MeteringServiceImpl implements MeteringService {
           .onSuccess(
               providerHandler -> {
                 String providerId = providerHandler.getString("provider");
-                summaryOverview = queryBuilder.buildSummaryOverview(jwtData,getTime(),providerId);
+                summaryOverview = queryBuilder.buildSummaryOverview(jwtData, getTime(), providerId);
                 LOGGER.debug("summary query =" + summaryOverview);
                 Future<JsonObject> result = executeQueryDatabaseOperation(summaryOverview);
                 result.onComplete(
@@ -434,6 +436,4 @@ public class MeteringServiceImpl implements MeteringService {
   public DateValidation.Time getTime() {
     return time;
   }
-
-
 }

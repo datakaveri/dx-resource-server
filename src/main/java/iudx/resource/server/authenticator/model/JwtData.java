@@ -2,9 +2,6 @@ package iudx.resource.server.authenticator.model;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @DataObject(generateConverter = true, publicConverter = false)
 public final class JwtData {
@@ -53,14 +50,14 @@ public final class JwtData {
     return json;
   }
 
-  public void setExpiry(String exp)
-  {
-    this.expiry = exp;
-  }
-  public String getExpiry()
-  {
+  public String getExpiry() {
     return this.expiry;
   }
+
+  public void setExpiry(String exp) {
+    this.expiry = exp;
+  }
+
   public String getAccessToken() {
     return accessToken;
   }
@@ -157,7 +154,7 @@ public final class JwtData {
         + drl
         + ", did="
         + did
-        +", expiry="
+        + ", expiry="
         + expiry
         + "]";
   }

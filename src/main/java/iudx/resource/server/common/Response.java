@@ -41,6 +41,26 @@ public class Response {
     return json;
   }
 
+  public String getType() {
+    return type;
+  }
+
+  public int getStatus() {
+    return status;
+  }
+
+  public String getTitle() {
+    return title;
+  }
+
+  public String getDetail() {
+    return detail;
+  }
+
+  @Override
+  public String toString() {
+    return toJson().toString();
+  }
 
   public static class Builder {
     private String type;
@@ -71,28 +91,6 @@ public class Response {
     public Response build() {
       return new Response(this);
     }
-  }
-
-
-  public String getType() {
-    return type;
-  }
-
-  public int getStatus() {
-    return status;
-  }
-
-  public String getTitle() {
-    return title;
-  }
-
-  public String getDetail() {
-    return detail;
-  }
-
-  @Override
-  public String toString() {
-    return toJson().toString();
   }
 
 

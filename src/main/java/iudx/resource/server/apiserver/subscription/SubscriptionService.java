@@ -2,7 +2,6 @@ package iudx.resource.server.apiserver.subscription;
 
 import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.apiserver.util.Constants.SUBSCRIPTION_ID;
-import static iudx.resource.server.authenticator.Constants.ROLE;
 import static iudx.resource.server.cache.cachelmpl.CacheType.CATALOGUE_CACHE;
 import static iudx.resource.server.databroker.util.Constants.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -157,10 +156,7 @@ public class SubscriptionService {
    * @return a future of josbObject
    */
   public Future<JsonObject> updateSubscription(
-      JsonObject json,
-      DataBrokerService databroker,
-      PostgresService pgService,
-      JwtData jwtData) {
+      JsonObject json, DataBrokerService databroker, PostgresService pgService, JwtData jwtData) {
     LOGGER.info("updateSubscription() method started");
     Promise<JsonObject> promise = Promise.promise();
 
@@ -183,7 +179,7 @@ public class SubscriptionService {
                   .put(JSON_DETAIL, "Subscription not found for [queue,entity]");
               promise.fail(res.toString());
             } else {
-                String expiry = jwtData.getExpiry();
+              String expiry = jwtData.getExpiry();
               StringBuilder updateQuery =
                   new StringBuilder(
                       UPDATE_SUB_SQL
@@ -359,7 +355,7 @@ public class SubscriptionService {
                           String role = jwtData.getRole();
                           String drl = jwtData.getDrl();
                           String userId = jwtData.getSub();
-                          String expiry= jwtData.getExpiry();
+                          String expiry = jwtData.getExpiry();
                           String delegatorId;
                           if (role.equalsIgnoreCase("delegate") && drl != null) {
                             delegatorId = jwtData.getDid();

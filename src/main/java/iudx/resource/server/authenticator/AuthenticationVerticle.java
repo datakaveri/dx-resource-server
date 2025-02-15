@@ -14,14 +14,10 @@ import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.serviceproxy.ServiceBinder;
-import iudx.resource.server.cache.CacheService;
-import iudx.resource.server.common.Api;
-import iudx.resource.server.metering.MeteringService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * The Authentication Verticle.
@@ -41,11 +37,6 @@ public class AuthenticationVerticle extends AbstractVerticle {
   private ServiceBinder binder;
   private MessageConsumer<JsonObject> consumer;
   private WebClient webClient;
-
-  private CacheService cacheService;
-  private MeteringService meteringService;
-  private Api api;
-  private String dxApiBasePath;
 
   static WebClient createWebClient(Vertx vertx, JsonObject config) {
     return createWebClient(vertx, config, false);
@@ -73,13 +64,13 @@ public class AuthenticationVerticle extends AbstractVerticle {
     getJwtPublicKey(vertx, config())
         .onSuccess(
             handler -> {
-                List<JsonObject> jwks = new ArrayList<>();
-                jwks.add(handler);
+              List<JsonObject> jwks = new ArrayList<>();
+              jwks.add(handler);
               binder = new ServiceBinder(vertx);
 
               JWTAuthOptions jwtAuthOptions = new JWTAuthOptions();
               jwtAuthOptions.getJWTOptions().setLeeway(30);
-                jwtAuthOptions.setJwks(jwks);
+              jwtAuthOptions.setJwks(jwks);
               /*
                * Default jwtIgnoreExpiry is false. If set through config, then that value is taken
                */
@@ -93,14 +84,8 @@ public class AuthenticationVerticle extends AbstractVerticle {
                         + "do not set IgnoreExpiration in production!!");
               }
 
-              cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
-              meteringService = MeteringService.createProxy(vertx, METERING_SERVICE_ADDRESS);
-              dxApiBasePath = config().getString("dxApiBasePath");
-              api = Api.getInstance(dxApiBasePath);
               JWTAuth jwtAuth = JWTAuth.create(vertx, jwtAuthOptions);
-              jwtAuthenticationService =
-                  new JwtAuthenticationServiceImpl(
-                       jwtAuth);
+              jwtAuthenticationService = new JwtAuthenticationServiceImpl(jwtAuth);
 
               /* Publish the Authentication service with the Event Bus against an address. */
               consumer =
@@ -132,7 +117,7 @@ public class AuthenticationVerticle extends AbstractVerticle {
             handler -> {
               if (handler.succeeded()) {
                 JsonObject json = handler.result().bodyAsJsonObject();
-                  JsonObject x5c = json.getJsonArray("keys").getJsonObject(0);
+                JsonObject x5c = json.getJsonArray("keys").getJsonObject(0);
                 promise.complete(x5c);
               } else {
                 promise.fail("fail to get JWT public key");

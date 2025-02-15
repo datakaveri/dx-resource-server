@@ -32,7 +32,8 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
   private String audience;
   private CatalogueService catalogueService;
 
-  public AuthValidationHandler(Api api, final CacheService cache, String audience, CatalogueService catalogueService) {
+  public AuthValidationHandler(
+      Api api, final CacheService cache, String audience, CatalogueService catalogueService) {
     this.apis = api;
     this.cache = cache;
     this.audience = audience;
@@ -149,6 +150,7 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
     }
     return promise.future();
   }
+
   private void processAuthFailure(RoutingContext ctx, String result) {
     if (result.contains("Not Found")) {
       LOGGER.error("Error : Item Not Found");
@@ -184,7 +186,7 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
 
   public Future<JwtData> validateAccess(JwtData jwtData, boolean openResource, String endpoint) {
     LOGGER.trace("validateAccess() started");
-    Promise<JwtData> promise = Promise.promise();
+    //    Promise<JwtData> promise = Promise.promise();
     /*TODO: why is this used ? open resource and open end point*/
     if (openResource && checkOpenEndPoints(endpoint)) {
       LOGGER.info("User access is allowed.");
@@ -227,7 +229,6 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
         isResourceExistHandler -> {
           if (isResourceExistHandler.failed()) {
             promise.fail("Not Found  : " + id);
-            return;
           } else {
             Set<String> type =
                 new HashSet<String>(isResourceExistHandler.result().getJsonArray("type").getList());
@@ -254,7 +255,6 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
                     } else {
                       LOGGER.error("ACL not defined in group or resource item");
                       promise.fail("ACL not defined in group or resource item");
-                      return;
                     }
                   } else {
                     String acl = null;
@@ -272,7 +272,6 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
                     if (acl == null) {
                       LOGGER.error("ACL not defined in group or resource item");
                       promise.fail("ACL not defined in group or resource item");
-                      return;
                     } else {
                       promise.complete(acl);
                     }

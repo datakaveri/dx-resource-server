@@ -720,7 +720,6 @@ public class SubscriptionService {
                     promise.fail(registerCallbackSubscriptionResponse.toString());
                   } else {
 
-                    OffsetDateTime dateTime = OffsetDateTime.now();
                     String callbackUrl = request.getString(CALLBACKURL);
                     String queueName = request.getString(QUEUE);
                     JsonArray entitites = request.getJsonArray(ENTITIES);
@@ -786,6 +785,7 @@ public class SubscriptionService {
                                               }
                                             });
                                   } else if (totalBindSuccess == totalBindCount) {
+                                    OffsetDateTime dateTime = OffsetDateTime.now();
                                     String insertQuery =
                                         INSERT_CALLBACK
                                             .replace("$1", subscriptionId)
