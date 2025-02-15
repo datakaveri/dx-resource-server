@@ -35,7 +35,7 @@ public class ValidatorsHandlersFactory {
       Pattern.compile(
           ".*[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}");
   private static Map<String, String> jsonSchemaMap = new HashMap<>();
-
+  /*TODO: set required to true for Bearer Authorization header later */
   public List<Validator> build(
       final Vertx vertx,
       final RequestType requestType,
@@ -48,31 +48,31 @@ public class ValidatorsHandlersFactory {
 
     switch (requestType) {
       case ENTITY:
-        validator = getEntityRequestValidations(parameters);
+        validator = getEntityRequestValidations(parameters, headers);
         break;
       case TEMPORAL:
-        validator = getTemporalRequestValidations(parameters);
+        validator = getTemporalRequestValidations(parameters, headers);
         break;
       case LATEST:
-        validator = getLatestRequestValidations(parameters);
+        validator = getLatestRequestValidations(parameters, headers);
         break;
       case POST_TEMPORAL:
-        validator = getPostEntitiesValidations(vertx, parameters, body, requestType);
+        validator = getPostEntitiesValidations(vertx, parameters, body, requestType, headers);
         break;
       case POST_ENTITIES:
-        validator = getPostTemporalValidations(vertx, parameters, body, requestType);
+        validator = getPostTemporalValidations(vertx, parameters, body, requestType, headers);
         break;
       case SUBSCRIPTION:
-        validator = getSubscriptionsValidations(vertx, body, headers);
+        validator = getSubscriptionsValidations(vertx, body, headers, parameters);
         break;
       case ASYNC_SEARCH:
-        validator = getAsyncRequestValidations(parameters);
+        validator = getAsyncRequestValidations(parameters, headers);
         break;
       case ASYNC_STATUS:
-        validator = getAsyncStatusRequestValidator(parameters);
+        validator = getAsyncStatusRequestValidator(parameters, headers);
         break;
       case OVERVIEW:
-        validator = getOverviewValidator(parameters);
+        validator = getOverviewValidator(parameters, headers);
         break;
       default:
         break;
@@ -81,14 +81,15 @@ public class ValidatorsHandlersFactory {
     return validator;
   }
 
-  private List<Validator> getOverviewValidator(MultiMap parameters) {
+  private List<Validator> getOverviewValidator(MultiMap parameters, MultiMap headers) {
     List<Validator> validators = new ArrayList<>();
     validators.add(new DateTypeValidator(parameters.get(STARTT), false));
     validators.add(new DateTypeValidator(parameters.get(ENDT), false));
+    validators.add(new BearerTokenTypeValidator(parameters.get(HEADER_AUTHORIZATION), false));
     return validators;
   }
 
-  private List<Validator> getEntityRequestValidations(final MultiMap parameters) {
+  private List<Validator> getEntityRequestValidations(final MultiMap parameters, MultiMap headers) {
     List<Validator> validators = new ArrayList<>();
 
     validators.add(new IdTypeValidator(parameters.get(NGSILDQUERY_ID), true));
@@ -108,11 +109,12 @@ public class ValidatorsHandlersFactory {
 
     // optional header public key
     validators.add(new HeaderKeyTypeValidation(parameters.get(HEADER_PUBLIC_KEY), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
 
     return validators;
   }
 
-  private List<Validator> getTemporalRequestValidations(final MultiMap parameters) {
+  private List<Validator> getTemporalRequestValidations(final MultiMap parameters, MultiMap headers) {
 
     List<Validator> validators = new ArrayList<>();
 
@@ -136,17 +138,19 @@ public class ValidatorsHandlersFactory {
 
     // optional header public key
     validators.add(new HeaderKeyTypeValidation(parameters.get(HEADER_PUBLIC_KEY), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
 
     return validators;
   }
 
-  private List<Validator> getLatestRequestValidations(final MultiMap parameters) {
+  private List<Validator> getLatestRequestValidations(final MultiMap parameters, MultiMap headers) {
 
     List<Validator> validators = new ArrayList<>();
     validators.add(new StringTypeValidator(parameters.get("*"), true, UUID_PATTERN));
 
     // optional header public key
     validators.add(new HeaderKeyTypeValidation(parameters.get(HEADER_PUBLIC_KEY), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
 
     return validators;
   }
@@ -155,7 +159,7 @@ public class ValidatorsHandlersFactory {
       Vertx vertx,
       final MultiMap parameters,
       final JsonObject body,
-      final RequestType requestType) {
+      final RequestType requestType, MultiMap headers) {
 
     List<Validator> validators = new ArrayList<>();
     // pagination optional fields
@@ -166,6 +170,7 @@ public class ValidatorsHandlersFactory {
 
     // optional header public key
     validators.add(new HeaderKeyTypeValidation(parameters.get(HEADER_PUBLIC_KEY), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
 
     return validators;
   }
@@ -174,7 +179,7 @@ public class ValidatorsHandlersFactory {
       Vertx vertx,
       final MultiMap parameters,
       final JsonObject body,
-      final RequestType requestType) {
+      final RequestType requestType, MultiMap headers) {
     List<Validator> validators = new ArrayList<>();
     // pagination optional fields
     validators.add(new PaginationLimitTypeValidator(parameters.get(NGSILDQUERY_SIZE), false));
@@ -184,19 +189,22 @@ public class ValidatorsHandlersFactory {
 
     // optional header public key
     validators.add(new HeaderKeyTypeValidation(parameters.get(HEADER_PUBLIC_KEY), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
 
     return validators;
   }
 
   private List<Validator> getSubscriptionsValidations(
-      final Vertx vertx, final JsonObject body, final MultiMap headers) {
+      final Vertx vertx, final JsonObject body, final MultiMap headers, MultiMap parameters) {
     List<Validator> validators = new ArrayList<>();
     validators.add(new OptionsHeaderValidator(headers.get(HEADER_OPTIONS), true));
     validators.addAll(getRequestSchemaValidator(vertx, body, RequestType.SUBSCRIPTION));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
+
     return validators;
   }
 
-  private List<Validator> getAsyncRequestValidations(final MultiMap parameters) {
+  private List<Validator> getAsyncRequestValidations(final MultiMap parameters, MultiMap headers) {
 
     List<Validator> validators = new ArrayList<>();
     validators.add(new IdTypeValidator(parameters.get(NGSILDQUERY_ID), true));
@@ -220,16 +228,18 @@ public class ValidatorsHandlersFactory {
     validators.add(
         new ElasticSearchFileResponseTypeValidator(
             parameters.get(HEADER_RESPONSE_FILE_FORMAT), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
 
     return validators;
   }
 
-  private List<Validator> getAsyncStatusRequestValidator(final MultiMap parameters) {
+  private List<Validator> getAsyncStatusRequestValidator(final MultiMap parameters, MultiMap headers) {
     List<Validator> validators = new ArrayList<>();
     validators.add(new StringTypeValidator(parameters.get("searchId"), true, UUID_PATTERN));
 
     // optional header public key
     validators.add(new HeaderKeyTypeValidation(parameters.get(HEADER_PUBLIC_KEY), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
 
     return validators;
   }

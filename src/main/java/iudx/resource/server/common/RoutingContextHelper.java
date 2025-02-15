@@ -1,17 +1,15 @@
 package iudx.resource.server.common;
 
+import static iudx.resource.server.apiserver.util.Constants.*;
+
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RequestBody;
 import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.authenticator.model.JwtData;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import static iudx.resource.server.apiserver.util.Constants.*;
 
 public class RoutingContextHelper {
-  //    private static final Logger LOGGER = LogManager.getLogger(RoutingContextHelper.class);
+  //  private static final Logger LOGGER = LogManager.getLogger(RoutingContextHelper.class);
   private static final String JWT_DATA = "jwtData";
 
   public static String getRequestPath(RoutingContext routingContext) {
@@ -51,9 +49,8 @@ public class RoutingContextHelper {
     /* Send Bearer <JWT-Token> if Authorization header is present */
     /* allowing both the tokens to be authenticated for now */
     /* TODO: later, 401 error is thrown if the token does not contain Bearer keyword */
-    String token = routingContext.request().headers().get(HEADER_BEARER_AUTHORIZATION);
-    boolean isBearerAuthHeaderPresent =
-        routingContext.request().headers().contains(HEADER_BEARER_AUTHORIZATION);
+    String token = routingContext.request().headers().get(HEADER_AUTHORIZATION);
+    boolean isBearerAuthHeaderPresent = token.contains(HEADER_BEARER_AUTHORIZATION);
     if (isBearerAuthHeaderPresent && token.trim().split(" ").length == 2) {
       String[] tokenWithoutBearer = token.split(HEADER_BEARER_AUTHORIZATION);
       token = tokenWithoutBearer[1].replaceAll("\\s", "");

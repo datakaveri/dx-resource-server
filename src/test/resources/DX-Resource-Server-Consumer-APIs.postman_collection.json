@@ -441,8 +441,8 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "token",
-								"value": "{{secureResourceToken}}",
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -524,13 +524,19 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "publicKey",
 								"value": "{{publicKeyValue}}",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -598,7 +604,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -669,6 +681,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -811,6 +829,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -884,6 +908,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -954,6 +984,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -1014,7 +1050,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -1085,7 +1127,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -1227,7 +1275,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -1300,6 +1354,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -1360,7 +1420,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -1431,7 +1497,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -1573,7 +1645,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -1646,7 +1724,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -1706,7 +1790,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{secureResourceToken}}"
 							}
 						],
 						"url": {
@@ -1777,7 +1867,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{secureResourceToken}}"
 							}
 						],
 						"url": {
@@ -1919,7 +2015,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{secureResourceToken}}"
 							}
 						],
 						"url": {
@@ -2018,6 +2120,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -2096,13 +2204,19 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "publicKey",
 								"value": "{{publicKeyValue}}",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -2166,7 +2280,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -2241,6 +2361,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -2391,6 +2517,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -2469,6 +2601,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -2533,7 +2671,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -2608,7 +2752,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -2758,7 +2908,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -2836,6 +2992,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -2900,7 +3062,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -2975,7 +3143,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -3125,7 +3299,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -3203,7 +3383,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -3267,7 +3453,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -3342,7 +3534,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -3493,7 +3691,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -3596,6 +3800,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -3677,13 +3887,19 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "publicKey",
 								"value": "{{publicKeyValue}}",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -3750,6 +3966,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -3819,6 +4041,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -3888,6 +4116,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -3958,6 +4192,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -4097,6 +4337,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -4160,6 +4406,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -4234,6 +4486,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -4308,6 +4566,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -4382,6 +4646,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -4534,6 +4804,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -4587,6 +4863,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -4651,6 +4933,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -4715,6 +5003,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -4779,6 +5073,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -4927,7 +5227,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{openResourceToken}}"
+								"value": "{{openResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -5002,13 +5308,19 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{openResourceToken}}"
+								"value": "{{openResourceToken}}",
+								"disabled": true
 							},
 							{
 								"key": "publicKey",
 								"value": "{{publicKeyValue}}",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -5069,7 +5381,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{openResourceToken}}"
+								"value": "{{openResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -5141,6 +5459,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -5213,6 +5537,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -5285,6 +5615,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -5432,6 +5768,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -5494,6 +5836,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -5567,6 +5915,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -5640,6 +5994,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -5713,6 +6073,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -5862,6 +6228,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -5919,6 +6291,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -5987,6 +6365,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -6055,6 +6439,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -6123,6 +6513,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -6290,6 +6686,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -6365,13 +6767,19 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "publicKey",
 								"value": "{{publicKeyValue}}",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -6429,6 +6837,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -6498,6 +6912,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -6567,6 +6987,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -6705,6 +7131,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -6770,6 +7202,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -6818,6 +7256,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -6877,6 +7321,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -6936,6 +7386,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7054,6 +7510,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7119,6 +7581,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7167,6 +7635,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7226,6 +7700,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7285,6 +7765,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7403,6 +7889,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7468,6 +7960,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7516,6 +8014,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7575,6 +8079,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7634,6 +8144,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7752,6 +8268,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7822,6 +8344,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7919,6 +8447,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -7990,13 +8524,19 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "publicKey",
 								"value": "{{publicKeyValue}}",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -8053,6 +8593,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -8121,6 +8667,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -8189,6 +8741,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -8325,6 +8883,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -8391,6 +8955,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -8443,6 +9013,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -8506,6 +9082,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -8569,6 +9151,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -8695,6 +9283,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -8761,6 +9355,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -8813,6 +9413,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -8868,6 +9474,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -8931,6 +9543,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -9057,6 +9675,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -9123,6 +9747,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -9175,6 +9805,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -9238,6 +9874,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -9301,6 +9943,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -9427,6 +10075,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -9494,6 +10148,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -9590,7 +10250,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -9692,13 +10358,19 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
 							},
 							{
 								"key": "publicKey",
 								"value": "{{publicKeyValue}}",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -9786,7 +10458,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -9870,6 +10548,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -9954,6 +10638,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -10038,6 +10728,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -10206,7 +10902,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -10294,7 +10996,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -10410,7 +11118,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -10497,13 +11211,19 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
 							},
 							{
 								"key": "publicKey",
 								"value": "{{publicKeyValue}}",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -10576,7 +11296,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -10660,6 +11386,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -10749,6 +11481,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -10833,6 +11571,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -11001,7 +11745,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -11089,7 +11839,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -11205,6 +11961,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -11258,13 +12020,19 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "publicKey",
 								"value": "{{publicKeyValue}}",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -11317,7 +12085,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{openResourceToken}}"
+								"value": "{{openResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -11367,6 +12141,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -11497,6 +12277,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -11570,13 +12356,19 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "publicKey",
 								"value": "{{publicKeyValue}}",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -11633,6 +12425,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -11701,6 +12499,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -11769,6 +12573,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -11837,6 +12647,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -11978,6 +12794,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -12039,6 +12861,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -12111,6 +12939,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -12183,6 +13017,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -12335,13 +13175,13 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
-							},
-							{
-								"key": "",
-								"value": "",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -12403,13 +13243,19 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "publicKey",
 								"value": "{{publicKeyValue}}",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -12457,7 +13303,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -12516,6 +13368,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -12575,6 +13433,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -12697,6 +13561,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -12746,6 +13616,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -12806,6 +13682,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -12866,6 +13748,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -12986,7 +13874,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -13050,6 +13944,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -13110,6 +14010,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -13170,6 +14076,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -13290,7 +14202,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -13354,6 +14272,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -13403,7 +14327,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -13463,7 +14393,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -13523,6 +14459,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -13575,6 +14517,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -13699,6 +14647,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -13748,7 +14702,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -13808,6 +14768,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -13868,6 +14834,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -13992,6 +14964,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -14040,7 +15018,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -14099,7 +15083,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -14158,7 +15148,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -14280,6 +15276,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -14328,7 +15330,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -14387,7 +15395,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -14446,7 +15460,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -14568,6 +15588,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -14616,7 +15642,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -14675,7 +15707,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -14734,7 +15772,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -14880,6 +15924,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -14942,13 +15992,19 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "publicKey",
 								"value": "{{publicKeyValue}}",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -14996,7 +16052,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -15055,6 +16117,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -15114,6 +16182,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -15235,6 +16309,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -15284,6 +16364,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -15344,6 +16430,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -15404,6 +16496,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -15524,7 +16622,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -15587,6 +16691,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -15647,6 +16757,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -15707,6 +16823,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -15827,7 +16949,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -15890,6 +17018,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -15939,7 +17073,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -15999,7 +17139,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -16059,7 +17205,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -16182,6 +17334,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -16230,7 +17388,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -16289,7 +17453,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -16348,7 +17518,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -16469,6 +17645,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -16517,7 +17699,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -16576,7 +17764,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -16635,7 +17829,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -16756,6 +17956,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -16804,7 +18010,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -16863,7 +18075,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -16922,7 +18140,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -17069,12 +18293,18 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"type": "text",
 								"value": "streaming"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -17193,12 +18423,18 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"type": "text",
 								"value": "streaming"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -17261,11 +18497,17 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"value": "streaming",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -17395,12 +18637,18 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{delegateToken}}"
+								"value": "{{delegateToken}}",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"type": "text",
 								"value": "streaming"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{delegateToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -17459,11 +18707,17 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"value": "streaming",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -17523,12 +18777,18 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"type": "text",
 								"value": "streaming"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -17651,11 +18911,17 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"value": "streaming",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -17716,11 +18982,17 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"value": "streaming",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -17780,12 +19052,18 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"type": "text",
 								"value": "streaming"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -17910,12 +19188,18 @@
 							{
 								"key": "options",
 								"type": "text",
-								"value": "streaming"
+								"value": "streaming",
+								"disabled": true
 							},
 							{
 								"key": "token",
 								"type": "text",
 								"value": "{{secureResourceToken}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18020,12 +19304,18 @@
 							{
 								"key": "options",
 								"type": "text",
-								"value": "streaming"
+								"value": "streaming",
+								"disabled": true
 							},
 							{
 								"key": "token",
 								"type": "text",
 								"value": "{{delegateToken}}"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{delegateToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18080,6 +19370,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -18130,7 +19426,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18201,7 +19503,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18272,7 +19580,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{delegateToken}}"
+								"value": "{{delegateToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{delegateToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18344,7 +19658,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18415,7 +19735,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18486,7 +19812,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18557,7 +19889,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18628,7 +19966,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18699,7 +20043,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18770,7 +20120,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18841,7 +20197,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18916,7 +20278,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -18991,6 +20359,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -19059,6 +20433,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -19128,6 +20508,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -19196,6 +20582,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -19264,6 +20656,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -19332,6 +20730,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -19400,6 +20804,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -19459,6 +20869,12 @@
 							{
 								"key": "token",
 								"value": "{{delegateToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{delegateToken}}",
 								"type": "text"
 							}
 						],
@@ -19518,6 +20934,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -19577,7 +20999,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -19636,7 +21064,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -19695,6 +21129,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -19754,7 +21194,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{secureResourceToken}}"
+								"value": "{{secureResourceToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -19827,6 +21273,12 @@
 							{
 								"key": "token",
 								"value": "{{providerToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{providerToken}}",
 								"type": "text"
 							}
 						],
@@ -19850,56 +21302,7 @@
 							]
 						}
 					},
-					"response": [
-						{
-							"name": "register adapter",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "token",
-										"value": "auth.iudx.org.in/vasanth.rajaraman@datakaveri.org/9c86739bbb0f653aeed1d78d18d64841",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"resourceGroup\":\"surat-itms\",\r\n    \"resourceServer\":\"rs.iudx.io\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{base_url}}/{{basePath}}/adapter/register",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"{{basePath}}",
-										"adapter",
-										"register"
-									]
-								}
-							},
-							"status": "Created",
-							"code": 201,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "content-type",
-									"value": "application/json"
-								},
-								{
-									"key": "content-length",
-									"value": "225"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"username\": \"datakaveri.org/3ae88e7ba006938ffc38203d326b1711b892226d\",\n    \"apiKey\": \"123456\",\n    \"id\": \"rbccps.org/aa9d66a000d94a78895de8d4c0b3a67f3450e531/rs.iudx.io/surat-itms\",\n    \"URL\": \"databroker.iudx.io\",\n    \"port\": \"5671\",\n    \"vHost\": \"IUDX\"\n}"
-						}
-					]
+					"response": []
 				},
 				{
 					"name": "409 (already exist) - Register adaptor",
@@ -19933,7 +21336,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{providerToken}}"
+								"value": "{{providerToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{providerToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -19956,56 +21365,7 @@
 							]
 						}
 					},
-					"response": [
-						{
-							"name": "register adapter",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "token",
-										"value": "auth.iudx.org.in/vasanth.rajaraman@datakaveri.org/9c86739bbb0f653aeed1d78d18d64841",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"resourceGroup\":\"surat-itms\",\r\n    \"resourceServer\":\"rs.iudx.io\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{base_url}}/{{basePath}}/adapter/register",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"{{basePath}}",
-										"adapter",
-										"register"
-									]
-								}
-							},
-							"status": "Created",
-							"code": 201,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "content-type",
-									"value": "application/json"
-								},
-								{
-									"key": "content-length",
-									"value": "225"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"username\": \"datakaveri.org/3ae88e7ba006938ffc38203d326b1711b892226d\",\n    \"apiKey\": \"123456\",\n    \"id\": \"rbccps.org/aa9d66a000d94a78895de8d4c0b3a67f3450e531/rs.iudx.io/surat-itms\",\n    \"URL\": \"databroker.iudx.io\",\n    \"port\": \"5671\",\n    \"vHost\": \"IUDX\"\n}"
-						}
-					]
+					"response": []
 				},
 				{
 					"name": "401(not authorized) register adaptor",
@@ -20064,56 +21424,7 @@
 							]
 						}
 					},
-					"response": [
-						{
-							"name": "register adapter",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "token",
-										"value": "auth.iudx.org.in/vasanth.rajaraman@datakaveri.org/9c86739bbb0f653aeed1d78d18d64841",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"resourceGroup\":\"surat-itms\",\r\n    \"resourceServer\":\"rs.iudx.io\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{base_url}}/{{basePath}}/adapter/register",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"{{basePath}}",
-										"adapter",
-										"register"
-									]
-								}
-							},
-							"status": "Created",
-							"code": 201,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "content-type",
-									"value": "application/json"
-								},
-								{
-									"key": "content-length",
-									"value": "225"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"username\": \"datakaveri.org/3ae88e7ba006938ffc38203d326b1711b892226d\",\n    \"apiKey\": \"123456\",\n    \"id\": \"rbccps.org/aa9d66a000d94a78895de8d4c0b3a67f3450e531/rs.iudx.io/surat-itms\",\n    \"URL\": \"databroker.iudx.io\",\n    \"port\": \"5671\",\n    \"vHost\": \"IUDX\"\n}"
-						}
-					]
+					"response": []
 				},
 				{
 					"name": "200 (success) - Get adaptor details (GL)",
@@ -20152,7 +21463,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{providerToken}}"
+								"value": "{{providerToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{providerToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -20202,7 +21519,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{providerToken}}"
+								"value": "{{providerToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{providerToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -20305,6 +21628,12 @@
 							{
 								"key": "token",
 								"value": "{{providerToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{providerToken}}",
 								"type": "text"
 							}
 						],
@@ -20355,7 +21684,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{providerToken}}"
+								"value": "{{providerToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{providerToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -20468,6 +21803,12 @@
 							{
 								"key": "token",
 								"value": "{{adaptorToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adaptorToken}}",
 								"type": "text"
 							}
 						],
@@ -20491,56 +21832,7 @@
 							]
 						}
 					},
-					"response": [
-						{
-							"name": "register adapter",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "token",
-										"value": "auth.iudx.org.in/vasanth.rajaraman@datakaveri.org/9c86739bbb0f653aeed1d78d18d64841",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"resourceGroup\":\"surat-itms\",\r\n    \"resourceServer\":\"rs.iudx.io\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{base_url}}/{{basePath}}/adapter/register",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"{{basePath}}",
-										"adapter",
-										"register"
-									]
-								}
-							},
-							"status": "Created",
-							"code": 201,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "content-type",
-									"value": "application/json"
-								},
-								{
-									"key": "content-length",
-									"value": "225"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"username\": \"datakaveri.org/3ae88e7ba006938ffc38203d326b1711b892226d\",\n    \"apiKey\": \"123456\",\n    \"id\": \"rbccps.org/aa9d66a000d94a78895de8d4c0b3a67f3450e531/rs.iudx.io/surat-itms\",\n    \"URL\": \"databroker.iudx.io\",\n    \"port\": \"5671\",\n    \"vHost\": \"IUDX\"\n}"
-						}
-					]
+					"response": []
 				},
 				{
 					"name": "409 (already exist) - Register adapter",
@@ -20574,7 +21866,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{adaptorToken}}"
+								"value": "{{adaptorToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adaptorToken}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -20597,56 +21895,7 @@
 							]
 						}
 					},
-					"response": [
-						{
-							"name": "register adapter",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "token",
-										"value": "auth.iudx.org.in/vasanth.rajaraman@datakaveri.org/9c86739bbb0f653aeed1d78d18d64841",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"resourceGroup\":\"surat-itms\",\r\n    \"resourceServer\":\"rs.iudx.io\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{base_url}}/{{basePath}}/adapter/register",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"{{basePath}}",
-										"adapter",
-										"register"
-									]
-								}
-							},
-							"status": "Created",
-							"code": 201,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "content-type",
-									"value": "application/json"
-								},
-								{
-									"key": "content-length",
-									"value": "225"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"username\": \"datakaveri.org/3ae88e7ba006938ffc38203d326b1711b892226d\",\n    \"apiKey\": \"123456\",\n    \"id\": \"rbccps.org/aa9d66a000d94a78895de8d4c0b3a67f3450e531/rs.iudx.io/surat-itms\",\n    \"URL\": \"databroker.iudx.io\",\n    \"port\": \"5671\",\n    \"vHost\": \"IUDX\"\n}"
-						}
-					]
+					"response": []
 				},
 				{
 					"name": "401(not authorized) register adapter",
@@ -20704,56 +21953,7 @@
 							]
 						}
 					},
-					"response": [
-						{
-							"name": "register adapter",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "token",
-										"value": "auth.iudx.org.in/vasanth.rajaraman@datakaveri.org/9c86739bbb0f653aeed1d78d18d64841",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"resourceGroup\":\"surat-itms\",\r\n    \"resourceServer\":\"rs.iudx.io\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{base_url}}/{{basePath}}/adapter/register",
-									"host": [
-										"{{base_url}}"
-									],
-									"path": [
-										"{{basePath}}",
-										"adapter",
-										"register"
-									]
-								}
-							},
-							"status": "Created",
-							"code": 201,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "content-type",
-									"value": "application/json"
-								},
-								{
-									"key": "content-length",
-									"value": "225"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"username\": \"datakaveri.org/3ae88e7ba006938ffc38203d326b1711b892226d\",\n    \"apiKey\": \"123456\",\n    \"id\": \"rbccps.org/aa9d66a000d94a78895de8d4c0b3a67f3450e531/rs.iudx.io/surat-itms\",\n    \"URL\": \"databroker.iudx.io\",\n    \"port\": \"5671\",\n    \"vHost\": \"IUDX\"\n}"
-						}
-					]
+					"response": []
 				},
 				{
 					"name": "200 (success) - Get adaptor details",
@@ -20793,6 +21993,12 @@
 							{
 								"key": "token",
 								"value": "{{adaptorToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adaptorToken}}",
 								"type": "text"
 							}
 						],
@@ -20843,7 +22049,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{adaptorToken}}"
+								"value": "{{adaptorToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adaptorToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -20996,6 +22208,12 @@
 							{
 								"key": "token",
 								"value": "{{adaptorToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adaptorToken}}",
 								"type": "text"
 							}
 						],
@@ -21046,7 +22264,13 @@
 							{
 								"key": "token",
 								"type": "text",
-								"value": "{{adaptorToken}}"
+								"value": "{{adaptorToken}}",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adaptorToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -21104,11 +22328,17 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"value": "count",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -21246,13 +22476,19 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"value": "count",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -21335,11 +22571,17 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"value": "count",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -21401,13 +22643,19 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "option",
 								"value": "count",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -21479,13 +22727,19 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "option",
 								"value": "count",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -21567,13 +22821,19 @@
 							{
 								"key": "token",
 								"value": "{{delegateToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"value": "count",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{delegateToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -21752,11 +23012,17 @@
 							{
 								"key": "token",
 								"value": "{{delegateToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"value": "count",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{delegateToken}}",
 								"type": "text"
 							}
 						],
@@ -21827,11 +23093,17 @@
 							{
 								"key": "token",
 								"value": "{{delegateToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"value": "count",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{delegateToken}}",
 								"type": "text"
 							}
 						],
@@ -21913,11 +23185,17 @@
 							{
 								"key": "token",
 								"value": "{{delegateToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "options",
 								"value": "count",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{delegateToken}}",
 								"type": "text"
 							}
 						],
@@ -22008,6 +23286,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -22080,11 +23364,17 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "format",
 								"value": "csv",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -22157,13 +23447,19 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
-								"type": "text"
+								"type": "text",
+								"disabled": true
 							},
 							{
 								"key": "publicKey",
 								"value": "{{publicKeyValue}}",
 								"type": "text",
 								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -22231,6 +23527,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -22368,6 +23670,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -22445,6 +23753,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -22511,6 +23825,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -22561,6 +23881,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -22671,6 +23997,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -22722,6 +24054,12 @@
 							{
 								"key": "token",
 								"value": "{{delegateToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{delegateToken}}",
 								"type": "text"
 							}
 						],
@@ -22871,6 +24209,12 @@
 							{
 								"key": "token",
 								"value": "{{delegateToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{delegateToken}}",
 								"type": "text"
 							}
 						],
@@ -22972,6 +24316,12 @@
 							{
 								"key": "token",
 								"value": "{{secureResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{secureResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -23035,6 +24385,12 @@
 							{
 								"key": "token",
 								"value": "{{adminToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}",
 								"type": "text"
 							}
 						],
@@ -23094,6 +24450,12 @@
 							{
 								"key": "token",
 								"value": "{{delegateToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{delegateToken}}",
 								"type": "text"
 							}
 						],
@@ -23158,6 +24520,12 @@
 							{
 								"key": "token",
 								"value": "{{delegateToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{delegateToken}}",
 								"type": "text"
 							}
 						],
@@ -23220,6 +24588,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -23272,6 +24646,12 @@
 							{
 								"key": "token",
 								"value": "{{adminToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}",
 								"type": "text"
 							}
 						],
@@ -23322,6 +24702,12 @@
 							{
 								"key": "token",
 								"value": "{{adminToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}",
 								"type": "text"
 							}
 						],
@@ -23429,6 +24815,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -23477,6 +24869,12 @@
 							{
 								"key": "token",
 								"value": "{{openResourceToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{openResourceToken}}",
 								"type": "text"
 							}
 						],
@@ -23547,6 +24945,12 @@
 							{
 								"key": "token",
 								"value": "{{adaptorToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adaptorToken}}",
 								"type": "text"
 							}
 						],
@@ -23668,6 +25072,12 @@
 							{
 								"key": "token",
 								"value": "{{adaptorToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adaptorToken}}",
 								"type": "text"
 							}
 						],
@@ -23717,6 +25127,12 @@
 							{
 								"key": "token",
 								"value": "{{adaptorToken}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adaptorToken}}",
 								"type": "text"
 							}
 						],

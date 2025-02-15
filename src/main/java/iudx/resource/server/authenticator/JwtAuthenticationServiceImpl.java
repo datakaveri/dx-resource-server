@@ -28,6 +28,7 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
 
     LOGGER.info("authInfo " + authenticationInfo);
     String token = authenticationInfo.getString("token");
+    LOGGER.info("token is : {}",token);
     return decodeJwt(token);
   }
 
