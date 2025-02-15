@@ -42,7 +42,8 @@ configs/
 | catServerPort       | integer  | 443                             | Port number to access HTTPS APIs of Catalogue Server                                                                                    |
 | timeLimit           |  String  | "test,2020-10-22T00:00:00Z,365" | Contains three comma-separated parts: deployment type (e.g., test or production), a date-time stamp, and the maximum allowed query days |
 | timeLimitForAsync   | integer  | 365                             | No of time limit (in days) for asynchronous search queries.                                                                             |
-
+| audience            |  String  | rs.iudx.io                      | Audience                                                                                                                                |
+ 
 ## Api Server Verticle
 
 | Key Name          | Value Datatype | Value Example | Description                                                              |
@@ -99,7 +100,6 @@ configs/
 |:------------------|:--------------:|:--------------|:----------------------------------------------------------------------------|
 | isWorkerVerticle  |    boolean     | false         | To check if worker verticle needs to be deployed for AuthenticationVerticle |
 | verticleInstances |    integer     | 1             | Number of instances required for AuthenticationVerticle                     |
-| audience          |     String     | rs.iudx.io    | Audience                                                                    |
 | authServerHost    |     String     | abc.iudx.io   | Hostname of the authentication server                                       |
 | jwtIgnoreExpiry   |    boolean     | false         | To ignore JWT Expiry                                                        |
 | enableLimits      |    boolean     | false         | To enable Limits (data limits)                                              |

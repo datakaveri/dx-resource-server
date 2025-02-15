@@ -6,8 +6,9 @@
     "commonConfig" : {
         "dxApiBasePath" : "/ngsi-ld/v1",
         "dxCatalogueBasePath": "/iudx/cat/v1",
-        "dxAuthBasePath": "/auth/v1"
-    },
+        "dxAuthBasePath": "/auth/v1",
+		"audience": "server"
+	},
 	"clusterId": "iudx-rs-cluster",
 	"modules": [
 		{
@@ -29,7 +30,6 @@
 			"id": "iudx.resource.server.authenticator.AuthenticationVerticle",
 			"isWorkerVerticle":false,
 			"verticleInstances": 2,
-			"audience": "server",
 			"keystore": "",
 			"keystorePassword": "",
 			"authServerHost": "",
