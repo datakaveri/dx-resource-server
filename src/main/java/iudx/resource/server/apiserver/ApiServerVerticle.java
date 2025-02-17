@@ -1681,35 +1681,21 @@ public class ApiServerVerticle extends AbstractVerticle {
   public void publishDataFromAdapter(RoutingContext routingContext) {
     LOGGER.trace("Info: publishDataFromAdapter method started;");
     JsonArray requestJson = routingContext.body().asJsonArray();
-    HttpServerRequest request = routingContext.request();
     HttpServerResponse response = routingContext.response();
-    /*String instanceId = request.getHeader(HEADER_HOST);*/
-    JsonObject authenticationInfo = new JsonObject();
-    authenticationInfo.put(API_ENDPOINT, "/iudx/v1/adapter");
-    /*requestJson.put(JSON_INSTANCEID, instanceId);*/
-    if (request.headers().contains(HEADER_TOKEN)) {
-      authenticationInfo.put(HEADER_TOKEN, request.getHeader(HEADER_TOKEN));
-
-      Future<JsonObject> brokerResult =
-          managementApi.publishDataFromAdapter(requestJson, databroker);
-      brokerResult.onComplete(
-          brokerResultHandler -> {
-            if (brokerResultHandler.succeeded()) {
-              LOGGER.debug("Success: publishing data from adapter");
-              routingContext.data().put(RESPONSE_SIZE, 0);
-              Future.future(fu -> updateAuditTable(routingContext));
-              handleSuccessResponse(
-                  response, ResponseType.Ok.getCode(), brokerResultHandler.result().toString());
-            } else {
-              LOGGER.debug("Fail: Bad request;" + brokerResultHandler.cause().getMessage());
-              processBackendResponse(response, brokerResultHandler.cause().getMessage());
-            }
-          });
-
-    } else {
-      LOGGER.debug("Fail: Unauthorized");
-      handleResponse(response, UNAUTHORIZED, MISSING_TOKEN_URN);
-    }
+    Future<JsonObject> brokerResult = managementApi.publishDataFromAdapter(requestJson, databroker);
+    brokerResult.onComplete(
+        brokerResultHandler -> {
+          if (brokerResultHandler.succeeded()) {
+            LOGGER.debug("Success: publishing data from adapter");
+            routingContext.data().put(RESPONSE_SIZE, 0);
+            Future.future(fu -> updateAuditTable(routingContext));
+            handleSuccessResponse(
+                response, ResponseType.Ok.getCode(), brokerResultHandler.result().toString());
+          } else {
+            LOGGER.debug("Fail: Bad request;" + brokerResultHandler.cause().getMessage());
+            processBackendResponse(response, brokerResultHandler.cause().getMessage());
+          }
+        });
   }
 
   private void getAllAdaptersForUsers(RoutingContext routingContext) {
