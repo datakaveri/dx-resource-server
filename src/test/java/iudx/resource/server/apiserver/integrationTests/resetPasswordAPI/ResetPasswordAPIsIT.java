@@ -26,7 +26,7 @@ public class ResetPasswordAPIsIT {
     @DisplayName("testing Reset Password  - 200 (Success) Reset user password")
     void ResetUserPwd() {
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .when()
                 .post("/user/resetPassword")
@@ -42,7 +42,7 @@ public class ResetPasswordAPIsIT {
     @DisplayName("testing Reset Password  - 404 (Not Found) Reset user password")
     void ResetUserPwdNotFound() {
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .when()
                 .post("/user/resetPasswords")
@@ -57,7 +57,7 @@ public class ResetPasswordAPIsIT {
     @DisplayName("testing Reset Password  - 401 (Not Authorized) Reset user password")
     void ResetUserPwdUnAuth() {
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .when()
                 .post("/user/resetPassword")

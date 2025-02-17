@@ -28,7 +28,7 @@ public class LatestDataAPIsIT {
     @DisplayName("testing get latest data from secure resource - 200 (success)")
     void GetLatestDataSecureResource() {
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .when()
                 .get("/entities/83c2e5c2-3574-4e11-9530-2b1fbdfce832")
@@ -44,7 +44,7 @@ public class LatestDataAPIsIT {
     @DisplayName("testing get latest data from secure resource - 200 (success) with optional encryption")
     void GetLatestDataSecureResourceWithOptionalEncryp() {
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .when()
                 //optional encryption
@@ -62,7 +62,7 @@ public class LatestDataAPIsIT {
     @DisplayName("testing get latest data from open resource - 200 (success)")
     void GetLatestDataOpenResource() {
         Response response = given()
-                .header("token", openResourceToken)
+                .header("Authorization", "Bearer " + openResourceToken)
                 .contentType("application/json")
                 .when()
                 .get("/entities/b58da193-23d9-43eb-b98a-a103d4b6103c")
@@ -78,7 +78,7 @@ public class LatestDataAPIsIT {
     @DisplayName("testing get latest data from open resource - 404 (Not Found)")
     void GetLatestDataOpenResourceNotFound() {
         Response response = given()
-                .header("token", openResourceToken)
+                .header("Authorization", "Bearer " + openResourceToken)
                 .contentType("application/json")
                 .when()
                 .get("/entities/b58da193-23d9-43eb-b98a-a103d4b6102c")
@@ -93,7 +93,7 @@ public class LatestDataAPIsIT {
     @DisplayName("testing get latest data from open resource - 401 (Not Authorized)")
     void GetLatestDataOpenResourceUnAuth() {
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .when()
                 .get("/entities/b58da193-23d9-43eb-b98a-a103d4b6103c")

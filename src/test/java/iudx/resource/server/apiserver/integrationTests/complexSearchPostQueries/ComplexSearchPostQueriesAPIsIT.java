@@ -39,7 +39,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -65,7 +65,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -93,7 +93,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -117,7 +117,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -142,7 +142,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -167,7 +167,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -192,7 +192,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("timeProperty", "observationDateTime"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -218,7 +218,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("timeProperty", "observationDateTime"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -242,7 +242,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("timeProperty", "observationDateTime"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -267,7 +267,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("timeProperty", "observationDateTime"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -292,7 +292,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("timeProperty", "observationDateTime"));
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -317,7 +317,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("timeProperty", "observationDateTime"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -341,7 +341,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("timeProperty", "observationDateTime"));
 
         Response response = given()
-                .header("token", openResourceToken)
+                .header("Authorization", "Bearer " + openResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -366,7 +366,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("timeProperty", "observationDateTime"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -390,7 +390,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("timeProperty", "observationDateTime"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -414,7 +414,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("timeProperty", "observationDateTime"));
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -438,7 +438,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("timeProperty", "observationDateTime"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -463,7 +463,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                 .put("attrs", "id");
 
         Response response = given()
-                .header("token", openResourceToken)
+                .header("Authorization", "Bearer " + openResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -489,7 +489,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                 .put("attrs", "id");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -513,7 +513,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                 .put("attrs", "id");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -538,7 +538,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                 .put("attrs", "id");
 
         Response response = given()
-                .header("token", openResourceToken)
+                .header("Authorization", "Bearer " + openResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -563,7 +563,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                 .put("attrs", "id");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -588,7 +588,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                 .put("attrs", "id");
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -620,7 +620,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                 .put("attrs", "id,speed");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -653,7 +653,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                 .put("attrs", "id,speed");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -684,7 +684,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                 .put("attrs", "id,speed");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -716,7 +716,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                 .put("attrs", "id,speed");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -747,7 +747,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                 .put("attrs", "id,speed");
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -777,7 +777,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -811,7 +811,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -841,7 +841,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "geoJsonLocation"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -872,7 +872,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -903,7 +903,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -931,7 +931,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -960,7 +960,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -987,7 +987,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -1015,7 +1015,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -1043,7 +1043,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -1071,7 +1071,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -1103,7 +1103,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -1130,7 +1130,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -1161,7 +1161,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -1189,7 +1189,7 @@ public class ComplexSearchPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
