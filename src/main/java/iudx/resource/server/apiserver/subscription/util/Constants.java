@@ -15,8 +15,10 @@ public class Constants {
                   + "resource_group,provider_id,delegator_id,item_type) "
                   + "VALUES('$1','$2','$3','$4','$5','$6','$7','$8','$9','$a','$b','$c')";
 
+
   public static final String UPDATE_SUB_SQL =
           "UPDATE subscriptions SET expiry='$1' where queue_name='$2' and entity='$3'";
+  public static final String DELETE_SUB_SQL = "DELETE FROM subscriptions where queue_name='$1'";
   public static final String RESULTS = "results";
 
   public static final String ITEM_TYPE_RESOURCE = "Resource";

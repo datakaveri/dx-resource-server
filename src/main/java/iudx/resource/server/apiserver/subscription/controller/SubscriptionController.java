@@ -14,8 +14,13 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+
 import iudx.resource.server.apiserver.handler.FailureHandler;
+import iudx.resource.server.apiserver.exception.FailureHandler;
+import iudx.resource.server.apiserver.subscription.model.DeleteSubsResultModel;
+import iudx.resource.server.apiserver.subscription.model.GetResultModel;
 import iudx.resource.server.apiserver.subscription.model.PostModelSubscription;
+import iudx.resource.server.apiserver.subscription.model.SubscriptionData;
 import iudx.resource.server.apiserver.subscription.service.SubscriptionService;
 import iudx.resource.server.apiserver.subscription.service.SubscriptionServiceImpl;
 import iudx.resource.server.apiserver.subscription.util.SubsType;
@@ -28,7 +33,13 @@ import iudx.resource.server.authenticator.handler.authorization.TokenRevokedHand
 import iudx.resource.server.authenticator.model.DxRole;
 import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.common.Api;
+
 import iudx.resource.server.common.CatalogueService;
+
+import iudx.resource.server.common.RequestType;
+import iudx.resource.server.common.ResultModel;
+import iudx.resource.server.common.validation.handler.ValidationHandler;
+import iudx.resource.server.database.postgres.model.PostgresResultModel;
 import iudx.resource.server.database.postgres.service.PostgresService;
 import iudx.resource.server.databroker.service.DataBrokerService;
 import org.apache.logging.log4j.LogManager;
@@ -37,8 +48,10 @@ import org.apache.logging.log4j.Logger;
 public class SubscriptionController {
   private static final Logger LOGGER = LogManager.getLogger(SubscriptionController.class);
   private final Router router;
-  private Vertx vertx;
-  private Api api;
+  private final Vertx vertx;
+  private final Api api;
+  ValidationHandler subsValidationHandler;
+  FailureHandler failureHandler;
   private PostgresService postgresService;
   private SubscriptionService subscriptionService;
   private DataBrokerService dataBrokerService;
@@ -56,54 +69,63 @@ public class SubscriptionController {
     this.config = config;
   }
 
+
+
+
   public void init() {
+      this.subsValidationHandler = new ValidationHandler(vertx, RequestType.SUBSCRIPTION);
+      this.failureHandler = new FailureHandler();
+      CatalogueService catalogueService = new CatalogueService(cacheService, config, vertx);
+
+      AuthHandler authHandler = new AuthHandler(api, authenticator);
+      Handler<RoutingContext> getIdHandler =
+              new GetIdHandler(api).withNormalisedPath(api.getSubscriptionUrl());
+
+      Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
+      Handler<RoutingContext> validateToken =
+              new AuthValidationHandler(api, cacheService, audience, catalogueService);
+
+      Handler<RoutingContext> userAndAdminAccessHandler =
+              new AuthorizationHandler()
+                      .setUserRolesForEndpoint(
+                              DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
+    // TODO: Need to add auth and auditing insert
+
+
     proxyRequired();
-
-    CatalogueService catalogueService = new CatalogueService(cacheService, config, vertx);
-
-    AuthHandler authHandler = new AuthHandler(api, authenticator);
-    Handler<RoutingContext> getIdHandler =
-        new GetIdHandler(api).withNormalisedPath(api.getSubscriptionUrl());
-
-    Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
-    Handler<RoutingContext> validateToken =
-        new AuthValidationHandler(api, cacheService, audience, catalogueService);
-    FailureHandler validationsFailureHandler = new FailureHandler();
-
-    Handler<RoutingContext> userAndAdminAccessHandler =
-        new AuthorizationHandler()
-            .setUserRolesForEndpoint(
-                DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
 
     router
         .post(api.getSubscriptionUrl())
+            .handler(subsValidationHandler)
         .handler(getIdHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::postSubscriptions)
-        .handler(validationsFailureHandler);
+        .failureHandler(failureHandler);
 
     router
         .patch(api.getSubscriptionUrl() + "/:userid/:alias")
+            .handler(subsValidationHandler)
         .handler(getIdHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::appendSubscription)
-        .handler(validationsFailureHandler);
+        .failureHandler(failureHandler);
 
     router
         .put(api.getSubscriptionUrl() + "/:userid/:alias")
+            .handler(subsValidationHandler)
         .handler(getIdHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::updateSubscription)
-        .handler(validationsFailureHandler);
+        .failureHandler(failureHandler);
 
     router
         .get(api.getSubscriptionUrl() + "/:userid/:alias")
@@ -113,7 +135,7 @@ public class SubscriptionController {
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::getSubscription)
-        .handler(validationsFailureHandler);
+        .failureHandler(failureHandler);
 
     router
         .get(api.getSubscriptionUrl())
@@ -123,7 +145,7 @@ public class SubscriptionController {
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::getAllSubscriptionForUser)
-        .handler(validationsFailureHandler);
+        .failureHandler(failureHandler);
 
     router
         .delete(api.getSubscriptionUrl() + "/:userid/:alias")
@@ -133,7 +155,7 @@ public class SubscriptionController {
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::deleteSubscription)
-        .handler(validationsFailureHandler);
+        .failureHandler(failureHandler);
 
     subscriptionService =
         new SubscriptionServiceImpl(postgresService, dataBrokerService, cacheService);
@@ -147,27 +169,43 @@ public class SubscriptionController {
     String subsId = userid + "/" + alias;
     JsonObject requestJson = routingContext.body().asJsonObject();
     String instanceId = request.getHeader(HEADER_HOST);
-    requestJson.put(SUBSCRIPTION_ID, subsId);
-    requestJson.put(JSON_INSTANCEID, instanceId);
+    /*requestJson.put(SUBSCRIPTION_ID, subsId);
+    requestJson.put(JSON_INSTANCEID, instanceId);*/
     String subscriptionType = SubsType.STREAMING.type;
-    requestJson.put(SUB_TYPE, subscriptionType);
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
+    /*requestJson.put(SUB_TYPE, subscriptionType);
+    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");*/
     HttpServerResponse response = routingContext.response();
     /*String entities = requestJson.getJsonArray("entities").getString(0);*/
     /*JsonObject cacheJson = new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);*/
-    requestJson.put(USER_ID, authInfo.getString(USER_ID));
-    Future<JsonObject> subsReq = subscriptionService.appendSubscription(requestJson, authInfo);
+    /*requestJson.put(USER_ID, authInfo.getString(USER_ID));*/
+
+    String entities = requestJson.getJsonArray("entities").getString(0);
+    String userId =
+        "fd47486b-3497-4248-ac1e-082e4d37a66c"; // TODO: Change this to take userId from AuthInfo
+    PostModelSubscription postModelSubscription =
+        new PostModelSubscription(
+            userId, subscriptionType, instanceId, entities, requestJson.getString("name"));
+
+    Future<SubscriptionData> subsReq =
+        subscriptionService.appendSubscription(postModelSubscription, subsId);
     subsReq.onComplete(
         subsRequestHandler -> {
           if (subsRequestHandler.succeeded()) {
             LOGGER.info("result : " + subsRequestHandler.result());
             routingContext.data().put(RESPONSE_SIZE, 0);
+            response
+                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .end(subsRequestHandler.result().streamingResult().toString());
             /*Future.future(fu -> updateAuditTable(routingContext));
             handleSuccessResponse(
                     response, ResponseType.Created.getCode(), subsRequestHandler.result().toString());*/
           } else {
             LOGGER.error("Fail: Bad request");
-            /* processBackendResponse(response, subsRequestHandler.cause().getMessage());*/
+            ResultModel rs = new ResultModel(subsRequestHandler.cause().getMessage(), response);
+            response
+                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .setStatusCode(rs.getStatusCode())
+                .end(rs.toJson().toString());
           }
         });
   }
@@ -182,33 +220,38 @@ public class SubscriptionController {
     JsonObject requestJson = routingContext.body().asJsonObject();
     String instanceId = request.getHeader(HEADER_HOST);
     String subscriptionType = SubsType.STREAMING.type;
-    requestJson.put(SUB_TYPE, subscriptionType);
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
+    /*requestJson.put(SUB_TYPE, subscriptionType);
+    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");*/
     if (requestJson.getString(JSON_NAME).equalsIgnoreCase(alias)) {
-      JsonObject jsonObj = requestJson.copy();
-      jsonObj.put(SUBSCRIPTION_ID, subsId);
-      jsonObj.put(JSON_INSTANCEID, instanceId);
-      jsonObj.put(USER_ID, authInfo.getString(USER_ID));
-      Future<JsonObject> subsReq = subscriptionService.updateSubscription(jsonObj, authInfo);
+      String entities = requestJson.getJsonArray("entities").getString(0);
+      Future<JsonObject> subsReq =
+          subscriptionService.updateSubscription(
+              entities, subsId, new JsonObject() /*authInfo*/); // TODO:Change authinfo into expiry
       subsReq.onComplete(
           subsRequestHandler -> {
             if (subsRequestHandler.succeeded()) {
               LOGGER.info("result : " + subsRequestHandler.result());
               routingContext.data().put(RESPONSE_SIZE, 0);
-              /*Future.future(fu -> updateAuditTable(routingContext));
-              handleSuccessResponse(
-                      response, ResponseType.Created.getCode(), subsRequestHandler.result().toString());*/
+              /*Future.future(fu -> updateAuditTable(routingContext));*/
+              /* handleSuccessResponse(
+              response, ResponseType.Created.getCode(), subsRequestHandler.result().toString());*/
               response
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                   .end(subsRequestHandler.result().toString());
             } else {
               LOGGER.error("Fail: Bad request");
-              /* processBackendResponse(response, subsRequestHandler.cause().getMessage());*/
+              ResultModel rs = new ResultModel(subsRequestHandler.cause().getMessage(), response);
+              response
+                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                  .setStatusCode(rs.getStatusCode())
+                  .end(rs.toJson().toString());
             }
           });
     } else {
       LOGGER.error("Fail: Bad request");
-      /*handleResponse(response, BAD_REQUEST, INVALID_PARAM_URN, MSG_INVALID_NAME);*/
+      response.setStatusCode(400);
+      response.putHeader(CONTENT_TYPE, APPLICATION_JSON);
+      response.end(BAD_REQUEST_DATA);
     }
   }
 
@@ -224,46 +267,29 @@ public class SubscriptionController {
     requestJson.put(SUBSCRIPTION_ID, subsId);
     requestJson.put(JSON_INSTANCEID, instanceId);*/
     String subscriptionType = SubsType.STREAMING.type;
-    /*requestJson.put(SUB_TYPE, subscriptionType);
+    /*
     JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
     requestJson.put(JSON_CONSUMER, authInfo.getString(JSON_CONSUMER));
     requestJson.put("authInfo", authInfo);*/
 
     // TODO: Model-> userid(domain), alias,SUBSCRIPTION_ID,JSON_INSTANCEID,SUB_TYPE,JSON_CONSUMER,
 
-    /*Future<JsonObject> subsReq = subscriptionService.getSubscription(requestJson);
+    Future<GetResultModel> subsReq = subscriptionService.getSubscription(subsId, subscriptionType);
     subsReq.onComplete(
         subHandler -> {
           if (subHandler.succeeded()) {
             LOGGER.info("Success: Getting subscription");
             routingContext.data().put(RESPONSE_SIZE, 0);
-            response.putHeader(CONTENT_TYPE, APPLICATION_JSON).end(subHandler.result().toString());
-            */
-    /*Future.future(fu -> updateAuditTable(routingContext));
-    handleSuccessResponse(
-            response, ResponseType.Ok.getCode(), subHandler.result().toString());*/
-    /*
-    } else {
-      LOGGER.error("Fail: Bad request");
-      */
-    /*processBackendResponse(response, subHandler.cause().getMessage());*/
-    /*
-      }
-    });*/
 
-    Future<JsonObject> subsReq = subscriptionService.getSubscription(subsId, subscriptionType);
-    subsReq.onComplete(
-        subHandler -> {
-          if (subHandler.succeeded()) {
-            LOGGER.info("Success: Getting subscription");
-            routingContext.data().put(RESPONSE_SIZE, 0);
             response.putHeader(CONTENT_TYPE, APPLICATION_JSON).end(subHandler.result().toString());
-            /*Future.future(fu -> updateAuditTable(routingContext));
-            handleSuccessResponse(
-                    response, ResponseType.Ok.getCode(), subHandler.result().toString());*/
-          } else {
-            LOGGER.error("Fail: Bad request");
-            /*processBackendResponse(response, subHandler.cause().getMessage());*/
+            response
+                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .end(subHandler.result().constructSuccessResponse().toString());
+            ResultModel rs = new ResultModel(subHandler.cause().getMessage(), response);
+            response
+                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .setStatusCode(rs.getStatusCode())
+                .end(rs.toJson().toString());
           }
         });
   }
@@ -273,25 +299,29 @@ public class SubscriptionController {
     HttpServerResponse response = routingContext.response();
     // TODO: Need to create AuthInfo class while authentication and authorization and take out
     // userid
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
-
+    /*JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");*/
     /*authInfo.setUserId("fd47486b-3497-4248-ac1e-082e4d37a66c");*/
     JsonObject jsonObj = new JsonObject();
-    jsonObj.put(USER_ID, authInfo.getString(USER_ID));
-    Future<JsonObject> subsReq =
+    /*jsonObj.put(USER_ID, authInfo.getString(USER_ID));*/
+    Future<PostgresResultModel> subsReq =
         subscriptionService.getAllSubscriptionQueueForUser(
             /*authInfo.getUserId()*/ "fd47486b-3497-4248-ac1e-082e4d37a66c"); // TODO: pass userid
     subsReq.onComplete(
         subHandler -> {
           if (subHandler.succeeded()) {
             LOGGER.info("Success: Getting subscription queue" + subHandler.result());
-
-            /*response.putHeader(CONTENT_TYPE, APPLICATION_JSON).end(subHandler.result().toString());*/
+            response
+                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .end(subHandler.result().toJson().toString());
             /*handleSuccessResponse(
             response, ResponseType.Ok.getCode(), subHandler.result().toString());*/
           } else {
             LOGGER.error("Fail: Bad request");
-            /*processBackendResponse(response, subHandler.cause().getMessage());*/
+            ResultModel rs = new ResultModel(subHandler.cause().getMessage(), response);
+            response
+                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .setStatusCode(rs.getStatusCode())
+                .end(rs.toJson().toString());
           }
         });
   }
@@ -304,25 +334,35 @@ public class SubscriptionController {
     String userid = request.getParam(USER_ID);
     String alias = request.getParam(JSON_ALIAS);
     String subsId = userid + "/" + alias;
-    JsonObject requestJson = new JsonObject();
+    /*JsonObject requestJson = new JsonObject();
     String instanceId = request.getHeader(HEADER_HOST);
     requestJson.put(SUBSCRIPTION_ID, subsId);
-    requestJson.put(JSON_INSTANCEID, instanceId);
+    requestJson.put(JSON_INSTANCEID, instanceId);*/
     String subscriptionType = SubsType.STREAMING.type;
-    requestJson.put(SUB_TYPE, subscriptionType);
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
+    /*requestJson.put(SUB_TYPE, subscriptionType);*/
+    /*JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
     requestJson.put(USER_ID, authInfo.getString(USER_ID));
-    requestJson.put("authInfo", authInfo);
-    Future<JsonObject> subsReq = subscriptionService.deleteSubscription(requestJson);
+    requestJson.put("authInfo", authInfo);*/
+    String userId = "fd47486b-3497-4248-ac1e-082e4d37a66c"; // TODO://Take out from auth info
+
+    Future<DeleteSubsResultModel> subsReq =
+        subscriptionService.deleteSubscription(subsId, subscriptionType, userId);
     subsReq.onComplete(
         subHandler -> {
           if (subHandler.succeeded()) {
             routingContext.data().put(RESPONSE_SIZE, 0);
+            response
+                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .end(subHandler.result().toJson().toString());
             /*Future.future(fu -> updateAuditTable(routingContext));
             handleSuccessResponse(
                     response, ResponseType.Ok.getCode(), subHandler.result().toString());*/
           } else {
-            /*processBackendResponse(response, subHandler.cause().getMessage());*/
+            ResultModel rs = new ResultModel(subHandler.cause().getMessage(), response);
+            response
+                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                .setStatusCode(rs.getStatusCode())
+                .end(rs.toJson().toString());
           }
         });
   }
@@ -351,43 +391,28 @@ public class SubscriptionController {
             userId, subscriptionType, instanceId, entities, requestBody.getString("name"));
 
     // TODO: Model -> instanceid,substype,userid,entities(ri),name,role,did,drl
-    /*subscriptionService
-    .createSubscription(jsonObj, jsonObj)
-    .onComplete(
-        subHandler -> {
-          if (subHandler.succeeded()) {
-            LOGGER.info("Success: Handle Subscription request;");
-            routingContext.data().put(RESPONSE_SIZE, 0);
-            */
-    /*Future.future(fu -> updateAuditTable(routingContext));
-    handleSuccessResponse(
-        response, ResponseType.Created.getCode(), subHandler.result().toString());*/
-    /*
-    } else {
-      LOGGER.error("Fail: Handle Subscription request;");
-      */
-    /* processBackendResponse(response, subHandler.cause().getMessage());*/
-    /*
-      }
-    });*/
 
     subscriptionService
         .createSubscription(postModelSubscription)
-        .onComplete(
+        .onSuccess(
             subHandler -> {
-              if (subHandler.succeeded()) {
-                LOGGER.info("Success: Handle Subscription request;");
-                routingContext.data().put(RESPONSE_SIZE, 0);
-                response
-                    .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                    .end(subHandler.result().toString());
-                /*Future.future(fu -> updateAuditTable(routingContext));
-                handleSuccessResponse(
-                    response, ResponseType.Created.getCode(), subHandler.result().toString());*/
-              } else {
-                LOGGER.error("Fail: Handle Subscription request;");
-                /* processBackendResponse(response, subHandler.cause().getMessage());*/
-              }
+              LOGGER.info("Success: Handle Subscription request;");
+              routingContext.data().put(RESPONSE_SIZE, 0);
+              response
+                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                  .end(subHandler.constructSuccessResponse().toString());
+              /*Future.future(fu -> updateAuditTable(routingContext));
+              handleSuccessResponse(
+                  response, ResponseType.Created.getCode(), subHandler.result().toString());*/
+            })
+        .onFailure(
+            failure -> {
+              ResultModel rs = new ResultModel(failure.getMessage(), response);
+              response
+                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                  .setStatusCode(rs.getStatusCode())
+                  .end(rs.toJson().toString());
+              // routingContext.fail(new DxRuntimeException(failure.getMessage()));
             });
   }
 
