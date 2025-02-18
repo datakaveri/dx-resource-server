@@ -32,6 +32,34 @@ public class Constants {
     public static final String USER_NAME = "username";
     public static final String APIKEY = "apiKey";
     public static final String ID = "id";
+    public static final String SUCCESS = "success";
+    public static final String TYPE = "type";
+    public static final String TITLE = "title";
+    public static final String STATUS = "status";
+    public static final String DETAIL = "detail";
+    public static final int INTERNAL_ERROR_CODE = 500;
+    public static final String QUEUE_DELETE_ERROR = "Deletion of Queue failed";
+    public static final String BINDING_FAILED = "Binding failed";
+    public static final int BAD_REQUEST_CODE = 400;
+    public static final String QUEUE_DOES_NOT_EXISTS = "Queue does not exist";
+    public static final String FAILURE = "failure";
+    public static final String QUEUE_LIST_ERROR = "Listing of Queue failed";
+    public static final String DETAILS = "details";
+    public static final String USER_CREATION_ERROR = "User creation failed";
+    public static final String DATABASE_READ_SUCCESS = "Read Database Success";
+    public static final String NETWORK_ISSUE = "Network Issue";
+    public static final String CHECK_CREDENTIALS =
+            "Something went wrong while creating user using mgmt API. Check credentials";
+    public static final String VHOST_PERMISSIONS_WRITE = "write permission set";
+    public static final String VHOST_PERMISSION_SET_ERROR = "Error in setting vHost permissions";
+    public static final String QUEUE_ALREADY_EXISTS = "Queue already exists";
+    public static final String QUEUE_ALREADY_EXISTS_WITH_DIFFERENT_PROPERTIES =
+            "Queue already exists with different properties";
+    public static final String QUEUE_CREATE_ERROR = "Creation of Queue failed";
+    public static final String QUEUE_EXCHANGE_NOT_FOUND = "Queue/Exchange does not exist";
+    public static final String QUEUE_BIND_ERROR = "error in queue binding with adaptor";
+    public static final String BAD_REQUEST_DATA = "Bad Request data";
+    public static final int SUCCESS_CODE = 200;
     public static final String URL = "URL";
     public static final String VHOST = "vHost";
     public static final String PORT = "port";

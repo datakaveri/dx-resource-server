@@ -8,6 +8,10 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import iudx.resource.server.apiserver.subscription.model.SubscriptionImplModel;
+import iudx.resource.server.databroker.model.ListStreamingSubsModel;
+import iudx.resource.server.databroker.model.SubscriptionResponseModel;
+
+import java.util.List;
 
 @VertxGen
 @ProxyGen
@@ -17,8 +21,7 @@ public interface DataBrokerService {
     return new DataBrokerServiceVertxEBProxy(vertx, address);
   }
 
-  /*Future<JsonObject> registerStreamingSubscription(JsonObject request);*/
-  Future<JsonObject> registerStreamingSubscription(SubscriptionImplModel subscriptionImplModel);
+  Future<SubscriptionResponseModel> registerStreamingSubscription(SubscriptionImplModel subscriptionImplModel);
 
   Future<JsonObject> registerAdaptor(JsonObject request, String vhost);
 
@@ -28,30 +31,11 @@ public interface DataBrokerService {
 
   Future<JsonObject> updateStreamingSubscription(JsonObject request);
 
-  Future<JsonObject> appendStreamingSubscription(JsonObject request);
+  Future<JsonObject> appendStreamingSubscription(SubscriptionImplModel subscriptionImplModel, String subId);
 
-  Future<JsonObject> deleteStreamingSubscription(JsonObject request);
+  Future<JsonObject> deleteStreamingSubscription(String queueName, String userid);
 
-  /*Future<JsonObject> listStreamingSubscription(JsonObject request);*/
-  Future<JsonObject> listStreamingSubscription(String subscriptionID);
-
-  Future<JsonObject> createExchange(JsonObject request, String vhost);
-
-  Future<JsonObject> deleteExchange(JsonObject request, String vhost);
-
-  Future<JsonObject> listExchangeSubscribers(JsonObject request, String vhost);
-
-  Future<JsonObject> createQueue(JsonObject request, String vhost);
-
-  Future<JsonObject> deleteQueue(JsonObject request, String vhost);
-
-  Future<JsonObject> bindQueue(JsonObject request, String vhost);
-
-  Future<JsonObject> unbindQueue(JsonObject request, String vhost);
-
-  Future<JsonObject> createvHost(JsonObject request);
-
-  Future<JsonObject> deletevHost(JsonObject request);
+  Future<List<String>> listStreamingSubscription(String subscriptionID);
 
   Future<JsonObject> listvHost(JsonObject request);
 
@@ -60,8 +44,6 @@ public interface DataBrokerService {
   Future<JsonObject> publishFromAdaptor(JsonArray request, String vhost);
 
   Future<JsonObject> resetPassword(JsonObject request);
-
-  Future<JsonObject> getExchange(JsonObject request, String vhost);
 
   Future<JsonObject> publishHeartbeat(JsonObject request, String vhost);
 
