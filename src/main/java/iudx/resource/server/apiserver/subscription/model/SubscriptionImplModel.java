@@ -2,6 +2,7 @@ package iudx.resource.server.apiserver.subscription.model;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
+import lombok.Getter;
 
 @DataObject
 public class SubscriptionImplModel {

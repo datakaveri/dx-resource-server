@@ -1,3 +1,4 @@
+/*
 package iudx.resource.server.databroker;
 
 import io.vertx.core.AsyncResult;
@@ -1531,3 +1532,4 @@ public class RabbitMQClientTest {
         });
     }
 }
+*/

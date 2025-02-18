@@ -1,6 +1,7 @@
 package iudx.resource.server.databroker.util;
 
 import static iudx.resource.server.apiserver.util.Constants.USER_ID;
+import static iudx.resource.server.database.util.Constants.ERROR;
 import static iudx.resource.server.databroker.util.Constants.*;
 import static iudx.resource.server.databroker.util.Util.*;
 
@@ -10,12 +11,12 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
+import iudx.resource.server.common.HttpStatusCode;
 import iudx.resource.server.common.Response;
 import iudx.resource.server.common.ResponseUrn;
+import iudx.resource.server.databroker.model.UserResponse;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -45,13 +46,12 @@ public class RabbitClient {
     this.amqpPort = amqpPort;
   }
 
-  public Future<JsonObject> deleteQueue(JsonObject request, String vhost) {
+  public Future<JsonObject> deleteQueue(String queueName, String vhost) {
     LOGGER.trace("Info : RabbitClient#deleteQueue() started");
     Promise<JsonObject> promise = Promise.promise();
     JsonObject finalResponse = new JsonObject();
-    if (request != null && !request.isEmpty()) {
-      String queueName = request.getString("queueName");
-      LOGGER.debug("Info : queuName" + queueName);
+    if (queueName != null && !queueName.isEmpty()) {
+      LOGGER.debug("Info : queueName" + queueName);
       String url = "/api/queues/" + vhost + "/" + encodeValue(queueName);
       rabbitWebClient
           .requestAsync(REQUEST_DELETE, url)
@@ -62,17 +62,27 @@ public class RabbitClient {
                   if (response != null && !response.equals(" ")) {
                     int status = response.statusCode();
                     if (status == HttpStatus.SC_NO_CONTENT) {
-                      /*finalResponse.put(QUEUE, queueName);*/
+                      finalResponse.put(QUEUE, queueName);
+                      promise.complete(finalResponse);
                     } else if (status == HttpStatus.SC_NOT_FOUND) {
-                      /*finalResponse.mergeIn(
-                      getResponseJson(status, FAILURE, QUEUE_DOES_NOT_EXISTS));*/
+                      finalResponse.mergeIn(
+                          getResponseJson(
+                              HttpStatusCode.NO_CONTENT.getUrn(),
+                              status,
+                              FAILURE,
+                              QUEUE_DOES_NOT_EXISTS));
+                      promise.fail(finalResponse.toString());
                     }
                   }
                   LOGGER.info(finalResponse);
-                  promise.complete(finalResponse);
                 } else {
                   LOGGER.error("Fail : deletion of queue failed - ", ar.cause());
-                  /*finalResponse.mergeIn(getResponseJson(500, FAILURE, QUEUE_DELETE_ERROR));*/
+                  finalResponse.mergeIn(
+                      getResponseJson(
+                          HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
+                          INTERNAL_ERROR_CODE,
+                          FAILURE,
+                          QUEUE_DELETE_ERROR));
                   promise.fail(finalResponse.toString());
                 }
               });
@@ -80,13 +90,12 @@ public class RabbitClient {
     return promise.future();
   }
 
-  public Future<JsonObject> listQueueSubscribers(String queueName, String vhost) {
+  public Future<List<String>> listQueueSubscribers(String queueName, String vhost) {
     LOGGER.trace("Info : RabbitClient#listQueueSubscribers() started");
     JsonObject finalResponse = new JsonObject();
-    Promise<JsonObject> promise = Promise.promise();
+    Promise<List<String>> promise = Promise.promise();
     if (queueName != null && !queueName.isEmpty()) {
-      /*String queueName = queueName.getString("queueName");*/
-      JsonArray oroutingKeys = new JsonArray();
+      List<String> oroutingKeys = new ArrayList<String>();
       String url = "/api/queues/" + vhost + "/" + encodeValue(queueName) + "/bindings";
       rabbitWebClient
           .requestAsync(REQUEST_GET, url)
@@ -109,19 +118,31 @@ public class RabbitClient {
                                 oroutingKeys.add(rkeys);
                               }
                             });
-                        finalResponse.put(ENTITIES, oroutingKeys);
+                        /*finalResponse.put(ENTITIES, oroutingKeys);*/
+                        promise.complete(oroutingKeys);
                       }
                     } else if (status == HttpStatus.SC_NOT_FOUND) {
-                      /*finalResponse
-                      .clear()
-                      .mergeIn(getResponseJson(status, FAILURE, QUEUE_DOES_NOT_EXISTS));*/
+                      finalResponse
+                          .clear()
+                          .mergeIn(
+                              getResponseJson(
+                                  HttpStatusCode.NOT_FOUND.getUrn(),
+                                  status,
+                                  FAILURE,
+                                  QUEUE_DOES_NOT_EXISTS));
+                      promise.fail(finalResponse.toString());
                     }
                   }
                   LOGGER.debug("Info : " + finalResponse);
-                  promise.complete(finalResponse);
+
                 } else {
-                  /*LOGGER.error("Error : Listing of Queue failed - " + ar.cause());
-                  finalResponse.mergeIn(getResponseJson(500, FAILURE, QUEUE_LIST_ERROR));*/
+                  LOGGER.error("Error : Listing of Queue failed - " + ar.cause());
+                  finalResponse.mergeIn(
+                      getResponseJson(
+                          HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
+                          INTERNAL_ERROR_CODE,
+                          FAILURE,
+                          QUEUE_LIST_ERROR));
                   promise.fail(finalResponse.toString());
                 }
               });
@@ -129,9 +150,9 @@ public class RabbitClient {
     return promise.future();
   }
 
-  public Future<JsonObject> createUserIfNotExist(String userid, String vhost) {
+  public Future<UserResponse> createUserIfNotExist(String userid, String vhost) {
     LOGGER.trace("Info : RabbitClient#createUserIfNotPresent() started");
-    Promise<JsonObject> promise = Promise.promise();
+    Promise<UserResponse> promise = Promise.promise();
 
     String password = randomPassword.get();
     String url = "/api/users/" + userid;
@@ -146,36 +167,40 @@ public class RabbitClient {
                 if (reply.result().statusCode() == HttpStatus.SC_NOT_FOUND) {
                   LOGGER.debug("Success : User not found. creating user");
                   /* Create new user */
-                  Future<JsonObject> userCreated = createUser(userid, password, vhost, url);
+
+                  Future<UserResponse> userCreated = createUser(userid, password, vhost, url);
                   userCreated.onComplete(
                       handler -> {
                         if (handler.succeeded()) {
                           /* Handle the response */
-                          JsonObject result = handler.result();
+                          UserResponse result = handler.result();
                           /*response.put(USER_ID, userid);
                           response.put(APIKEY, password);
                           response.put(TYPE, result.getInteger("type"));
                           response.put(TITLE, result.getString("title"));
                           response.put(DETAILS, result.getString("detail"));
                           response.put(VHOST_PERMISSIONS, vhost);*/
-                          promise.complete(response);
+                          promise.complete(/*response*/ result);
                         } else {
                           LOGGER.error(
                               "Error : Error in user creation. Cause : " + handler.cause());
-                          /*response.mergeIn(
-                          getResponseJson(INTERNAL_ERROR_CODE, ERROR, USER_CREATION_ERROR));*/
+                          response.mergeIn(
+                              getResponseJson(INTERNAL_ERROR_CODE, ERROR, USER_CREATION_ERROR));
                           promise.fail(response.toString());
                         }
                       });
 
                 } else if (reply.result().statusCode() == HttpStatus.SC_OK) {
                   LOGGER.debug("DATABASE_READ_SUCCESS");
-                  response.put(USER_ID, userid);
-                  response.put(APIKEY, API_KEY_MESSAGE);
+                  UserResponse userResponse = new UserResponse();
+                  userResponse.setUserId(userid);
+                  userResponse.setPassword(API_KEY_MESSAGE);
+                  /*response.put(USER_ID, userid);
+                  response.put(APIKEY, API_KEY_MESSAGE);*/
                   /*response.mergeIn(
-                      getResponseJson(SUCCESS_CODE, DATABASE_READ_SUCCESS, DATABASE_READ_SUCCESS))*/;
-                  response.put(VHOST_PERMISSIONS, vhost);
-                  promise.complete(response);
+                  getResponseJson(SUCCESS_CODE, DATABASE_READ_SUCCESS, DATABASE_READ_SUCCESS));*/
+                  /*response.put(VHOST_PERMISSIONS, vhost);*/
+                  promise.complete(userResponse);
                 }
 
               } else {
@@ -189,9 +214,9 @@ public class RabbitClient {
     return promise.future();
   }
 
-  Future<JsonObject> createUser(String userid, String password, String vhost, String url) {
+  Future<UserResponse> createUser(String userid, String password, String vhost, String url) {
     LOGGER.trace("Info : RabbitClient#createUser() started");
-    Promise<JsonObject> promise = Promise.promise();
+    Promise<UserResponse> promise = Promise.promise();
     JsonObject response = new JsonObject();
     JsonObject arg = new JsonObject();
     arg.put(PASSWORD, password);
@@ -202,25 +227,25 @@ public class RabbitClient {
         .onComplete(
             ar -> {
               if (ar.succeeded()) {
-                /* Check if user is created */
+                // Check if user is created
                 if (ar.result().statusCode() == HttpStatus.SC_CREATED) {
                   LOGGER.debug("createUserRequest success");
-                  response.put("USER_ID", userid);
+                  response.put(USER_ID, userid);
                   response.put(PASSWORD, password);
+                  UserResponse userResponse = new UserResponse();
+                  userResponse.setUserId(userid);
+                  userResponse.setPassword(password);
+                  userResponse.setStatus("success");
+                  userResponse.setDetail("User created and vHost permission set successfully.");
                   LOGGER.debug("Info : user created successfully");
                   // set permissions to vhost for newly created user
-                  Future<JsonObject> vhostPermission = setVhostPermissions(userid, vhost);
+                  Future<Void> vhostPermission = setVhostPermissions(userid, vhost);
                   vhostPermission.onComplete(
                       handler -> {
                         if (handler.succeeded()) {
-                          /* response.mergeIn(
-                          getResponseJson(
-                              SUCCESS_CODE,
-                              VHOST_PERMISSIONS,
-                              handler.result().getString(DETAIL)));*/
-                          promise.complete(handler.result());
+                          promise.complete(userResponse);
                         } else {
-                          /* Handle error */
+
                           LOGGER.error(
                               "Error : error in setting vhostPermissions. Cause : ",
                               handler.cause());
@@ -229,24 +254,23 @@ public class RabbitClient {
                       });
 
                 } else {
-                  /* Handle error */
-                  LOGGER.error("Error : createUser method - Some network error. cause", ar.cause());
-                  /* response.put(FAILURE, NETWORK_ISSUE);*/
+                  LOGGER.error(
+                      "Error : createUser method - Some network error. cause" + ar.cause());
+                  response.put(FAILURE, NETWORK_ISSUE);
                   promise.fail(response.toString());
                 }
               } else {
-                /* Handle error */
                 LOGGER.info(
                     "Error : Something went wrong while creating user using mgmt API :",
                     ar.cause());
-                /*response.put(FAILURE, CHECK_CREDENTIALS);*/
+                response.put(FAILURE, CHECK_CREDENTIALS);
                 promise.fail(response.toString());
               }
             });
     return promise.future();
   }
 
-  Future<JsonObject> setVhostPermissions(String shaUsername, String vhost) {
+  Future<Void> setVhostPermissions(String shaUsername, String vhost) {
     LOGGER.trace("Info : RabbitClient#setVhostPermissions() started");
     /* Construct URL to use */
     JsonObject vhostPermissions = new JsonObject();
@@ -255,7 +279,7 @@ public class RabbitClient {
     vhostPermissions.put(CONFIGURE, DENY);
     vhostPermissions.put(WRITE, NONE);
     vhostPermissions.put(READ, NONE);
-    Promise<JsonObject> promise = Promise.promise();
+    Promise<Void> promise = Promise.promise();
     /* Construct a response object */
     JsonObject vhostPermissionResponse = new JsonObject();
     String url = "/api/permissions/" + vhost + "/" + encodeValue(shaUsername);
@@ -264,6 +288,7 @@ public class RabbitClient {
         .onComplete(
             handler -> {
               if (handler.succeeded()) {
+                LOGGER.debug("setVhost " + handler.result());
                 /* Check if permission was set */
                 if (handler.result().statusCode() == HttpStatus.SC_CREATED) {
                   LOGGER.debug(
@@ -272,9 +297,9 @@ public class RabbitClient {
                           + " ] in vHost [ "
                           + vhost
                           + "]");
-                  /*vhostPermissionResponse.mergeIn(
-                  getResponseJson(SUCCESS_CODE, VHOST_PERMISSIONS, VHOST_PERMISSIONS_WRITE));*/
-                  promise.complete(vhostPermissionResponse);
+                  vhostPermissionResponse.mergeIn(
+                      getResponseJson(SUCCESS_CODE, VHOST_PERMISSIONS, VHOST_PERMISSIONS_WRITE));
+                  promise.complete();
                 } else {
                   LOGGER.error(
                       "Error : error in write permission set for user [ "
@@ -282,9 +307,12 @@ public class RabbitClient {
                           + " ] in vHost [ "
                           + vhost
                           + " ]");
-                  /* vhostPermissionResponse.mergeIn(
-                  getResponseJson(
-                      INTERNAL_ERROR_CODE, VHOST_PERMISSIONS, VHOST_PERMISSION_SET_ERROR));*/
+                  vhostPermissionResponse.mergeIn(
+                      getResponseJson(
+                          HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
+                          INTERNAL_ERROR_CODE,
+                          VHOST_PERMISSIONS,
+                          VHOST_PERMISSION_SET_ERROR));
                   promise.fail(vhostPermissions.toString());
                 }
               } else {
@@ -295,65 +323,21 @@ public class RabbitClient {
                         + " ] in vHost [ "
                         + vhost
                         + " ]");
-                /*vhostPermissionResponse.mergeIn(
-                getResponseJson(
-                    INTERNAL_ERROR_CODE, VHOST_PERMISSIONS, VHOST_PERMISSION_SET_ERROR));*/
+                vhostPermissionResponse.mergeIn(
+                    getResponseJson(
+                        HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
+                        INTERNAL_ERROR_CODE,
+                        VHOST_PERMISSIONS,
+                        VHOST_PERMISSION_SET_ERROR));
                 promise.fail(vhostPermissions.toString());
               }
             });
     return promise.future();
   }
 
-  /*public Future<JsonObject> createQueue(JsonObject request, String vhost) {
+  public Future<String> createQueue(String queueName, String vhost) {
     LOGGER.trace("Info : RabbitClient#createQueue() started");
-    Promise<JsonObject> promise = Promise.promise();
-    JsonObject finalResponse = new JsonObject();
-    if (request != null && !request.isEmpty()) {
-      JsonObject configProp = new JsonObject();
-      JsonObject arguments = new JsonObject();
-      arguments
-          .put(X_MESSAGE_TTL_NAME, X_MESSAGE_TTL_VALUE)
-          .put(X_MAXLENGTH_NAME, X_MAXLENGTH_VALUE)
-          .put(X_QUEUE_MODE_NAME, X_QUEUE_MODE_VALUE);
-      configProp.put(X_QUEUE_TYPE, true);
-      configProp.put(X_QUEUE_ARGUMENTS, arguments);
-      String queueName = request.getString("queueName");
-      String url = "/api/queues/" + vhost + "/" + encodeValue(queueName); // "durable":true
-      rabbitWebClient
-          .requestAsync(REQUEST_PUT, url, configProp)
-          .onComplete(
-              ar -> {
-                if (ar.succeeded()) {
-                  HttpResponse<Buffer> response = ar.result();
-                  if (response != null && !response.equals(" ")) {
-                    int status = response.statusCode();
-                    if (status == HttpStatus.SC_CREATED) {
-                      finalResponse.put(QUEUE, queueName);
-                    } else if (status == HttpStatus.SC_NO_CONTENT) {
-                      *//*finalResponse.mergeIn(
-                      getResponseJson(HttpStatus.SC_CONFLICT, FAILURE, QUEUE_ALREADY_EXISTS),
-                      true);*//*
-                    } else if (status == HttpStatus.SC_BAD_REQUEST) {
-                      *//* finalResponse.mergeIn(
-                      getResponseJson(
-                              status, FAILURE, QUEUE_ALREADY_EXISTS_WITH_DIFFERENT_PROPERTIES),
-                      true);*//*
-                    }
-                  }
-                  promise.complete(finalResponse);
-                } else {
-                  LOGGER.error("Fail : Creation of Queue failed - ", ar.cause());
-                  *//*finalResponse.mergeIn(getResponseJson(500, FAILURE, QUEUE_CREATE_ERROR));*//*
-                  promise.fail(finalResponse.toString());
-                }
-              });
-    }
-    return promise.future();
-  }*/
-
-  public Future<JsonObject> createQueue(String queueName, String vhost) {
-    LOGGER.trace("Info : RabbitClient#createQueue() started");
-    Promise<JsonObject> promise = Promise.promise();
+    Promise<String> promise = Promise.promise();
     JsonObject finalResponse = new JsonObject();
     if (queueName != null && !queueName.isEmpty()) {
       JsonObject configProp = new JsonObject();
@@ -371,25 +355,44 @@ public class RabbitClient {
               ar -> {
                 if (ar.succeeded()) {
                   HttpResponse<Buffer> response = ar.result();
+                  LOGGER.debug(
+                      "------------------------------"
+                          + response.statusCode()
+                          + "----------------");
                   if (response != null && !response.equals(" ")) {
                     int status = response.statusCode();
                     if (status == HttpStatus.SC_CREATED) {
-                      finalResponse.put(QUEUE, queueName);
+                      /*finalResponse.put(QUEUE, queueName);*/
+                      promise.complete(queueName);
                     } else if (status == HttpStatus.SC_NO_CONTENT) {
-                      /*finalResponse.mergeIn(
-                      getResponseJson(HttpStatus.SC_CONFLICT, FAILURE, QUEUE_ALREADY_EXISTS),
-                      true);*/
+                      /*throw new DxRuntimeException(409,QUEUE_ERROR_URN);*/
+                      finalResponse.mergeIn(
+                          getResponseJson(
+                              HttpStatusCode.CONFLICT.getUrn(),
+                              HttpStatus.SC_CONFLICT,
+                              HttpStatusCode.CONFLICT.getDescription(),
+                              QUEUE_ALREADY_EXISTS),
+                          true);
+                      promise.fail(finalResponse.toString());
                     } else if (status == HttpStatus.SC_BAD_REQUEST) {
-                      /* finalResponse.mergeIn(
-                      getResponseJson(
-                              status, FAILURE, QUEUE_ALREADY_EXISTS_WITH_DIFFERENT_PROPERTIES),
-                      true);*/
+                      finalResponse.mergeIn(
+                          getResponseJson(
+                              HttpStatusCode.BAD_REQUEST.getUrn(),
+                              status,
+                              FAILURE,
+                              QUEUE_ALREADY_EXISTS_WITH_DIFFERENT_PROPERTIES),
+                          true);
+                      promise.fail(finalResponse.toString());
                     }
                   }
-                  promise.complete(finalResponse);
                 } else {
                   LOGGER.error("Fail : Creation of Queue failed - ", ar.cause());
-                  /*finalResponse.mergeIn(getResponseJson(500, FAILURE, QUEUE_CREATE_ERROR));*/
+                  finalResponse.mergeIn(
+                      getResponseJson(
+                          HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
+                          INTERNAL_ERROR_CODE,
+                          FAILURE,
+                          QUEUE_CREATE_ERROR));
                   promise.fail(finalResponse.toString());
                 }
               });
@@ -397,16 +400,14 @@ public class RabbitClient {
     return promise.future();
   }
 
-  public Future<JsonObject> bindQueue(JsonObject request, String vhost) {
+  public Future<Void> bindQueue(
+      String exchangeName, String queueName, JsonArray entities, String vhost) {
     LOGGER.trace("Info : RabbitClient#bindQueue() started");
     JsonObject finalResponse = new JsonObject();
     JsonObject requestBody = new JsonObject();
-    Promise<JsonObject> promise = Promise.promise();
-    if (request != null && !request.isEmpty()) {
-
-      String exchangeName = request.getString("exchangeName");
-      String queueName = request.getString("queueName");
-      JsonArray entities = request.getJsonArray("entities");
+    Promise<Void> promise = Promise.promise();
+    if (exchangeName != null && !exchangeName.isEmpty()
+        || queueName != null && queueName.isEmpty()) {
 
       String url =
           "/api/bindings/"
@@ -417,8 +418,7 @@ public class RabbitClient {
               + encodeValue(queueName);
 
       requestBody.put("routing_key", entities.getString(0));
-      LOGGER.debug(
-          "_--------------------" + requestBody.toString() + "---------------------" + url);
+
       rabbitWebClient
           .requestAsync(REQUEST_POST, url, requestBody)
           .onComplete(
@@ -429,19 +429,29 @@ public class RabbitClient {
                     int status = response.statusCode();
                     LOGGER.info("Info : Binding " + entities.getString(0) + " Status is " + status);
                     if (status == HttpStatus.SC_CREATED) {
-                      finalResponse.put(EXCHANGE, exchangeName);
+                      /*finalResponse.put(EXCHANGE, exchangeName);
                       finalResponse.put(QUEUE, queueName);
-                      finalResponse.put("ENTITIES", entities);
-                      LOGGER.debug("Success : " + finalResponse);
-                      promise.complete(finalResponse);
+                      finalResponse.put(ENTITIES, entities);
+                      LOGGER.debug("Success : " + finalResponse);*/
+                      promise.complete();
                     } else if (status == HttpStatus.SC_NOT_FOUND) {
-                      /*finalResponse.mergeIn(
-                      getResponseJson(status, FAILURE, QUEUE_EXCHANGE_NOT_FOUND));*/
+                      finalResponse.mergeIn(
+                          getResponseJson(
+                              HttpStatusCode.NOT_FOUND.getUrn(),
+                              status,
+                              FAILURE,
+                              QUEUE_EXCHANGE_NOT_FOUND));
+                      promise.fail(finalResponse.toString());
                     }
                   }
                 } else {
                   LOGGER.error("Fail : Binding of Queue failed - ", ar.cause());
-                  /* finalResponse.mergeIn(getResponseJson(500, FAILURE, QUEUE_BIND_ERROR));*/
+                  finalResponse.mergeIn(
+                      getResponseJson(
+                          HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
+                          INTERNAL_ERROR_CODE,
+                          FAILURE,
+                          QUEUE_BIND_ERROR));
                   promise.fail(finalResponse.toString());
                 }
               });

@@ -10,8 +10,6 @@ public class PostModelSubscription {
     private String instanceId;
     private String entities;
     private String name;
-
-    // Default Constructor (Required for Vert.x Codegen)
     public PostModelSubscription() {}
 
     // Existing Constructor

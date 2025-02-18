@@ -1,38 +1,18 @@
 package iudx.resource.server.apiserver.subscription.model;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import iudx.resource.server.common.ResponseUrn;
+import iudx.resource.server.databroker.model.SubscriptionResponseModel;
 
-public class SubscriptionData {
-  private JsonObject dataBrokerResult;
-  private JsonObject cacheResult;
-  private JsonObject streamingResult;
-
-  public SubscriptionData(
-      JsonObject dataBrokerResult, JsonObject cacheResult, JsonObject streamingResult) {
-    this.dataBrokerResult = dataBrokerResult;
-    this.cacheResult = cacheResult;
-    this.streamingResult = streamingResult;
-  }
-
-  public JsonObject getDataBrokerResult() {
-    return dataBrokerResult;
-  }
-
-  public JsonObject getCacheResult() {
-    return cacheResult;
-  }
-
-  public JsonObject getStreamingResult() {
-    return streamingResult;
-  }
-
-  @Override
-  public String toString() {
-    return "DataBrokerResult = "
-        + dataBrokerResult
-        + ", cacheResult = "
-        + cacheResult
-        + ", StreamingResult = "
-        + streamingResult;
+public record SubscriptionData(
+    JsonObject dataBrokerResult,
+    JsonObject cacheResult,
+    SubscriptionResponseModel streamingResult) {
+  public JsonObject constructSuccessResponse() {
+    return new JsonObject()
+        .put("type", ResponseUrn.SUCCESS_URN.getUrn())
+        .put("title", ResponseUrn.SUCCESS_URN.getMessage().toLowerCase())
+        .put("results", new JsonArray().add(streamingResult.toJson()));
   }
 }

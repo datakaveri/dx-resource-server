@@ -23,7 +23,7 @@ public enum HttpStatusCode {
   PROXY_AUTHENTICATION_REQUIRED(
       407, "Proxy Authentication Required", "urn:dx:rs:proxyAuthenticationRequired"),
   REQUEST_TIMEOUT(408, "Request Timeout", "urn:dx:rs:requestTimeout"),
-  CONFLICT(409, "Conflict", "urn:dx:rs:conflict"),
+  CONFLICT(409, "Conflict", "urn:dx:rs:general"),
   GONE(410, "Gone", "urn:dx:rs:gone"),
   LENGTH_REQUIRED(411, "Length Required", "urn:dx:rs:lengthRequired"),
   PRECONDITION_FAILED(412, "Precondition Failed", "urn:dx:rs:preconditionFailed"),

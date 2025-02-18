@@ -1,6 +1,10 @@
 package iudx.resource.server.apiserver;
 
 import static iudx.resource.server.apiserver.util.Constants.*;
+import static iudx.resource.server.common.HttpStatusCode.NOT_FOUND;
+import static iudx.resource.server.common.ResponseUrn.YET_NOT_IMPLEMENTED_URN;
+import static iudx.resource.server.common.ResponseUtil.generateResponse;
+import static iudx.resource.server.common.Util.errorResponse;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpMethod;
@@ -28,24 +32,6 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-/**
- * The Resource Server API Verticle.
- *
- * <h1>Resource Server API Verticle</h1>
- *
- * <p>The API Server verticle implements the IUDX Resource Server APIs. It handles the API requests
- * from the clients and interacts with the associated Service to respond.
- *
- * @version 1.0
- * @see io.vertx.core.Vertx
- * @see AbstractVerticle
- * @see HttpServer
- * @see Router
- * @see io.vertx.servicediscovery.ServiceDiscovery
- * @see io.vertx.servicediscovery.types.EventBusService
- * @see io.vertx.spi.cluster.hazelcast.HazelcastClusterManager
- * @since 2020-05-31
- */
 public class ApiServerVerticle extends AbstractVerticle {
   private static final Logger LOGGER = LogManager.getLogger(ApiServerVerticle.class);
   Router router;
@@ -120,15 +106,15 @@ public class ApiServerVerticle extends AbstractVerticle {
                       return;
                     }
                     // TODO:: Need to add responses
-                    /* response
-                    .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                    .setStatusCode(code.getValue())
-                    .end(errorResponse(code));*/
+                    response
+                        .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                        .setStatusCode(code.getValue())
+                        .end(errorResponse(code));
                   });
             });
 
     router.route().handler(BodyHandler.create());
-    router.route().handler(TimeoutHandler.create(10000, 408));
+    router.route().handler(TimeoutHandler.create(50000, 408));
 
     /* Get openapiv3 spec */
     router
@@ -194,10 +180,10 @@ public class ApiServerVerticle extends AbstractVerticle {
             requestHandler -> {
               HttpServerResponse response = requestHandler.response();
               LOGGER.warn("⚠️ Last route handling request for: " + requestHandler.request().path());
-              /*response
-              .putHeader(HEADER_CONTENT_TYPE, MIME_APPLICATION_JSON)
-              .setStatusCode(404)
-              .end(generateResponse(NOT_FOUND, YET_NOT_IMPLEMENTED_URN).toString());*/
+              response
+                  .putHeader(HEADER_CONTENT_TYPE, MIME_APPLICATION_JSON)
+                  .setStatusCode(404)
+                  .end(generateResponse(NOT_FOUND, YET_NOT_IMPLEMENTED_URN).toString());
             });
 
     /* Print the deployed endpoints */
