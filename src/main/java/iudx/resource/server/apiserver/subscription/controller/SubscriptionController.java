@@ -15,7 +15,6 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-
 import iudx.resource.server.apiserver.handler.FailureHandler;
 import iudx.resource.server.apiserver.subscription.model.DeleteSubsResultModel;
 import iudx.resource.server.apiserver.subscription.model.GetResultModel;
@@ -33,9 +32,7 @@ import iudx.resource.server.authenticator.handler.authorization.TokenRevokedHand
 import iudx.resource.server.authenticator.model.DxRole;
 import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.common.Api;
-
 import iudx.resource.server.common.CatalogueService;
-
 import iudx.resource.server.common.RequestType;
 import iudx.resource.server.common.ResultModel;
 import iudx.resource.server.common.validation.handler.ValidationHandler;
@@ -67,36 +64,32 @@ public class SubscriptionController {
     /*TODO: update example config-dev and config-dev */
     this.audience = config.getString("audience");
     this.config = config;
+    this.subsValidationHandler = new ValidationHandler(vertx, RequestType.SUBSCRIPTION);
+    this.failureHandler = new FailureHandler();
   }
 
-
-
-
   public void init() {
-      this.subsValidationHandler = new ValidationHandler(vertx, RequestType.SUBSCRIPTION);
-      this.failureHandler = new FailureHandler();
-      CatalogueService catalogueService = new CatalogueService(cacheService, config, vertx);
+    CatalogueService catalogueService = new CatalogueService(cacheService, config, vertx);
 
-      AuthHandler authHandler = new AuthHandler(api, authenticator);
-      Handler<RoutingContext> getIdHandler =
-              new GetIdHandler(api).withNormalisedPath(api.getSubscriptionUrl());
+    AuthHandler authHandler = new AuthHandler(api, authenticator);
+    Handler<RoutingContext> getIdHandler =
+        new GetIdHandler(api).withNormalisedPath(api.getSubscriptionUrl());
 
-      Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
-      Handler<RoutingContext> validateToken =
-              new AuthValidationHandler(api, cacheService, audience, catalogueService);
+    Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
+    Handler<RoutingContext> validateToken =
+        new AuthValidationHandler(api, cacheService, audience, catalogueService);
 
-      Handler<RoutingContext> userAndAdminAccessHandler =
-              new AuthorizationHandler()
-                      .setUserRolesForEndpoint(
-                              DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
+    Handler<RoutingContext> userAndAdminAccessHandler =
+        new AuthorizationHandler()
+            .setUserRolesForEndpoint(
+                DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
     // TODO: Need to add auth and auditing insert
-
 
     proxyRequired();
 
     router
         .post(api.getSubscriptionUrl())
-            .handler(subsValidationHandler)
+        .handler(subsValidationHandler)
         .handler(getIdHandler)
         .handler(authHandler)
         .handler(validateToken)
@@ -107,7 +100,7 @@ public class SubscriptionController {
 
     router
         .patch(api.getSubscriptionUrl() + "/:userid/:alias")
-            .handler(subsValidationHandler)
+        .handler(subsValidationHandler)
         .handler(getIdHandler)
         .handler(authHandler)
         .handler(validateToken)
@@ -118,7 +111,7 @@ public class SubscriptionController {
 
     router
         .put(api.getSubscriptionUrl() + "/:userid/:alias")
-            .handler(subsValidationHandler)
+        .handler(subsValidationHandler)
         .handler(getIdHandler)
         .handler(authHandler)
         .handler(validateToken)
