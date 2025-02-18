@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 public class Constants {
 
+  // date-time format
   public static final String APP_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss[.SSSSSS]'Z'";
   public static final String APP_NAME_REGEX = "[a-zA-Z0-9._\\-]*$";
 
@@ -14,8 +15,7 @@ public class Constants {
   public static final String API_METHOD = "method";
   public static final String ID = "id";
   public static final String RESOURCE_ID_DEFAULT =
-      "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/"
-          + "surat-itms-realtime-information/surat-itms-live-eta";
+          "8b95ab80-2aaf-4636-a65e-7f2563d0d371";
   public static final String RESPONSE_SIZE = "response_size";
   public static final String IDS = "ids";
 
@@ -33,10 +33,18 @@ public class Constants {
   public static final String SUBSCRIPTION_URL_REGEX = NGSILD_SUBSCRIPTION_URL + "(.*)";
   public static final String NGSILD_POST_TEMPORAL_QUERY_PATH = "/temporal/entityOperations/query";
   public static final String TEMPORAL_POST_QUERY_URL_REGEX =
-      NGSILD_POST_TEMPORAL_QUERY_PATH + "(.*)";
+          NGSILD_POST_TEMPORAL_QUERY_PATH + "(.*)";
   public static final String NGSILD_POST_ENTITIES_QUERY_PATH = "/entityOperations/query";
   public static final String ENTITIES_POST_QUERY_URL_REGEX =
-      NGSILD_POST_ENTITIES_QUERY_PATH + "(.*)";
+          NGSILD_POST_ENTITIES_QUERY_PATH + "(.*)";
+
+  // Async endpoints
+  public static final String STATUS = "/status";
+  public static final String SEARCH = "/search";
+  public static final String IUDX_ASYNC_SEARCH = "(.*)/async/search";
+  public static final String IUDX_ASYNC_STATUS = "(.*)/async/status";
+  public static final String IUDX_ASYNC_SEARCH_API = "/async/search";
+  public static final String ASYNC = "/async";
 
   // IUDX management endpoints
   public static final String IUDX_MANAGEMENT_URL = "/management";
@@ -62,7 +70,7 @@ public class Constants {
   public static final String ADAPTER_URL_REGEX = IUDX_MANAGEMENT_ADAPTER_URL + "(.*)";
   public static final String INGESTION_PATH = "/ingestion";
   public static final String IUDX_MANAGEMENT_RESET_PWD =
-      IUDX_MANAGEMENT_URL + "/user/resetPassword";
+          IUDX_MANAGEMENT_URL + "/user/resetPassword";
   public static final String RESET_URL_REGEX = IUDX_MANAGEMENT_RESET_PWD + "(.*)";
   public static final String RESET_PWD = "/user/resetPassword";
 
@@ -70,9 +78,13 @@ public class Constants {
   public static final String ROUTE_STATIC_SPEC = "/apis/spec";
 
   public static final String ROUTE_DOC = "/apis";
-  public static final List<String> bypassEndpoint = List.of(ROUTE_STATIC_SPEC, ROUTE_DOC);
   public static final List<String> openEndPoints =
-      List.of("/temporal/entities", "/entities", "/entityOperations/query");
+          List.of("/temporal/entities", "/entities", "/entityOperations/query");
+  public static final String REVOKE_TOKEN = "/revokeToken";
+  public static final String REVOKE_TOKEN_REGEX = "/admin/revokeToken" + "(.*)";
+  public static final String RESOURCE_ATTRIBS = "/resourceattribute";
+  public static final String UNIQUE_ATTR_REGEX = "/admin/resourceattribute";
+  public static final String ADMIN = "/admin";
 
   public static final String MONTHLY_OVERVIEW = "/overview";
   public static final String SUMMARY_ENDPOINT = "/summary";
@@ -109,6 +121,7 @@ public class Constants {
 
   // Header params
   public static final String HEADER_TOKEN = "token";
+  public static final String HEADER_BEARER_AUTHORIZATION = "Bearer";
   public static final String HEADER_CSV = "csv";
   public static final String HEADER_JSON = "json";
   public static final String HEADER_PARQUET = "parquet";
@@ -122,7 +135,6 @@ public class Constants {
   public static final String HEADER_OPTIONS = "options";
 
   public static final String COUNT_HEADER = "Count";
-  public static final String PUBLIC_TOKEN = "public";
   public static final String HEADER_PUBLIC_KEY = "publicKey";
   public static final String HEADER_RESPONSE_FILE_FORMAT = "format";
 
@@ -235,7 +247,7 @@ public class Constants {
   public static final int VALIDATION_ID_MIN_LEN = 0;
   public static final int VALIDATION_ID_MAX_LEN = 512;
   public static final Pattern VALIDATION_ID_PATTERN =
-      Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
+          Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
   public static final int VALIDATION_MAX_ATTRS = 5;
   public static final int VALIDATION_MAX_DAYS_INTERVAL_ALLOWED = 10;
   public static final int VALIDATION_MAX_DAYS_INTERVAL_ALLOWED_FOR_ASYNC = 365;
@@ -298,4 +310,14 @@ public class Constants {
   public static final String EVENTTYPE_DELETED = "SUBS_DELETED";
   public static final String EVENTTYPE_APPEND = "SUBS_APPEND";
   public static final String EVENTTYPE_UPDATE = "SUBS_UPDATED";
+
+  //user
+  public static final String EMAIL_ID = "emailId";
+  public static final String FIRST_NAME = "firstName";
+  public static final String LAST_NAME = "lastName";
+  public static final String RS_SERVER_URL = "resourceServerUrl";
+  public static final String USERID = "userId";
+  public static final String USER_ROLE = "userRole";
+  public static final String USER = "user";
+  public static final String CONSTRAINTS = "accessConstraints";
 }

@@ -7,7 +7,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import iudx.resource.server.database.postgres.PostgresService;
+import iudx.resource.server.cache.service.type.UniqueAttributeCache;
+import iudx.resource.server.database.postgres.service.PostgresService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,7 +63,7 @@ public class UniqueAttributeCacheTest {
                 ((Handler<AsyncResult<JsonObject>>) arg1.getArgument(1)).handle(asyncResult);
                 return null;
             }
-        }).when(postgresService).executeQuery(anyString(), any());
+        }).when(postgresService).executeQuery(anyString());
 
         uniqueAttributeCache.refreshCache();
         vertxTestContext.completeNow();
