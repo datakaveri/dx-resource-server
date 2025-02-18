@@ -6,6 +6,7 @@ import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import iudx.resource.server.database.postgres.model.PostgresResultModel;
 
 
 @VertxGen
@@ -17,6 +18,8 @@ public interface PostgresService {
   }
 
   Future<JsonObject> executeQuery(final String query);
+
+  Future<PostgresResultModel> executeQuery1(final String query);
 
   Future<JsonObject> executePreparedQuery(final String query, final JsonObject queryparams);
 }

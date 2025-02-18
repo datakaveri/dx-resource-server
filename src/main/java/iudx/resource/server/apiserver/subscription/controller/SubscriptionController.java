@@ -4,6 +4,7 @@ import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.cache.util.Constants.CACHE_SERVICE_ADDRESS;
 import static iudx.resource.server.common.Constants.AUTH_SERVICE_ADDRESS;
 import static iudx.resource.server.database.postgres.util.Constants.PG_SERVICE_ADDRESS;
+import static iudx.resource.server.databroker.util.Constants.BAD_REQUEST_DATA;
 import static iudx.resource.server.databroker.util.Constants.DATA_BROKER_SERVICE_ADDRESS;
 
 import io.vertx.core.Future;
@@ -16,7 +17,6 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
 import iudx.resource.server.apiserver.handler.FailureHandler;
-import iudx.resource.server.apiserver.exception.FailureHandler;
 import iudx.resource.server.apiserver.subscription.model.DeleteSubsResultModel;
 import iudx.resource.server.apiserver.subscription.model.GetResultModel;
 import iudx.resource.server.apiserver.subscription.model.PostModelSubscription;

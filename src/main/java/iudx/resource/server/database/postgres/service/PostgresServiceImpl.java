@@ -9,7 +9,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.Tuple;
 import iudx.resource.server.common.Response;
 import iudx.resource.server.common.ResponseUrn;
-
+import iudx.resource.server.database.postgres.model.PostgresResultModel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collector;
@@ -19,9 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public final class PostgresServiceImpl implements PostgresService {
-
   private static final Logger LOGGER = LogManager.getLogger(PostgresServiceImpl.class);
-
   private final PgPool pgClient;
 
   public PostgresServiceImpl(final PgPool pgclient) {
@@ -49,6 +47,46 @@ public final class PostgresServiceImpl implements PostgresService {
                       .put("title", ResponseUrn.SUCCESS_URN.getMessage())
                       .put("result", result);
               promise.complete(responseJson);
+            })
+        .onFailure(
+            failureHandler -> {
+              LOGGER.debug(failureHandler);
+              Response response =
+                  new Response.Builder()
+                      .withUrn(ResponseUrn.DB_ERROR_URN.getUrn())
+                      .withStatus(HttpStatus.SC_BAD_REQUEST)
+                      .withDetail(failureHandler.getLocalizedMessage())
+                      .build();
+              promise.fail(response.toString());
+            });
+    return promise.future();
+  }
+
+  @Override
+  public Future<PostgresResultModel> executeQuery1(final String query) {
+
+    Promise<PostgresResultModel> promise = Promise.promise();
+    Collector<Row, ?, List<JsonObject>> rowCollector =
+        Collectors.mapping(row -> row.toJson(), Collectors.toList());
+
+    pgClient
+        .withConnection(
+            connection ->
+                connection.query(query).collecting(rowCollector).execute().map(row -> row.value()))
+        .onSuccess(
+            successHandler -> {
+              JsonArray result = new JsonArray(successHandler);
+              JsonObject responseJson =
+                  new JsonObject()
+                      .put("type", ResponseUrn.SUCCESS_URN.getUrn())
+                      .put("title", ResponseUrn.SUCCESS_URN.getMessage())
+                      .put("result", result);
+              PostgresResultModel postgresResultModel =
+                  new PostgresResultModel(
+                      ResponseUrn.SUCCESS_URN.getUrn(),
+                      ResponseUrn.SUCCESS_URN.getMessage(),
+                      result);
+              promise.complete(postgresResultModel);
             })
         .onFailure(
             failureHandler -> {

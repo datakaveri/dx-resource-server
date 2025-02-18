@@ -32,7 +32,7 @@ import iudx.resource.server.apiserver.util.RequestType;
 
 @ExtendWith(VertxExtension.class)
 @ExtendWith(MockitoExtension.class)
-public class ValidationHandlerTest {
+public class ValidationHandlerFactoryTest {
   RequestType requestType;
   @Mock
   RoutingContext routingContext;

@@ -292,10 +292,6 @@ public class Constants {
           + "VALUES('$1','$2','$3','$4','$5','$6','$7','$8','$9','$a','$b','$c') "
           + "ON CONFLICT(queue_name,entity) DO NOTHING";
 
-  public static final String DELETE_SUB_SQL = "DELETE FROM subscriptions where queue_name='$1'";
-
-
-
   public static final String NO_CONTENT = "204";
 
   public static final String STARTT = "starttime";
