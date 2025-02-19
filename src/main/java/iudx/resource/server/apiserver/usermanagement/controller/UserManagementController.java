@@ -77,7 +77,7 @@ public class UserManagementController {
 
   private void resetPassword(RoutingContext routingContext) {
     HttpServerResponse response = routingContext.response();
-    String userId = RoutingContextHelper.getJwtData(routingContext).getIid().split(":")[1];
+    String userId = RoutingContextHelper.getJwtData(routingContext).getSub();
     userManagementService
         .resetPassword(userId)
         .onSuccess(
