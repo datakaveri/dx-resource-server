@@ -121,6 +121,7 @@ public class Constants {
 
   // Header params
   public static final String HEADER_TOKEN = "token";
+  public static final String HEADER_AUTHORIZATION = "Authorization";
   public static final String HEADER_BEARER_AUTHORIZATION = "Bearer";
   public static final String HEADER_CSV = "csv";
   public static final String HEADER_JSON = "json";
