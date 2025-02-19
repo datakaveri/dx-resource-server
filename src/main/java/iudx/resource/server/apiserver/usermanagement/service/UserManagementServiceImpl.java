@@ -1,8 +1,7 @@
 package iudx.resource.server.apiserver.usermanagement.service;
 
 import static iudx.resource.server.database.util.Constants.ERROR;
-import static iudx.resource.server.databroker.util.Constants.INTERNAL_ERROR_CODE;
-import static iudx.resource.server.databroker.util.Constants.QUEUE_LIST_ERROR;
+import static iudx.resource.server.databroker.util.Constants.*;
 import static iudx.resource.server.databroker.util.Util.getResponseJson;
 
 import io.vertx.core.Future;
@@ -35,8 +34,8 @@ public class UserManagementServiceImpl {
                     getResponseJson(
                             HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
                             INTERNAL_ERROR_CODE,
-                            ERROR,
-                            QUEUE_LIST_ERROR)
+                            NETWORK_ISSUE,
+                            NETWORK_ISSUE)
                         .toString());
               }
             });
