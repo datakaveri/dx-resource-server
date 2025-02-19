@@ -1,11 +1,13 @@
 package iudx.resource.server.apiserver.subscription.controller;
 
+import static iudx.resource.server.apiserver.metering.util.Constant.METERING_SERVICE_ADDRESS;
 import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.cache.util.Constants.CACHE_SERVICE_ADDRESS;
 import static iudx.resource.server.common.Constants.AUTH_SERVICE_ADDRESS;
+import static iudx.resource.server.common.ResponseUrn.INVALID_PARAM_URN;
 import static iudx.resource.server.database.postgres.util.Constants.PG_SERVICE_ADDRESS;
-import static iudx.resource.server.databroker.util.Constants.BAD_REQUEST_DATA;
 import static iudx.resource.server.databroker.util.Constants.DATA_BROKER_SERVICE_ADDRESS;
+import static iudx.resource.server.databroker.util.Util.getResponseJson;
 
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -15,11 +17,12 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import iudx.resource.server.apiserver.handler.FailureHandler;
+import iudx.resource.server.apiserver.exception.FailureHandler;
+import iudx.resource.server.apiserver.metering.handler.MeteringHandler;
+import iudx.resource.server.apiserver.metering.service.MeteringService;
 import iudx.resource.server.apiserver.subscription.model.DeleteSubsResultModel;
 import iudx.resource.server.apiserver.subscription.model.GetResultModel;
 import iudx.resource.server.apiserver.subscription.model.PostModelSubscription;
-import iudx.resource.server.apiserver.subscription.model.SubscriptionData;
 import iudx.resource.server.apiserver.subscription.service.SubscriptionService;
 import iudx.resource.server.apiserver.subscription.service.SubscriptionServiceImpl;
 import iudx.resource.server.apiserver.subscription.util.SubsType;
@@ -30,11 +33,9 @@ import iudx.resource.server.authenticator.handler.authorization.AuthorizationHan
 import iudx.resource.server.authenticator.handler.authorization.GetIdHandler;
 import iudx.resource.server.authenticator.handler.authorization.TokenRevokedHandler;
 import iudx.resource.server.authenticator.model.DxRole;
+import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.cache.service.CacheService;
-import iudx.resource.server.common.Api;
-import iudx.resource.server.common.CatalogueService;
-import iudx.resource.server.common.RequestType;
-import iudx.resource.server.common.ResultModel;
+import iudx.resource.server.common.*;
 import iudx.resource.server.common.validation.handler.ValidationHandler;
 import iudx.resource.server.database.postgres.model.PostgresResultModel;
 import iudx.resource.server.database.postgres.service.PostgresService;
@@ -47,8 +48,8 @@ public class SubscriptionController {
   private final Router router;
   private final Vertx vertx;
   private final Api api;
-  ValidationHandler subsValidationHandler;
-  FailureHandler failureHandler;
+  private ValidationHandler subsValidationHandler;
+  private FailureHandler failureHandler;
   private PostgresService postgresService;
   private SubscriptionService subscriptionService;
   private DataBrokerService dataBrokerService;
@@ -56,6 +57,7 @@ public class SubscriptionController {
   private AuthenticationService authenticator;
   private String audience;
   private JsonObject config;
+  private MeteringService meteringService;
 
   public SubscriptionController(Vertx vertx, Router router, Api api, JsonObject config) {
     this.vertx = vertx;
@@ -69,6 +71,7 @@ public class SubscriptionController {
   }
 
   public void init() {
+    proxyRequired();
     CatalogueService catalogueService = new CatalogueService(cacheService, config, vertx);
 
     AuthHandler authHandler = new AuthHandler(api, authenticator);
@@ -83,9 +86,10 @@ public class SubscriptionController {
         new AuthorizationHandler()
             .setUserRolesForEndpoint(
                 DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
-    // TODO: Need to add auth and auditing insert
 
-    proxyRequired();
+    /*MeteringHandler meteringHandler = new MeteringHandler(meteringService);*/
+
+    // TODO: Need to add auditing insert
 
     router
         .post(api.getSubscriptionUrl())
@@ -96,6 +100,7 @@ public class SubscriptionController {
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::postSubscriptions)
+        /*.handler(meteringHandler)*/
         .failureHandler(failureHandler);
 
     router
@@ -107,6 +112,7 @@ public class SubscriptionController {
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::appendSubscription)
+        /*.handler(meteringHandler)*/
         .failureHandler(failureHandler);
 
     router
@@ -118,6 +124,7 @@ public class SubscriptionController {
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::updateSubscription)
+        /*.handler(meteringHandler)*/
         .failureHandler(failureHandler);
 
     router
@@ -128,6 +135,7 @@ public class SubscriptionController {
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::getSubscription)
+        /*.handler(meteringHandler)*/
         .failureHandler(failureHandler);
 
     router
@@ -148,6 +156,7 @@ public class SubscriptionController {
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::deleteSubscription)
+        /*.handler(meteringHandler)*/
         .failureHandler(failureHandler);
 
     subscriptionService =
@@ -156,81 +165,48 @@ public class SubscriptionController {
 
   private void appendSubscription(RoutingContext routingContext) {
     LOGGER.trace("Info: appendSubscription method started");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
     HttpServerRequest request = routingContext.request();
     String userid = request.getParam(USER_ID);
     String alias = request.getParam(JSON_ALIAS);
     String subsId = userid + "/" + alias;
     JsonObject requestJson = routingContext.body().asJsonObject();
     String instanceId = request.getHeader(HEADER_HOST);
-    /*requestJson.put(SUBSCRIPTION_ID, subsId);
-    requestJson.put(JSON_INSTANCEID, instanceId);*/
     String subscriptionType = SubsType.STREAMING.type;
-    /*requestJson.put(SUB_TYPE, subscriptionType);
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");*/
+
     HttpServerResponse response = routingContext.response();
-    /*String entities = requestJson.getJsonArray("entities").getString(0);*/
-    /*JsonObject cacheJson = new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);*/
-    /*requestJson.put(USER_ID, authInfo.getString(USER_ID));*/
 
     String entities = requestJson.getJsonArray("entities").getString(0);
-    String userId =
-        "fd47486b-3497-4248-ac1e-082e4d37a66c"; // TODO: Change this to take userId from AuthInfo
+    String userId = jwtData.getSub();
+    String role = jwtData.getRole();
+    String drl = jwtData.getDrl();
+    String delegatorId;
+    if (role.equalsIgnoreCase("delegate") && drl != null) {
+      delegatorId = jwtData.getDid();
+    } else {
+      delegatorId = userId;
+    }
     PostModelSubscription postModelSubscription =
         new PostModelSubscription(
-            userId, subscriptionType, instanceId, entities, requestJson.getString("name"));
-
-    Future<SubscriptionData> subsReq =
-        subscriptionService.appendSubscription(postModelSubscription, subsId);
-    subsReq.onComplete(
-        subsRequestHandler -> {
-          if (subsRequestHandler.succeeded()) {
-            LOGGER.info("result : " + subsRequestHandler.result());
-            routingContext.data().put(RESPONSE_SIZE, 0);
-            response
-                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                .end(subsRequestHandler.result().streamingResult().toString());
-            /*Future.future(fu -> updateAuditTable(routingContext));
-            handleSuccessResponse(
-                    response, ResponseType.Created.getCode(), subsRequestHandler.result().toString());*/
-          } else {
-            LOGGER.error("Fail: Bad request");
-            ResultModel rs = new ResultModel(subsRequestHandler.cause().getMessage(), response);
-            response
-                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                .setStatusCode(rs.getStatusCode())
-                .end(rs.toJson().toString());
-          }
-        });
-  }
-
-  private void updateSubscription(RoutingContext routingContext) {
-    LOGGER.trace("Info: updateSubscription method started");
-    HttpServerRequest request = routingContext.request();
-    HttpServerResponse response = routingContext.response();
-    String userid = request.getParam(USER_ID);
-    String alias = request.getParam(JSON_ALIAS);
-    String subsId = userid + "/" + alias;
-    JsonObject requestJson = routingContext.body().asJsonObject();
-    String instanceId = request.getHeader(HEADER_HOST);
-    String subscriptionType = SubsType.STREAMING.type;
-    /*requestJson.put(SUB_TYPE, subscriptionType);
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");*/
+            userId,
+            subscriptionType,
+            instanceId,
+            entities,
+            requestJson.getString("name"),
+            jwtData.getExpiry(),
+            delegatorId);
     if (requestJson.getString(JSON_NAME).equalsIgnoreCase(alias)) {
-      String entities = requestJson.getJsonArray("entities").getString(0);
-      Future<JsonObject> subsReq =
-          subscriptionService.updateSubscription(
-              entities, subsId, new JsonObject() /*authInfo*/); // TODO:Change authinfo into expiry
+      Future<GetResultModel> subsReq =
+          subscriptionService.appendSubscription(postModelSubscription, subsId);
       subsReq.onComplete(
           subsRequestHandler -> {
             if (subsRequestHandler.succeeded()) {
               LOGGER.info("result : " + subsRequestHandler.result());
               routingContext.data().put(RESPONSE_SIZE, 0);
-              /*Future.future(fu -> updateAuditTable(routingContext));*/
-              /* handleSuccessResponse(
-              response, ResponseType.Created.getCode(), subsRequestHandler.result().toString());*/
               response
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                  .end(subsRequestHandler.result().toString());
+                  .end(subsRequestHandler.result().constructSuccessResponse().toString());
+              /*routingContext.next();*/
             } else {
               LOGGER.error("Fail: Bad request");
               ResultModel rs = new ResultModel(subsRequestHandler.cause().getMessage(), response);
@@ -242,9 +218,61 @@ public class SubscriptionController {
           });
     } else {
       LOGGER.error("Fail: Bad request");
-      response.setStatusCode(400);
-      response.putHeader(CONTENT_TYPE, APPLICATION_JSON);
-      response.end(BAD_REQUEST_DATA);
+      response
+          .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+          .setStatusCode(400)
+          .end(
+              getResponseJson(
+                      INVALID_PARAM_URN.getUrn(),
+                      HttpStatusCode.BAD_REQUEST.getDescription(),
+                      MSG_INVALID_NAME)
+                  .toString());
+    }
+  }
+
+  private void updateSubscription(RoutingContext routingContext) {
+    LOGGER.trace("Info: updateSubscription method started");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    HttpServerRequest request = routingContext.request();
+    HttpServerResponse response = routingContext.response();
+    String userid = request.getParam(USER_ID);
+    String alias = request.getParam(JSON_ALIAS);
+    String subsId = userid + "/" + alias;
+    JsonObject requestJson = routingContext.body().asJsonObject();
+
+    if (requestJson.getString(JSON_NAME).equalsIgnoreCase(alias)) {
+      String entities = requestJson.getJsonArray("entities").getString(0);
+      Future<GetResultModel> subsReq =
+          subscriptionService.updateSubscription(entities, subsId, jwtData.getExpiry());
+      subsReq.onComplete(
+          subsRequestHandler -> {
+            if (subsRequestHandler.succeeded()) {
+              LOGGER.info("result : " + subsRequestHandler.result());
+              routingContext.data().put(RESPONSE_SIZE, 0);
+              response
+                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                  .end(subsRequestHandler.result().constructSuccessResponse().toString());
+              /*routingContext.next();*/
+            } else {
+              LOGGER.error("Fail: Bad request");
+              ResultModel rs = new ResultModel(subsRequestHandler.cause().getMessage(), response);
+              response
+                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                  .setStatusCode(rs.getStatusCode())
+                  .end(rs.toJson().toString());
+            }
+          });
+    } else {
+      LOGGER.error("Fail: Bad request");
+      response
+          .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+          .setStatusCode(400)
+          .end(
+              getResponseJson(
+                      INVALID_PARAM_URN.getUrn(),
+                      HttpStatusCode.BAD_REQUEST.getDescription(),
+                      MSG_INVALID_NAME)
+                  .toString());
     }
   }
 
@@ -255,17 +283,7 @@ public class SubscriptionController {
     String domain = request.getParam(USER_ID);
     String alias = request.getParam(JSON_ALIAS);
     String subsId = domain + "/" + alias;
-    /*JsonObject requestJson = new JsonObject();
-    String instanceId = request.getHeader(HEADER_HOST);
-    requestJson.put(SUBSCRIPTION_ID, subsId);
-    requestJson.put(JSON_INSTANCEID, instanceId);*/
     String subscriptionType = SubsType.STREAMING.type;
-    /*
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
-    requestJson.put(JSON_CONSUMER, authInfo.getString(JSON_CONSUMER));
-    requestJson.put("authInfo", authInfo);*/
-
-    // TODO: Model-> userid(domain), alias,SUBSCRIPTION_ID,JSON_INSTANCEID,SUB_TYPE,JSON_CONSUMER,
 
     Future<GetResultModel> subsReq = subscriptionService.getSubscription(subsId, subscriptionType);
     subsReq.onComplete(
@@ -273,11 +291,11 @@ public class SubscriptionController {
           if (subHandler.succeeded()) {
             LOGGER.info("Success: Getting subscription");
             routingContext.data().put(RESPONSE_SIZE, 0);
-
-            response.putHeader(CONTENT_TYPE, APPLICATION_JSON).end(subHandler.result().toString());
             response
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .end(subHandler.result().constructSuccessResponse().toString());
+            /*routingContext.next();*/
+          } else {
             ResultModel rs = new ResultModel(subHandler.cause().getMessage(), response);
             response
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
@@ -289,16 +307,11 @@ public class SubscriptionController {
 
   private void getAllSubscriptionForUser(RoutingContext routingContext) {
     LOGGER.trace("Info: getAllSubscriptionForUser method started");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
     HttpServerResponse response = routingContext.response();
-    // TODO: Need to create AuthInfo class while authentication and authorization and take out
-    // userid
-    /*JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");*/
-    /*authInfo.setUserId("fd47486b-3497-4248-ac1e-082e4d37a66c");*/
-    JsonObject jsonObj = new JsonObject();
-    /*jsonObj.put(USER_ID, authInfo.getString(USER_ID));*/
+
     Future<PostgresResultModel> subsReq =
-        subscriptionService.getAllSubscriptionQueueForUser(
-            /*authInfo.getUserId()*/ "fd47486b-3497-4248-ac1e-082e4d37a66c"); // TODO: pass userid
+        subscriptionService.getAllSubscriptionQueueForUser(jwtData.getSub());
     subsReq.onComplete(
         subHandler -> {
           if (subHandler.succeeded()) {
@@ -306,10 +319,7 @@ public class SubscriptionController {
             response
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .end(subHandler.result().toJson().toString());
-            /*handleSuccessResponse(
-            response, ResponseType.Ok.getCode(), subHandler.result().toString());*/
           } else {
-            LOGGER.error("Fail: Bad request");
             ResultModel rs = new ResultModel(subHandler.cause().getMessage(), response);
             response
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
@@ -320,24 +330,15 @@ public class SubscriptionController {
   }
 
   private void deleteSubscription(RoutingContext routingContext) {
-    // TODO: Make Models and Remove RoutingContext
     LOGGER.trace("Info: deleteSubscription() method started;");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
     HttpServerRequest request = routingContext.request();
     HttpServerResponse response = routingContext.response();
     String userid = request.getParam(USER_ID);
     String alias = request.getParam(JSON_ALIAS);
     String subsId = userid + "/" + alias;
-    /*JsonObject requestJson = new JsonObject();
-    String instanceId = request.getHeader(HEADER_HOST);
-    requestJson.put(SUBSCRIPTION_ID, subsId);
-    requestJson.put(JSON_INSTANCEID, instanceId);*/
     String subscriptionType = SubsType.STREAMING.type;
-    /*requestJson.put(SUB_TYPE, subscriptionType);*/
-    /*JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
-    requestJson.put(USER_ID, authInfo.getString(USER_ID));
-    requestJson.put("authInfo", authInfo);*/
-    String userId = "fd47486b-3497-4248-ac1e-082e4d37a66c"; // TODO://Take out from auth info
-
+    String userId = jwtData.getSub();
     Future<DeleteSubsResultModel> subsReq =
         subscriptionService.deleteSubscription(subsId, subscriptionType, userId);
     subsReq.onComplete(
@@ -347,9 +348,7 @@ public class SubscriptionController {
             response
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .end(subHandler.result().toJson().toString());
-            /*Future.future(fu -> updateAuditTable(routingContext));
-            handleSuccessResponse(
-                    response, ResponseType.Ok.getCode(), subHandler.result().toString());*/
+            /*routingContext.next();*/
           } else {
             ResultModel rs = new ResultModel(subHandler.cause().getMessage(), response);
             response
@@ -362,28 +361,32 @@ public class SubscriptionController {
 
   private void postSubscriptions(RoutingContext routingContext) {
     LOGGER.trace("Info: postSubscriptions() method started");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
     HttpServerRequest request = routingContext.request();
     JsonObject requestBody = routingContext.body().asJsonObject();
     String instanceId = request.getHeader(HEADER_HOST);
     String subscriptionType = SubsType.STREAMING.type;
-    /*requestBody.put(SUB_TYPE, subscriptionType);*/
-    /*JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");*/
-
-    JsonObject jsonObj = requestBody.copy();
-    jsonObj.put(USER_ID, "authInfo.getString(USER_ID)");
-    jsonObj.put(JSON_INSTANCEID, instanceId);
 
     HttpServerResponse response = routingContext.response();
-
-    String entities = jsonObj.getJsonArray("entities").getString(0);
-
-    String userId =
-        "fd47486b-3497-4248-ac1e-082e4d37a66c"; // TODO: Change this to take userId from AuthInfo
+    String entities = requestBody.getJsonArray("entities").getString(0);
+    String userId = jwtData.getSub();
+    String role = jwtData.getRole();
+    String drl = jwtData.getDrl();
+    String delegatorId;
+    if (role.equalsIgnoreCase("delegate") && drl != null) {
+      delegatorId = jwtData.getDid();
+    } else {
+      delegatorId = userId;
+    }
     PostModelSubscription postModelSubscription =
         new PostModelSubscription(
-            userId, subscriptionType, instanceId, entities, requestBody.getString("name"));
-
-    // TODO: Model -> instanceid,substype,userid,entities(ri),name,role,did,drl
+            userId,
+            subscriptionType,
+            instanceId,
+            entities,
+            requestBody.getString("name"),
+            jwtData.getExpiry(),
+            delegatorId);
 
     subscriptionService
         .createSubscription(postModelSubscription)
@@ -394,9 +397,7 @@ public class SubscriptionController {
               response
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                   .end(subHandler.constructSuccessResponse().toString());
-              /*Future.future(fu -> updateAuditTable(routingContext));
-              handleSuccessResponse(
-                  response, ResponseType.Created.getCode(), subHandler.result().toString());*/
+              /*routingContext.next();*/
             })
         .onFailure(
             failure -> {
@@ -414,5 +415,6 @@ public class SubscriptionController {
     dataBrokerService = DataBrokerService.createProxy(vertx, DATA_BROKER_SERVICE_ADDRESS);
     cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
     authenticator = AuthenticationService.createProxy(vertx, AUTH_SERVICE_ADDRESS);
+    meteringService = MeteringService.createProxy(vertx, METERING_SERVICE_ADDRESS);
   }
 }

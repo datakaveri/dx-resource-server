@@ -11,6 +11,5 @@ public class Constants {
   public static final String ASYNC_SERVICE_ADDRESS = "iudx.rs.async.service";
   public static final String DATABASE_SERVICE_ADDRESS = "iudx.rs.database.service";
   public static final String BROKER_SERVICE_ADDRESS = "iudx.rs.broker.service";
-  public static final String METERING_SERVICE_ADDRESS = "iudx.rs.metering.service";
   public static final String ENCRYPTION_SERVICE_ADDRESS = "iudx.rs.encryption.service";
 }

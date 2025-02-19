@@ -59,11 +59,11 @@ public class RevokedClientCache implements IudxCache {
     Promise<Void> promise = Promise.promise();
     String query = SELECT_REVOKE_TOKEN_SQL;
     pgService
-        .executeQuery(query)
+        .executeQuery1(query)
         .onComplete(
             handler -> {
               if (handler.succeeded()) {
-                JsonArray clientIdArray = handler.result().getJsonArray("result");
+                JsonArray clientIdArray = handler.result().getResult();/*handler.result().getJsonArray("result");*/
                 cache.invalidateAll();
                 clientIdArray.forEach(
                     e -> {

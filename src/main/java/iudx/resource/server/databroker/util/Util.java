@@ -31,4 +31,12 @@ public class Util {
         json.put(DETAIL, detail);
         return json;
     }
+
+    public static JsonObject getResponseJson(String type, String title, String detail){
+        JsonObject json = new JsonObject();
+        json.put(TYPE, type);
+        json.put(TITLE, title);
+        json.put(DETAIL, detail);
+        return json;
+    }
 }

@@ -46,9 +46,9 @@ public class RabbitClient {
     this.amqpPort = amqpPort;
   }
 
-  public Future<JsonObject> deleteQueue(String queueName, String vhost) {
+  public Future<Void> deleteQueue(String queueName, String vhost) {
     LOGGER.trace("Info : RabbitClient#deleteQueue() started");
-    Promise<JsonObject> promise = Promise.promise();
+    Promise<Void> promise = Promise.promise();
     JsonObject finalResponse = new JsonObject();
     if (queueName != null && !queueName.isEmpty()) {
       LOGGER.debug("Info : queueName" + queueName);
@@ -62,8 +62,8 @@ public class RabbitClient {
                   if (response != null && !response.equals(" ")) {
                     int status = response.statusCode();
                     if (status == HttpStatus.SC_NO_CONTENT) {
-                      finalResponse.put(QUEUE, queueName);
-                      promise.complete(finalResponse);
+                      /*finalResponse.put(QUEUE, queueName);*/
+                      promise.complete();
                     } else if (status == HttpStatus.SC_NOT_FOUND) {
                       finalResponse.mergeIn(
                           getResponseJson(
