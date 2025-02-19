@@ -4,7 +4,7 @@ import static iudx.resource.server.apiserver.subscription.util.Constants.*;
 import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.apiserver.util.Constants.RESOURCE_GROUP;
 import static iudx.resource.server.cache.util.CacheType.CATALOGUE_CACHE;
-import static iudx.resource.server.databroker.util.Constants.*;
+import static iudx.resource.server.databroker.util.Constants.SUCCESS;
 import static iudx.resource.server.databroker.util.Util.getResponseJson;
 
 import io.vertx.core.Future;
@@ -20,9 +20,12 @@ import iudx.resource.server.database.postgres.model.PostgresResultModel;
 import iudx.resource.server.database.postgres.service.PostgresService;
 import iudx.resource.server.databroker.model.SubscriptionResponseModel;
 import iudx.resource.server.databroker.service.DataBrokerService;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -43,10 +46,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
   private static StringBuilder createSubQuery(
       PostModelSubscription postModelSubscription,
-      JsonObject authInfo,
       SubscriptionData subscriptionDataResult,
       SubsType subsType,
-      String delegatorId,
       String type) {
     StringBuilder query =
         new StringBuilder(
@@ -55,14 +56,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .replace("$2", subsType.type)
                 .replace("$3", subscriptionDataResult.dataBrokerResult().getString("id"))
                 .replace("$4", postModelSubscription.getEntities())
-                .replace("$5", /*authInfo.getString("expiry")*/ "2025-02-13T03:15:02")
+                .replace("$5", postModelSubscription.getExpiry())
                 .replace("$6", subscriptionDataResult.cacheResult().getString("name"))
                 .replace("$7", subscriptionDataResult.cacheResult().toString())
-                .replace(
-                    "$8", /*authInfo.getString("userid")*/ "fd47486b-3497-4248-ac1e-082e4d37a66c")
+                .replace("$8", postModelSubscription.getUserId())
                 .replace("$9", subscriptionDataResult.cacheResult().getString(RESOURCE_GROUP))
                 .replace("$a", subscriptionDataResult.cacheResult().getString("provider"))
-                .replace("$b", delegatorId)
+                .replace("$b", postModelSubscription.getDelegatorId())
                 .replace("$c", type));
     return query;
   }
@@ -70,11 +70,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   private static StringBuilder appendSubsQuery(
       String subId,
       String entities,
-      JsonObject authInfo,
       SubscriptionData appendSubscriptionResult,
       SubsType subType,
-      String delegatorId,
-      String type) {
+      String type,
+      PostModelSubscription postModelSubscription) {
     StringBuilder appendQuery =
         new StringBuilder(
             APPEND_SUB_SQL
@@ -82,14 +81,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .replace("$2", subType.type)
                 .replace("$3", subId)
                 .replace("$4", entities)
-                .replace("$5", /*authInfo.getString("expiry")*/ "2025-02-13T03:15:02")
+                .replace("$5", postModelSubscription.getExpiry())
                 .replace("$6", appendSubscriptionResult.cacheResult().getString("name"))
                 .replace("$7", appendSubscriptionResult.cacheResult().toString())
-                .replace(
-                    "$8", /*authInfo.getString("userid")*/ "fd47486b-3497-4248-ac1e-082e4d37a66c")
+                .replace("$8", postModelSubscription.getUserId())
                 .replace("$9", appendSubscriptionResult.cacheResult().getString(RESOURCE_GROUP))
                 .replace("$a", appendSubscriptionResult.cacheResult().getString("provider"))
-                .replace("$b", delegatorId)
+                .replace("$b", postModelSubscription.getDelegatorId())
                 .replace("$c", type));
     return appendQuery;
   }
@@ -155,7 +153,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             })
         .compose(
             registerStreaming -> {
-              LOGGER.debug("--->>>" + registerStreaming.toString());
               createResultContainer.isQueueCreated = true;
               JsonObject brokerResponse = registerStreaming.toJson();
 
@@ -171,37 +168,23 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         .compose(
             subscriptionDataResult -> {
               LOGGER.debug("cacheResult: " + subscriptionDataResult.cacheResult());
-              String role = /*authInfo.getString("ROLE");*/ "consumer";
-              String drl = /*authInfo.getString(DRL);*/ "";
-              String delegatorId;
-              if (role.equalsIgnoreCase("delegate") && drl != null) {
-                delegatorId = /*authInfo.getString(DID);*/ "";
-              } else {
-                delegatorId = /*authInfo.getString("userid");*/
-                    "fd47486b-3497-4248-ac1e-082e4d37a66c";
-              }
+
               String type =
                   subscriptionDataResult.cacheResult().containsKey(RESOURCE_GROUP)
                       ? "RESOURCE"
                       : "RESOURCE_GROUP";
 
               StringBuilder query =
-                  createSubQuery(
-                      postModelSubscription,
-                      new JsonObject() /*authInfo*/,
-                      subscriptionDataResult,
-                      subType,
-                      delegatorId,
-                      type);
+                  createSubQuery(postModelSubscription, subscriptionDataResult, subType, type);
               LOGGER.debug("query: " + query);
 
               return postgresService
-                  .executeQuery(query.toString())
+                  .executeQuery1(query.toString())
                   .map(postgresSuccess -> subscriptionDataResult);
             })
         .onSuccess(
             subscriptionDataResultSuccess -> {
-              LOGGER.debug(">><><<><><><><------" + subscriptionDataResultSuccess.toString());
+              LOGGER.debug(subscriptionDataResultSuccess.toString());
               promise.complete(subscriptionDataResultSuccess);
             })
         .onFailure(
@@ -220,25 +203,20 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                           } else {
                             LOGGER.error("subscription rolled back failed");
                           }
-
                           promise.fail(failure.toString());
                         });
               } else {
-                // throw new DxRuntimeException(failure);
-
-                LOGGER.debug("res -->" + failure.getMessage());
+                LOGGER.debug(failure.getMessage());
                 promise.fail(failure.getMessage());
-                /*promise.fail(new DxRuntimeException(failure.getMessage()));*/
-                /*throw new DxRuntimeException(409, ResponseUrn.YET_NOT_IMPLEMENTED_URN,failure.getMessage());*/
               }
             });
     return promise.future();
   }
 
   @Override
-  public Future<JsonObject> updateSubscription(String entities, String subId, JsonObject authInfo) {
+  public Future<GetResultModel> updateSubscription(String entities, String subId, String expiry) {
     LOGGER.info("updateSubscription() method started");
-    Promise<JsonObject> promise = Promise.promise();
+    Promise<GetResultModel> promise = Promise.promise();
 
     String queueName = subId;
     String entity = entities;
@@ -252,61 +230,58 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         .executeQuery1(selectQuery.toString())
         .compose(
             selectQueryHandler -> {
-              JsonArray resultArray = /*selectQueryHandler.getJsonArray("result")*/
-                  selectQueryHandler.getResult();
+              JsonArray resultArray = selectQueryHandler.getResult();
+              LOGGER.debug("selectQueryHandler   " + selectQueryHandler.getResult());
               if (resultArray.isEmpty()) {
-                JsonObject res = new JsonObject();
-                res.put(JSON_TYPE, 404)
-                    .put(JSON_TITLE, ResponseUrn.RESOURCE_NOT_FOUND_URN.getUrn())
-                    .put(JSON_DETAIL, "Subscription not found for [queue,entity]");
-
-                promise.fail(res.toString());
-                // TODO: Throw Error and return from here
+                JsonObject failJson =
+                    getResponseJson(
+                        HttpStatusCode.NOT_FOUND.getUrn(),
+                        HttpStatusCode.NOT_FOUND.getValue(),
+                        HttpStatusCode.NOT_FOUND.getDescription(),
+                        "Subscription not found for [queue,entity]");
+                promise.fail(failJson.toString());
+                return null;
               }
               StringBuilder updateQuery =
                   new StringBuilder(
                       UPDATE_SUB_SQL
-                          .replace("$1", "2025-02-19T03:15:02" /*authInfo.getString("expiry")*/)
+                          .replace("$1", expiry)
                           .replace("$2", queueName)
                           .replace("$3", entity));
-              LOGGER.debug(updateQuery);
+              LOGGER.debug("updateQuery : " + updateQuery);
               return postgresService.executeQuery1(updateQuery.toString());
             })
-        .onComplete(
+        .onSuccess(
             pgHandler -> {
-              if (pgHandler.succeeded()) {
-
-                JsonObject response = new JsonObject();
-                JsonArray jsonEntities = new JsonArray();
-
-                jsonEntities.add(entities);
-
-                JsonObject results = new JsonObject();
-                results.put("entities", jsonEntities);
-
-                response.put(TYPE, ResponseUrn.SUCCESS_URN.getUrn());
-                response.put(TITLE, "success");
-                response.put(RESULTS, new JsonArray().add(results));
-
-                promise.complete(response);
-              } else {
-                LOGGER.error(pgHandler.cause());
-                JsonObject res = new JsonObject(pgHandler.cause().getMessage());
-                /*promise.fail(generateResponse(res).toString());*/
-              }
+              /*JsonObject response = new JsonObject();
+              JsonArray jsonEntities = new JsonArray();
+              jsonEntities.add(entities);
+              JsonObject results = new JsonObject();
+              results.put("entities, jsonEntities);
+              response.put(TYPE, ResponseUrn.SUCCESS_URN.getUrn());
+              response.put(TITLE, "success");
+              response.put(RESULTS, new JsonArray().add(results));*/
+              List<String> resultEntities = new ArrayList<String>();
+              resultEntities.add(entities);
+              promise.complete(new GetResultModel(resultEntities));
+            })
+        .onFailure(
+            failure -> {
+              LOGGER.debug("res -->" + failure.getMessage());
+              promise.fail(failure.getMessage());
             });
 
     return promise.future();
   }
 
   @Override
-  public Future<SubscriptionData> appendSubscription(
+  public Future<GetResultModel> appendSubscription(
       PostModelSubscription postModelSubscription, String subsId) {
     LOGGER.info("appendSubscription() method started");
     String entities = postModelSubscription.getEntities();
     JsonObject cacheJson = new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
     SubsType subType = SubsType.valueOf(postModelSubscription.getSubscriptionType());
-    Promise<SubscriptionData> promise = Promise.promise();
+    Promise<GetResultModel> promise = Promise.promise();
     cacheService
         .get(cacheJson)
         .compose(
@@ -331,8 +306,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             })
         .compose(
             appendStreaming -> {
-              JsonObject brokerResponse = appendStreaming.getJsonArray("results").getJsonObject(0);
-              LOGGER.debug("brokerResponse: " + brokerResponse);
+              // JsonObject brokerResponse =
+              // appendStreaming.get()getJsonArray("results").getJsonObject(0);
+              LOGGER.debug("brokerResponse: " + appendStreaming);
 
               JsonObject cacheJson1 =
                   new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
@@ -342,20 +318,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                   .map(
                       cacheResult ->
                           new SubscriptionData(
-                              brokerResponse, cacheResult, new SubscriptionResponseModel()));
+                              new JsonObject(), cacheResult, new SubscriptionResponseModel()));
             })
         .compose(
             appendSubscriptionResult -> {
               LOGGER.debug("cacheResult: " + appendSubscriptionResult.cacheResult());
-              String role = /*authInfo.getString("ROLE");*/ "consumer";
-              String drl = /*authInfo.getString(DRL);*/ "";
-              String delegatorId;
-              if (role.equalsIgnoreCase("delegate") && drl != null) {
-                delegatorId = /*authInfo.getString(DID);*/ "";
-              } else {
-                delegatorId = /*authInfo.getString("userid");*/
-                    "fd47486b-3497-4248-ac1e-082e4d37a66c";
-              }
               String type =
                   appendSubscriptionResult.cacheResult().containsKey(RESOURCE_GROUP)
                       ? "RESOURCE"
@@ -365,43 +332,27 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                   appendSubsQuery(
                       subsId,
                       entities,
-                      new JsonObject() /*authInfo*/,
                       appendSubscriptionResult,
                       subType,
-                      delegatorId,
-                      type);
+                      type,
+                      postModelSubscription);
               LOGGER.debug("appendQuery = " + appendQuery);
 
               return postgresService
-                  .executeQuery(appendQuery.toString())
+                  .executeQuery1(appendQuery.toString())
                   .map(postgresSuccess -> appendSubscriptionResult);
             })
-        .onComplete(
+        .onSuccess(
             subscriptionDataResultSuccess -> {
-              if (subscriptionDataResultSuccess.succeeded()) {
-                promise.complete(subscriptionDataResultSuccess.result());
-              } else {
-                deleteSubscription(
-                        subsId,
-                        subType.type,
-                        postModelSubscription.getUserId() /*authInfo.getString("userid")*/)
-                    .onComplete(
-                        handlers -> {
-                          if (handlers.succeeded()) {
-                            LOGGER.info("subscription rolled back successfully");
-                          } else {
-                            LOGGER.error("subscription rolled back failed");
-                          }
-                          JsonObject res =
-                              new JsonObject(subscriptionDataResultSuccess.cause().getMessage());
-                          LOGGER.debug(
-                              "pgHandler.cause().getMessage "
-                                  + subscriptionDataResultSuccess.cause().getMessage());
-                          /*promise.fail(generateResponse(res).toString());*/
-                        });
-              }
+              List<String> listAppend = new ArrayList<String>();
+              listAppend.add(entities);
+              promise.complete(new GetResultModel(listAppend));
             })
-        .onFailure(failed -> LOGGER.error(failed.getCause()));
+        .onFailure(
+            failed -> {
+              LOGGER.debug("Failed :: " + failed.getMessage());
+              promise.fail(failed.getMessage());
+            });
     return promise.future();
   }
 
@@ -427,7 +378,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
               deleteDataBroker -> {
                 if (deleteDataBroker.succeeded()) {
                   DeleteSubsResultModel deleteSubsResultModel =
-                      new DeleteSubsResultModel(deleteDataBroker.result());
+                      new DeleteSubsResultModel(
+                          getResponseJson(
+                              ResponseUrn.SUCCESS_URN.getUrn(),
+                              HttpStatus.SC_OK,
+                              SUCCESS,
+                              "Subscription deleted Successfully"));
                   promise.complete(deleteSubsResultModel);
                 } else {
                   promise.fail(deleteDataBroker.cause().getMessage());
@@ -440,16 +396,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     return promise.future();
   }
 
-  private Future<JsonObject> deleteSubscriptionFromPg(String subscriptionID) {
-    Promise<JsonObject> promise = Promise.promise();
+  private Future<Void> deleteSubscriptionFromPg(String subscriptionID) {
+    Promise<Void> promise = Promise.promise();
     String deleteQueueQuery = DELETE_SUB_SQL.replace("$1", subscriptionID);
     LOGGER.trace("delete query- " + deleteQueueQuery);
     postgresService
-        .executeQuery(deleteQueueQuery)
+        .executeQuery1(deleteQueueQuery)
         .onComplete(
             pgHandler -> {
               if (pgHandler.succeeded()) {
-                promise.complete(pgHandler.result());
+                LOGGER.debug("deleted from postgres");
+                promise.complete();
               } else {
                 LOGGER.error("fail here");
                 JsonObject failJson =
@@ -542,12 +499,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     return promise.future();
   }
 
-  private JsonObject constructSuccessResponse(JsonObject request) {
+  /*private JsonObject constructSuccessResponse(JsonObject request) {
     return new JsonObject()
         .put("type", ResponseUrn.SUCCESS_URN.getUrn())
         .put("title", ResponseUrn.SUCCESS_URN.getMessage().toLowerCase())
         .put("results", new JsonArray().add(request));
-  }
+  }*/
 
   public class CreateResultContainer {
     public String queueName;

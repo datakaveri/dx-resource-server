@@ -13,7 +13,7 @@ import static iudx.resource.server.apiserver.util.Constants.*;
 public class RoutingContextHelper {
     private static final Logger LOGGER = LogManager.getLogger(RoutingContextHelper.class);
     private static final String JWT_DATA = "jwtData";
-
+    private static final String API_ENDPOINT = "apiEndpoint";
     public static String getRequestPath(RoutingContext routingContext) {
         return routingContext.request().path();
     }
@@ -21,7 +21,6 @@ public class RoutingContextHelper {
     public static String getMethod(RoutingContext routingContext) {
         return routingContext.request().method().toString();
     }
-
 
     public static HttpServerRequest getRequest(RoutingContext routingContext)
     {
@@ -97,5 +96,6 @@ public class RoutingContextHelper {
     public static JwtData getJwtData(RoutingContext routingContext) {
         return routingContext.get(JWT_DATA);
     }
+
 
 }

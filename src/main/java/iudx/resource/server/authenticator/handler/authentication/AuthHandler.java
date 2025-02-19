@@ -31,7 +31,7 @@ public class AuthHandler implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext context) {
     JsonObject authInfo = RoutingContextHelper.getAuthInfo(context);
-    LOGGER.debug("Info :" + context.request().path());
+    LOGGER.debug("Info :" + context.request().path() + " AuthInfo " + authInfo.toString());
 
     Future<JwtData> jwtDataFuture = authenticator.tokenIntrospect(authInfo);
     jwtDataFuture

@@ -8,7 +8,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import iudx.resource.server.apiserver.subscription.model.SubscriptionImplModel;
-import iudx.resource.server.databroker.model.ListStreamingSubsModel;
 import iudx.resource.server.databroker.model.SubscriptionResponseModel;
 
 import java.util.List;
@@ -31,9 +30,9 @@ public interface DataBrokerService {
 
   Future<JsonObject> updateStreamingSubscription(JsonObject request);
 
-  Future<JsonObject> appendStreamingSubscription(SubscriptionImplModel subscriptionImplModel, String subId);
+  Future<List<String>> appendStreamingSubscription(SubscriptionImplModel subscriptionImplModel, String subId);
 
-  Future<JsonObject> deleteStreamingSubscription(String queueName, String userid);
+  Future<Void> deleteStreamingSubscription(String queueName, String userid);
 
   Future<List<String>> listStreamingSubscription(String subscriptionID);
 
@@ -47,5 +46,5 @@ public interface DataBrokerService {
 
   Future<JsonObject> publishHeartbeat(JsonObject request, String vhost);
 
-  Future<JsonObject> publishMessage(JsonObject body, String toExchange, String routingKey);
+  Future<Void> publishMessage(JsonObject body, String toExchange, String routingKey);
 }
