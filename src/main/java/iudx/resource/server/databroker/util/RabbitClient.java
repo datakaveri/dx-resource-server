@@ -17,7 +17,11 @@ import iudx.resource.server.common.ResponseUrn;
 import iudx.resource.server.databroker.model.UserResponse;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.function.BinaryOperator;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.http.HttpStatus;
@@ -35,6 +39,21 @@ public class RabbitClient {
                 .putLong(uid.getLeastSignificantBits())
                 .array();
         return Base64.getUrlEncoder().encodeToString(pwdBytes).substring(0, 22);
+      };
+  public static Predicate<String> isValidId =
+      (id) -> {
+        if (id == null) {
+          return false;
+        }
+        Pattern allowedPattern = Pattern.compile("[^-_.//a-zA-Z0-9 ]", Pattern.CASE_INSENSITIVE);
+        Matcher isInvalid = allowedPattern.matcher(id);
+        return !isInvalid.find();
+      };
+  public static BinaryOperator<JsonArray> bindingMergeOperator =
+      (key1, key2) -> {
+        JsonArray mergedArray = new JsonArray();
+        mergedArray.clear().addAll((JsonArray) key1).addAll((JsonArray) key2);
+        return mergedArray;
       };
   private final String amqpUrl;
   private final int amqpPort;
@@ -355,10 +374,7 @@ public class RabbitClient {
               ar -> {
                 if (ar.succeeded()) {
                   HttpResponse<Buffer> response = ar.result();
-                  LOGGER.debug(
-                      "------------------------------"
-                          + response.statusCode()
-                          + "----------------");
+                  LOGGER.debug("status code:" + +response.statusCode());
                   if (response != null && !response.equals(" ")) {
                     int status = response.statusCode();
                     if (status == HttpStatus.SC_CREATED) {
@@ -457,6 +473,29 @@ public class RabbitClient {
               });
     }
 
+    return promise.future();
+  }
+
+  Future<Void> bindQueue(String queue, String adaptorId, String topics, String vhost) {
+    LOGGER.trace("Info : RabbitClient#bindQueue() started");
+    LOGGER.debug("Info : data : " + queue + " adaptorID : " + adaptorId + " topics : " + topics);
+    Promise<Void> promise = Promise.promise();
+    String url =
+        "/api/bindings/" + vhost + "/e/" + encodeValue(adaptorId) + "/q/" + encodeValue(queue);
+    JsonObject bindRequest = new JsonObject();
+    bindRequest.put("routing_key", topics);
+
+    rabbitWebClient
+        .requestAsync(REQUEST_POST, url, bindRequest)
+        .onComplete(
+            handler -> {
+              if (handler.succeeded()) {
+                promise.complete();
+              } else {
+                LOGGER.error("Error : Queue" + queue + " binding error : ", handler.cause());
+                promise.fail(handler.cause());
+              }
+            });
     return promise.future();
   }
 
@@ -606,5 +645,409 @@ public class RabbitClient {
         break;
     }
     return permissionsJson;
+  }
+
+  public Future<JsonObject> registerAdapter(JsonObject request, String vhost) {
+    LOGGER.trace("Info : RabbitClient#registerAdaptor() started");
+    LOGGER.debug("Request :" + request + " vhost : " + vhost);
+    Promise<JsonObject> promise = Promise.promise();
+    String id = request.getJsonArray("entities").getString(0); // getting first and only id
+    AdaptorResultContainer requestParams = new AdaptorResultContainer();
+    requestParams.vhost = vhost;
+    requestParams.id = request.getString("resourceGroup");
+    requestParams.resourceServer = request.getString("resourceServer");
+    requestParams.userid = request.getString("userid");
+
+    requestParams.adaptorId = id;
+    requestParams.type = request.getString("types");
+    if (isValidId.test(requestParams.adaptorId)) {
+      if (requestParams.adaptorId != null
+          && !requestParams.adaptorId.isEmpty()
+          && !requestParams.adaptorId.isBlank()) {
+        Future<UserResponse> userCreationFuture = createUserIfNotExist(requestParams.userid, vhost);
+        userCreationFuture
+            .compose(
+                userCreationResult -> {
+                  requestParams.apiKey =
+                      userCreationResult.getPassword() /*userCreationResult.getString("apiKey")*/;
+                  JsonObject json = new JsonObject();
+                  json.put(EXCHANGE_NAME, requestParams.adaptorId);
+                  LOGGER.debug("Success : User created/exist.");
+                  return createExchange(json, vhost);
+                })
+            .compose(
+                createExchangeResult -> {
+                  if (createExchangeResult.containsKey("detail")) {
+                    LOGGER.error("Error : Exchange creation failed. ");
+                    return Future.failedFuture(createExchangeResult.toString());
+                  }
+                  LOGGER.debug("Success : Exchange created successfully.");
+                  requestParams.isExchnageCreated = true;
+                  return updateUserPermissions(
+                      requestParams.vhost,
+                      requestParams.userid,
+                      PermissionOpType.ADD_WRITE,
+                      requestParams.adaptorId);
+                })
+            .compose(
+                userPermissionsResult -> {
+                  LOGGER.debug("Success : user permissions set.");
+                  return queueBinding(requestParams, vhost);
+                })
+            .onSuccess(
+                success -> {
+                  LOGGER.debug("Success : queue bindings done.");
+                  JsonObject response =
+                      new JsonObject()
+                          .put(USER_NAME, requestParams.userid)
+                          .put(APIKEY, requestParams.apiKey)
+                          .put(ID, requestParams.adaptorId)
+                          .put(URL, this.amqpUrl)
+                          .put(PORT, this.amqpPort)
+                          .put(VHOST, requestParams.vhost);
+                  LOGGER.debug("Success : Adapter created successfully.");
+                  promise.complete(response);
+                })
+            .onFailure(
+                failure -> {
+                  LOGGER.info("Error : ", failure);
+                  // Compensating call, delete adaptor if created;
+                  if (requestParams.isExchnageCreated) {
+                    JsonObject deleteJson =
+                        new JsonObject().put("exchangeName", requestParams.adaptorId);
+                    Future.future(fu -> deleteExchange(deleteJson, vhost));
+                  }
+                  promise.fail(failure);
+                });
+      } else {
+        promise.fail(
+            getResponseJson(BAD_REQUEST_CODE, BAD_REQUEST_DATA, "Invalid/Missing Parameters")
+                .toString());
+      }
+    } else {
+      promise.fail(
+          getResponseJson(BAD_REQUEST_CODE, BAD_REQUEST_DATA, "Invalid/Missing Parameters")
+              .toString());
+    }
+    return promise.future();
+  }
+
+  public Future<JsonObject> createExchange(JsonObject request, String vhost) {
+    LOGGER.trace("Info : RabbitClient#createExchage() started");
+    Promise<JsonObject> promise = Promise.promise();
+    if (request != null && !request.isEmpty()) {
+      JsonObject obj = new JsonObject();
+      obj.put(TYPE, EXCHANGE_TYPE);
+      obj.put(AUTO_DELETE, false);
+      obj.put(DURABLE, true);
+      String exchangeName = request.getString("exchangeName");
+      String url = "/api/exchanges/" + vhost + "/" + encodeValue(exchangeName);
+      rabbitWebClient
+          .requestAsync(REQUEST_PUT, url, obj)
+          .onComplete(
+              requestHandler -> {
+                if (requestHandler.succeeded()) {
+                  JsonObject responseJson = new JsonObject();
+                  HttpResponse<Buffer> response = requestHandler.result();
+                  int statusCode = response.statusCode();
+                  if (statusCode == HttpStatus.SC_CREATED) {
+                    responseJson.put(EXCHANGE, exchangeName);
+                  } else if (statusCode == HttpStatus.SC_NO_CONTENT) {
+                    responseJson =
+                        getResponseJson(HttpStatus.SC_CONFLICT, FAILURE, EXCHANGE_EXISTS);
+                  } else if (statusCode == HttpStatus.SC_BAD_REQUEST) {
+                    responseJson =
+                        getResponseJson(
+                            statusCode, FAILURE, EXCHANGE_EXISTS_WITH_DIFFERENT_PROPERTIES);
+                  }
+                  LOGGER.debug("Success : " + responseJson);
+                  promise.complete(responseJson);
+                } else {
+                  JsonObject errorJson =
+                      getResponseJson(
+                          HttpStatus.SC_INTERNAL_SERVER_ERROR, ERROR, EXCHANGE_CREATE_ERROR);
+                  LOGGER.error("Fail : " + requestHandler.cause());
+                  promise.fail(errorJson.toString());
+                }
+              });
+    }
+    return promise.future();
+  }
+
+  Future<JsonObject> queueBinding(AdaptorResultContainer adaptorResultContainer, String vhost) {
+    LOGGER.trace("RabbitClient#queueBinding() method started");
+    Promise<JsonObject> promise = Promise.promise();
+    String topics;
+
+    if (adaptorResultContainer.type.equalsIgnoreCase("resourceGroup")) {
+      topics = adaptorResultContainer.adaptorId + DATA_WILDCARD_ROUTINGKEY;
+    } else {
+      topics = adaptorResultContainer.id + "/." + adaptorResultContainer.adaptorId;
+    }
+    bindQueue(QUEUE_DATA, adaptorResultContainer.adaptorId, topics, vhost)
+        .compose(
+            databaseResult ->
+                bindQueue(REDIS_LATEST, adaptorResultContainer.adaptorId, topics, vhost))
+        .compose(
+            bindToAuditingQueueResult ->
+                bindQueue(QUEUE_AUDITING, adaptorResultContainer.adaptorId, topics, vhost))
+        .onSuccess(
+            successHandler -> {
+              JsonObject response = new JsonObject();
+              response.mergeIn(
+                  getResponseJson(
+                      SUCCESS_CODE,
+                      "Queue_Database",
+                      QUEUE_DATA + " queue bound to " + adaptorResultContainer.adaptorId));
+              LOGGER.debug("Success : " + response);
+              promise.complete(response);
+            })
+        .onFailure(
+            failureHandler -> {
+              LOGGER.error("Error : queue bind error : " + failureHandler.getCause().toString());
+              JsonObject response = getResponseJson(INTERNAL_ERROR_CODE, ERROR, QUEUE_BIND_ERROR);
+              promise.fail(response.toString());
+            });
+    return promise.future();
+  }
+
+  Future<JsonObject> deleteExchange(JsonObject request, String vhost) {
+    LOGGER.trace("Info : RabbitClient#deleteExchange() started");
+    Promise<JsonObject> promise = Promise.promise();
+    if (request != null && !request.isEmpty()) {
+      String exchangeName = request.getString("exchangeName");
+      String url = "/api/exchanges/" + vhost + "/" + encodeValue(exchangeName);
+      rabbitWebClient
+          .requestAsync(REQUEST_DELETE, url)
+          .onComplete(
+              requestHandler -> {
+                if (requestHandler.succeeded()) {
+                  JsonObject responseJson = new JsonObject();
+                  HttpResponse<Buffer> response = requestHandler.result();
+                  int statusCode = response.statusCode();
+                  if (statusCode == HttpStatus.SC_NO_CONTENT) {
+                    responseJson = new JsonObject();
+                    responseJson.put(EXCHANGE, exchangeName);
+                  } else {
+                    responseJson = getResponseJson(statusCode, FAILURE, EXCHANGE_NOT_FOUND);
+                    LOGGER.debug("Success : " + responseJson);
+                  }
+                  promise.complete(responseJson);
+                } else {
+                  JsonObject errorJson =
+                      getResponseJson(
+                          HttpStatus.SC_INTERNAL_SERVER_ERROR, ERROR, EXCHANGE_DELETE_ERROR);
+                  LOGGER.error("Error : " + requestHandler.cause());
+                  promise.fail(errorJson.toString());
+                }
+              });
+    }
+    return promise.future();
+  }
+
+  Future<JsonObject> getExchange(JsonObject request, String vhost) {
+    JsonObject response = new JsonObject();
+    Promise<JsonObject> promise = Promise.promise();
+    if (request != null && !request.isEmpty()) {
+      String exchangeName = request.getString("id");
+      String url;
+      url = "/api/exchanges/" + vhost + "/" + encodeValue(exchangeName);
+      rabbitWebClient
+          .requestAsync(REQUEST_GET, url)
+          .onComplete(
+              result -> {
+                if (result.succeeded()) {
+                  int status = result.result().statusCode();
+                  response.put(TYPE, status);
+                  if (status == HttpStatus.SC_OK) {
+                    response.put(TITLE, SUCCESS);
+                    response.put(DETAIL, EXCHANGE_FOUND);
+                  } else if (status == HttpStatus.SC_NOT_FOUND) {
+                    response.put(TITLE, FAILURE);
+                    response.put(DETAIL, EXCHANGE_NOT_FOUND);
+                  } else {
+                    response.put("getExchange_status", status);
+                    promise.fail("getExchange_status" + result.cause());
+                  }
+                } else {
+                  response.put("getExchange_error", result.cause());
+                  promise.fail("getExchange_error" + result.cause());
+                }
+                LOGGER.debug("getExchange method response : " + response);
+                promise.tryComplete(response);
+              });
+
+    } else {
+      promise.fail("exchangeName not provided");
+    }
+    return promise.future();
+  }
+
+  public Future<JsonObject> deleteAdapter(JsonObject json, String vhost) {
+    LOGGER.trace("Info : RabbitClient#deleteAdapter() started");
+    Promise<JsonObject> promise = Promise.promise();
+    JsonObject finalResponse = new JsonObject();
+    Future<JsonObject> result = getExchange(json, vhost);
+    result.onComplete(
+        resultHandler -> {
+          if (resultHandler.succeeded()) {
+            int status = resultHandler.result().getInteger("type");
+            if (status == 200) {
+              String exchangeId = json.getString("id");
+              String userId = json.getString("userid");
+              String url = "/api/exchanges/" + vhost + "/" + encodeValue(exchangeId);
+              rabbitWebClient
+                  .requestAsync(REQUEST_DELETE, url)
+                  .onComplete(
+                      rh -> {
+                        if (rh.succeeded()) {
+                          LOGGER.debug("Info : " + exchangeId + " adaptor deleted successfully");
+                          finalResponse.mergeIn(getResponseJson(200, "success", "adaptor deleted"));
+                          Future.future(
+                              fu ->
+                                  updateUserPermissions(
+                                      vhost, userId, PermissionOpType.DELETE_WRITE, exchangeId));
+                        } else if (rh.failed()) {
+                          finalResponse
+                              .clear()
+                              .mergeIn(
+                                  getResponseJson(
+                                      HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                                      "Adaptor deleted",
+                                      rh.cause().toString()));
+                          LOGGER.error("Error : Adaptor deletion failed cause - " + rh.cause());
+                          promise.fail(finalResponse.toString());
+                        } else {
+                          LOGGER.error("Error : Something wrong in deleting adaptor" + rh.cause());
+                          finalResponse.mergeIn(
+                              getResponseJson(400, "bad request", "nothing to delete"));
+                          promise.fail(finalResponse.toString());
+                        }
+                        promise.tryComplete(finalResponse);
+                      });
+
+            } else if (status == 404) { // exchange not found
+              finalResponse
+                  .clear()
+                  .mergeIn(
+                      getResponseJson(
+                          status, "not found", resultHandler.result().getString("detail")));
+              LOGGER.error("Error : Exchange not found cause ");
+              promise.fail(finalResponse.toString());
+            } else { // some other issue
+              LOGGER.error("Error : Bad request");
+              finalResponse.mergeIn(getResponseJson(400, "bad request", "nothing to delete"));
+              promise.fail(finalResponse.toString());
+            }
+          }
+          if (resultHandler.failed()) {
+            LOGGER.error("Error : deleteAdaptor - resultHandler failed : " + resultHandler.cause());
+            finalResponse.mergeIn(
+                getResponseJson(INTERNAL_ERROR_CODE, "bad request", "nothing to delete"));
+            promise.fail(finalResponse.toString());
+          }
+        });
+    return promise.future();
+  }
+
+  public Future<JsonObject> listExchangeSubscribers(JsonObject request, String vhost) {
+    LOGGER.trace("Info : RabbitClient#listExchangeSubscribers() started");
+    Promise<JsonObject> promise = Promise.promise();
+    JsonObject finalResponse = new JsonObject();
+    if (request != null && !request.isEmpty()) {
+      String exchangeName = request.getString(ID);
+      String url = "/api/exchanges/" + vhost + "/" + encodeValue(exchangeName) + "/bindings/source";
+      rabbitWebClient
+          .requestAsync(REQUEST_GET, url)
+          .onComplete(
+              ar -> {
+                if (ar.succeeded()) {
+                  HttpResponse<Buffer> response = ar.result();
+                  if (response != null && !response.equals(" ")) {
+                    int status = response.statusCode();
+                    if (status == HttpStatus.SC_OK) {
+                      Buffer body = response.body();
+                      if (body != null) {
+                        JsonArray jsonBody = new JsonArray(body.toString());
+                        Map res =
+                            jsonBody.stream()
+                                .map(JsonObject.class::cast)
+                                .collect(
+                                    Collectors.toMap(
+                                        json -> json.getString("destination"),
+                                        json -> new JsonArray().add(json.getString("routing_key")),
+                                        bindingMergeOperator));
+                        LOGGER.debug("Info : exchange subscribers : " + jsonBody);
+                        finalResponse.clear().mergeIn(new JsonObject(res));
+                        LOGGER.debug("Info : final Response : " + finalResponse);
+                        if (finalResponse.isEmpty()) {
+                          finalResponse
+                              .clear()
+                              .mergeIn(
+                                  getResponseJson(
+                                      HttpStatus.SC_NOT_FOUND, FAILURE, EXCHANGE_NOT_FOUND),
+                                  true);
+                        }
+                      }
+                    } else if (status == HttpStatus.SC_NOT_FOUND) {
+                      finalResponse.mergeIn(
+                          getResponseJson(HttpStatus.SC_NOT_FOUND, FAILURE, EXCHANGE_NOT_FOUND),
+                          true);
+                    }
+                  }
+                  promise.complete(finalResponse);
+                  LOGGER.debug("Success :" + finalResponse);
+                } else {
+                  LOGGER.error("Fail : Listing of Exchange failed - ", ar.cause());
+                  JsonObject error = getResponseJson(500, FAILURE, "Internal server error");
+                  promise.fail(error.toString());
+                }
+              });
+    }
+    return promise.future();
+  }
+
+  public Future<JsonObject> resetPasswordInRmq(String userid, String password) {
+    LOGGER.trace("Info : RabbitClient#resetPassword() started");
+    Promise<JsonObject> promise = Promise.promise();
+    JsonObject response = new JsonObject();
+    JsonObject arg = new JsonObject();
+    arg.put(PASSWORD, password);
+    arg.put(TAGS, NONE);
+    String url = "/api/users/" + userid;
+    LOGGER.debug("url : " + url);
+    rabbitWebClient
+        .requestAsync(REQUEST_PUT, url, arg)
+        .onComplete(
+            ar -> {
+              if (ar.succeeded()) {
+                if (ar.result().statusCode() == HttpStatus.SC_NO_CONTENT) {
+                  response.put(userid, userid);
+                  response.put(PASSWORD, password);
+                  LOGGER.debug("user password changed");
+                  promise.complete(response);
+                } else {
+                  LOGGER.error("Error :reset pwd method failed", ar.cause());
+                  response.put(FAILURE, NETWORK_ISSUE);
+                  promise.fail(response.toString());
+                }
+              } else {
+                LOGGER.error("User creation failed using mgmt API :", ar.cause());
+                response.put(FAILURE, CHECK_CREDENTIALS);
+                promise.fail(response.toString());
+              }
+            });
+    return promise.future();
+  }
+
+  public class AdaptorResultContainer {
+    public String apiKey;
+    public String id;
+    public String resourceServer;
+    public String userid;
+    public String adaptorId;
+    public String vhost;
+    public boolean isExchnageCreated;
+    public String type;
   }
 }
