@@ -9,7 +9,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import iudx.resource.server.apiserver.subscription.model.SubscriptionImplModel;
 import iudx.resource.server.databroker.model.SubscriptionResponseModel;
-
 import java.util.List;
 
 @VertxGen
@@ -19,7 +18,6 @@ public interface DataBrokerService {
   static DataBrokerService createProxy(Vertx vertx, String address) {
     return new DataBrokerServiceVertxEBProxy(vertx, address);
   }
-
   Future<SubscriptionResponseModel> registerStreamingSubscription(SubscriptionImplModel subscriptionImplModel);
 
   Future<JsonObject> registerAdaptor(JsonObject request, String vhost);
@@ -36,15 +34,9 @@ public interface DataBrokerService {
 
   Future<List<String>> listStreamingSubscription(String subscriptionID);
 
-  Future<JsonObject> listvHost(JsonObject request);
-
-  Future<JsonObject> listQueueSubscribers(JsonObject request, String vhost);
-
   Future<JsonObject> publishFromAdaptor(JsonArray request, String vhost);
 
-  Future<JsonObject> resetPassword(JsonObject request);
-
-  Future<JsonObject> publishHeartbeat(JsonObject request, String vhost);
+  Future<JsonObject> resetPassword(String userId);
 
   Future<Void> publishMessage(JsonObject body, String toExchange, String routingKey);
 }

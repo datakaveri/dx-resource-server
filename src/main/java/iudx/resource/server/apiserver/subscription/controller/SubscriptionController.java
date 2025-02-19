@@ -18,7 +18,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.exception.FailureHandler;
-import iudx.resource.server.apiserver.metering.handler.MeteringHandler;
 import iudx.resource.server.apiserver.metering.service.MeteringService;
 import iudx.resource.server.apiserver.subscription.model.DeleteSubsResultModel;
 import iudx.resource.server.apiserver.subscription.model.GetResultModel;
@@ -204,6 +203,7 @@ public class SubscriptionController {
               LOGGER.info("result : " + subsRequestHandler.result());
               routingContext.data().put(RESPONSE_SIZE, 0);
               response
+                  .setStatusCode(201)
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                   .end(subsRequestHandler.result().constructSuccessResponse().toString());
               /*routingContext.next();*/
@@ -250,6 +250,7 @@ public class SubscriptionController {
               LOGGER.info("result : " + subsRequestHandler.result());
               routingContext.data().put(RESPONSE_SIZE, 0);
               response
+                  .setStatusCode(201)
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                   .end(subsRequestHandler.result().constructSuccessResponse().toString());
               /*routingContext.next();*/
@@ -395,6 +396,7 @@ public class SubscriptionController {
               LOGGER.info("Success: Handle Subscription request;");
               routingContext.data().put(RESPONSE_SIZE, 0);
               response
+                  .setStatusCode(201)
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                   .end(subHandler.constructSuccessResponse().toString());
               /*routingContext.next();*/

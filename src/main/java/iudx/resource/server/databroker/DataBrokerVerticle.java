@@ -152,7 +152,7 @@ public class DataBrokerVerticle extends AbstractVerticle {
             prodVhost,
             externalVhost,
             iudxInternalRabbitMqClient,
-            iudxRabbitMqClient);
+            iudxRabbitMqClient,config());
 
     asyncService = AsyncService.createProxy(vertx, ASYNC_SERVICE_ADDRESS);
 

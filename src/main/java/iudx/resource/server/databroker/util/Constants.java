@@ -67,4 +67,17 @@ public class Constants {
     public static final String API_KEY_MESSAGE =
             "Use the apiKey returned on registration, if lost please use /resetPassword API";
     public static final String ENTITIES = "entities";
+    public static final String EXCHANGE_DELETE_ERROR = "Deletion of Exchange failed";
+    public static final String AUTO_DELETE = "auto_delete";
+    public static final String EXCHANGE_TYPE = "topic";
+    public static final String DURABLE = "durable";
+    public static final String EXCHANGE_FOUND = "Exchange found";
+    public static final String EXCHANGE_NOT_FOUND = "Exchange not found";
+    public static final String EXCHANGE_CREATE_ERROR = "Creation of Exchange failed";
+    public static final String QUEUE_DATA = "database";
+    public static final String QUEUE_AUDITING = "subscriptions-monitoring";
+    public static final String REDIS_LATEST = "redis-latest";
+    public static final String EXCHANGE_EXISTS = "Exchange already exists";
+    public static final String EXCHANGE_EXISTS_WITH_DIFFERENT_PROPERTIES =
+            "Exchange already exists with different properties";
 }

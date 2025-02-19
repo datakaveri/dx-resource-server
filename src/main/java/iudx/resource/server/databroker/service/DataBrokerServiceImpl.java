@@ -1,5 +1,8 @@
 package iudx.resource.server.databroker.service;
 
+import static iudx.resource.server.apiserver.util.Constants.ID;
+import static iudx.resource.server.apiserver.util.Constants.RESOURCE_GROUP;
+import static iudx.resource.server.cache.util.CacheType.CATALOGUE_CACHE;
 import static iudx.resource.server.database.util.Constants.ERROR;
 import static iudx.resource.server.databroker.util.Constants.*;
 import static iudx.resource.server.databroker.util.Util.getResponseJson;
@@ -14,11 +17,14 @@ import iudx.resource.server.apiserver.subscription.model.SubscriptionImplModel;
 import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.common.HttpStatusCode;
 import iudx.resource.server.common.ResponseUrn;
+import iudx.resource.server.common.Vhosts;
 import iudx.resource.server.databroker.model.SubscriptionResponseModel;
 import iudx.resource.server.databroker.util.PermissionOpType;
 import iudx.resource.server.databroker.util.RabbitClient;
+import iudx.resource.server.databroker.util.Util;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,15 +39,19 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   private RabbitClient rabbitClient;
   private RabbitMQClient iudxInternalRabbitMqClient;
   private RabbitMQClient iudxRabbitMqClient;
+  private JsonObject config;
 
   public DataBrokerServiceImpl(
-          RabbitClient client,
-          String amqpUrl,
-          int amqpPort,
-          CacheService cacheService,
-          String iudxInternalVhost,
-          String prodVhost,
-          String externalVhost, RabbitMQClient iudxInternalRabbitMqClient, RabbitMQClient iudxRabbitMqClient) {
+      RabbitClient client,
+      String amqpUrl,
+      int amqpPort,
+      CacheService cacheService,
+      String iudxInternalVhost,
+      String prodVhost,
+      String externalVhost,
+      RabbitMQClient iudxInternalRabbitMqClient,
+      RabbitMQClient iudxRabbitMqClient,
+      JsonObject config) {
     this.rabbitClient = client;
     this.amqpUrl = amqpUrl;
     this.amqpPort = amqpPort;
@@ -51,6 +61,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     this.externalVhost = externalVhost;
     this.iudxInternalRabbitMqClient = iudxInternalRabbitMqClient;
     this.iudxRabbitMqClient = iudxRabbitMqClient;
+    this.config = config;
     LOGGER.trace("Info : DataBrokerServiceImpl#constructor() completed");
   }
 
@@ -125,10 +136,6 @@ public class DataBrokerServiceImpl implements DataBrokerService {
                   entitiesArray.add(exchangeName + "/." + routingKey);
                 }
                 LOGGER.debug(" Exchange name = {}", exchangeName);
-                /*JsonObject json = new JsonObject();
-                json.put(EXCHANGE_NAME, exchangeName);
-                json.put(QUEUE_NAME, queueName);
-                json.put(ENTITIES, array);*/
                 return rabbitClient.bindQueue(exchangeName, queueName, entitiesArray, vhostProd);
               })
           .compose(
@@ -174,17 +181,65 @@ public class DataBrokerServiceImpl implements DataBrokerService {
 
   @Override
   public Future<JsonObject> registerAdaptor(JsonObject request, String vhost) {
-    return null;
+    Promise<JsonObject> promise = Promise.promise();
+    String virtualHost = getVhost(vhost);
+    if (request != null && !request.isEmpty()) {
+      Future<JsonObject> result = rabbitClient.registerAdapter(request, virtualHost);
+      result.onComplete(
+          resultHandler -> {
+            if (resultHandler.succeeded()) {
+              promise.complete(resultHandler.result());
+            } else {
+              LOGGER.error("registerAdaptor resultHandler failed : " + resultHandler.cause());
+              promise.fail(resultHandler.cause().getMessage());
+            }
+          });
+    }
+    return promise.future();
   }
 
   @Override
   public Future<JsonObject> deleteAdaptor(JsonObject request, String vhost) {
-    return null;
+    Promise<JsonObject> promise = Promise.promise();
+    String virtualHost = getVhost(vhost);
+    if (request != null && !request.isEmpty()) {
+      Future<JsonObject> result = rabbitClient.deleteAdapter(request, virtualHost);
+      result.onComplete(
+          resultHandler -> {
+            if (resultHandler.succeeded()) {
+              promise.complete(resultHandler.result());
+            }
+            if (resultHandler.failed()) {
+              LOGGER.error("getExchange resultHandler failed : " + resultHandler.cause());
+              promise.fail(resultHandler.cause().getMessage());
+            }
+          });
+    }
+    return promise.future();
   }
 
   @Override
   public Future<JsonObject> listAdaptor(JsonObject request, String vhost) {
-    return null;
+    Promise<JsonObject> promise = Promise.promise();
+    JsonObject finalResponse = new JsonObject();
+    String virtualHost = getVhost(vhost);
+    if (request != null && !request.isEmpty()) {
+      Future<JsonObject> result = rabbitClient.listExchangeSubscribers(request, virtualHost);
+      result.onComplete(
+          resultHandler -> {
+            if (resultHandler.succeeded()) {
+              promise.complete(resultHandler.result());
+            }
+            if (resultHandler.failed()) {
+              LOGGER.error("deleteAdaptor - resultHandler failed : " + resultHandler.cause());
+              promise.fail(resultHandler.cause().getMessage());
+            }
+          });
+    } else {
+      promise.fail(finalResponse.toString());
+      ;
+    }
+    return promise.future();
   }
 
   @Override
@@ -198,7 +253,6 @@ public class DataBrokerServiceImpl implements DataBrokerService {
     LOGGER.trace("Info : SubscriptionService#appendStreamingSubscription() started");
 
     Promise<List<String>> promise = Promise.promise();
-    /*JsonObject appendStreamingSubscriptionResponse = new JsonObject();*/
     JsonObject requestjson = new JsonObject();
 
     String entities = subscriptionImplModel.getControllerModel().getEntities();
@@ -225,11 +279,6 @@ public class DataBrokerServiceImpl implements DataBrokerService {
                 exchangeName = subscriptionImplModel.getResourcegroup();
                 entitiesArray.add(exchangeName + "/." + routingKey);
               }
-              /*JsonObject json = new JsonObject();
-              json.put(EXCHANGE_NAME, exchangeName);
-              json.put(QUEUE_NAME, queueName);
-              json.put(ENTITIES, entitiesArray);*/
-
               return rabbitClient.bindQueue(exchangeName, queueName, entitiesArray, vhostProd);
             })
         .compose(
@@ -242,12 +291,6 @@ public class DataBrokerServiceImpl implements DataBrokerService {
         .onComplete(
             permissionHandler -> {
               if (permissionHandler.succeeded()) {
-                /* appendStreamingSubscriptionResponse.put(ENTITIES, entities);
-
-                JsonObject response = new JsonObject();
-                response.put(TYPE, ResponseUrn.SUCCESS_URN.getUrn());
-                response.put(TITLE, "success");
-                response.put(RESULTS, new JsonArray().add(appendStreamingSubscriptionResponse));*/
                 List<String> listEntities = new ArrayList<String>();
                 listEntities.add(entities);
                 promise.complete(listEntities);
@@ -298,28 +341,94 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<JsonObject> listvHost(JsonObject request) {
-    return null;
-  }
-
-  @Override
-  public Future<JsonObject> listQueueSubscribers(JsonObject request, String vhost) {
-    return null;
-  }
-
-  @Override
   public Future<JsonObject> publishFromAdaptor(JsonArray request, String vhost) {
-    return null;
+    Promise<JsonObject> promise = Promise.promise();
+    JsonObject finalResponse = new JsonObject();
+    LOGGER.debug("request JsonArray " + request);
+
+    if (request != null && !request.isEmpty()) {
+
+      JsonObject cacheRequestJson = new JsonObject();
+      cacheRequestJson.put("type", CATALOGUE_CACHE);
+      cacheRequestJson.put("key", request.getJsonObject(0).getJsonArray("entities").getValue(0));
+      cacheService
+          .get(cacheRequestJson)
+          .onComplete(
+              cacheHandler -> {
+                if (cacheHandler.succeeded()) {
+                  JsonObject cacheResult = cacheHandler.result();
+                  String resourceGroupId =
+                      cacheResult.containsKey(RESOURCE_GROUP)
+                          ? cacheResult.getString(RESOURCE_GROUP)
+                          : cacheResult.getString(ID);
+                  LOGGER.debug("Info : resourceGroupId  " + resourceGroupId);
+                  String id =
+                      request.getJsonObject(0).getJsonArray("entities").getValue(0).toString();
+                  String routingKey = resourceGroupId + "/." + id;
+                  request.remove("entities");
+
+                  for (int i = 0; i < request.size(); i++) {
+                    JsonObject jsonObject = request.getJsonObject(i);
+                    jsonObject.remove("entities");
+                    jsonObject.put("id", id);
+                  }
+                  LOGGER.trace(request);
+                  if (resourceGroupId != null && !resourceGroupId.isBlank()) {
+                    LOGGER.debug("Info : routingKey  " + routingKey);
+                    Buffer buffer = Buffer.buffer(request.encode());
+                    iudxRabbitMqClient.basicPublish(
+                        resourceGroupId,
+                        routingKey,
+                        buffer,
+                        resultHandler -> {
+                          if (resultHandler.succeeded()) {
+                            finalResponse.put(STATUS, HttpStatus.SC_OK);
+                            LOGGER.info("Success : Message published to queue");
+                            promise.complete(finalResponse);
+                          } else {
+                            finalResponse.put(TYPE, HttpStatus.SC_BAD_REQUEST);
+                            LOGGER.error("Fail : " + resultHandler.cause().toString());
+                            promise.fail(resultHandler.cause().getMessage());
+                          }
+                        });
+                  }
+                } else {
+                  LOGGER.error("Item not found");
+                }
+              });
+    }
+    return promise.future();
   }
 
   @Override
-  public Future<JsonObject> resetPassword(JsonObject request) {
-    return null;
-  }
+  public Future<JsonObject> resetPassword(String userid) {
+    Promise<JsonObject> promise = Promise.promise();
+    JsonObject response = new JsonObject();
+    String password = Util.randomPassword.get();
 
-  @Override
-  public Future<JsonObject> publishHeartbeat(JsonObject request, String vhost) {
-    return null;
+    rabbitClient
+        .resetPasswordInRmq(userid, password)
+        .onSuccess(
+            successHandler -> {
+              response.put("type", ResponseUrn.SUCCESS_URN.getUrn());
+              response.put(TITLE, "successful");
+              response.put(DETAIL, "Successfully changed the password");
+              JsonArray result =
+                  new JsonArray()
+                      .add(new JsonObject().put("username", userid).put("apiKey", password));
+              response.put("result", result);
+              promise.complete(response);
+            })
+        .onFailure(
+            failurehandler -> {
+              JsonObject failureResponse = new JsonObject();
+              failureResponse
+                  .put("type", 401)
+                  .put("title", "not authorized")
+                  .put("detail", "not authorized");
+              promise.fail(failureResponse.toString());
+            });
+    return promise.future();
   }
 
   @Override
@@ -349,6 +458,11 @@ public class DataBrokerServiceImpl implements DataBrokerService {
 
   private boolean isGroupResource(JsonObject jsonObject) {
     return jsonObject.getString("type").equalsIgnoreCase("resourceGroup");
+  }
+
+  private String getVhost(String vhost) {
+    String vhostKey = Vhosts.valueOf(vhost).value;
+    return this.config.getString(vhostKey);
   }
 
   public class ResultContainer {
