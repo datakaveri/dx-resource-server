@@ -164,10 +164,11 @@ public class ApiServerVerticle extends AbstractVerticle {
     serverOptions.setCompressionSupported(true).setCompressionLevel(5);
     server = vertx.createHttpServer(serverOptions);
     server.requestHandler(router).listen(port);
+    String audience = config().getString("audience");
 
     new SubscriptionController(vertx, router, api, config()).init();
     new SearchController(vertx, router, api, config()).init();
-    new AdminController(vertx, router, api).init();
+    new AdminController(vertx, router, api, audience).init();
     new UserManagementController(router, vertx, api, config()).init();
     new AsyncController(vertx, router, api, config()).init();
     new IngestionController(vertx, router, api, config()).init();

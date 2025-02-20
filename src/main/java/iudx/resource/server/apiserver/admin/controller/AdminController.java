@@ -12,9 +12,8 @@ import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.handler.FailureHandler;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
+import iudx.resource.server.authenticator.handler.authentication.TokenIntrospectHandler;
 import iudx.resource.server.authenticator.handler.authorization.GetIdHandler;
-import iudx.resource.server.authenticator.handler.authorization.TokenInterospectionForAdminApis;
-import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.common.Api;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,25 +24,28 @@ public class AdminController {
   private Vertx vertx;
   private Api api;
   private AuthenticationService authenticator;
+  private String rsUrl;
 
-  public AdminController(Vertx vertx, Router router, Api api) {
+  public AdminController(Vertx vertx, Router router, Api api, String audience) {
     this.vertx = vertx;
     this.router = router;
     this.api = api;
+    this.rsUrl = audience;
   }
 
   public void init() {
     createProxy();
-    AuthHandler authHandler = new AuthHandler(api, authenticator);
+    AuthHandler authHandler = new AuthHandler(authenticator);
     GetIdHandler getIdHandler = new GetIdHandler(api);
-    Handler<RoutingContext> validateToken = new TokenInterospectionForAdminApis();
+    Handler<RoutingContext> tokenIntrospectHandler =
+            new TokenIntrospectHandler().validateKeycloakToken(rsUrl);
     FailureHandler validationsFailureHandler = new FailureHandler();
 
     router
         .post(ADMIN + REVOKE_TOKEN)
         .handler(getIdHandler.withNormalisedPath(api.getAdminRevokeToken()))
         .handler(authHandler)
-        .handler(validateToken)
+        .handler(tokenIntrospectHandler)
         .handler(this::handleRevokeTokenRequest)
         .failureHandler(validationsFailureHandler);
 
@@ -51,7 +53,7 @@ public class AdminController {
         .post(ADMIN + RESOURCE_ATTRIBS)
         .handler(getIdHandler.withNormalisedPath(api.getAdminUniqueAttributeOfResource()))
         .handler(authHandler)
-        .handler(validateToken)
+        .handler(tokenIntrospectHandler)
         .handler(this::createUniqueAttribute)
         .failureHandler(validationsFailureHandler);
 
@@ -59,7 +61,7 @@ public class AdminController {
         .put(ADMIN + RESOURCE_ATTRIBS)
         .handler(getIdHandler.withNormalisedPath(api.getAdminUniqueAttributeOfResource()))
         .handler(authHandler)
-        .handler(validateToken)
+        .handler(tokenIntrospectHandler)
         .handler(this::updateUniqueAttribute)
         .failureHandler(validationsFailureHandler);
 
@@ -67,7 +69,7 @@ public class AdminController {
         .delete(ADMIN + RESOURCE_ATTRIBS)
         .handler(getIdHandler.withNormalisedPath(api.getAdminUniqueAttributeOfResource()))
         .handler(authHandler)
-        .handler(validateToken)
+        .handler(tokenIntrospectHandler)
         .handler(this::deleteUniqueAttribute)
         .failureHandler(validationsFailureHandler);
   }

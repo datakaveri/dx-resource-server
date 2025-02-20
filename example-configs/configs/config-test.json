@@ -6,7 +6,8 @@
     "commonConfig" : {
         "dxApiBasePath" : "/ngsi-ld/v1",
         "dxCatalogueBasePath": "/iudx/cat/v1",
-        "dxAuthBasePath": "/auth/v1"
+        "dxAuthBasePath": "/auth/v1",
+		"audience": "rs.iudx.io"
     },
 	"clusterId": "iudx-rs-cluster",
 	"modules": [
@@ -39,7 +40,8 @@
 			"catServerHost": "",
 			"catServerPort": "",
 			"jwtIgnoreExpiry": true,
-			"enableLimits": false
+			"enableLimits": false,
+			"issuer": "<token-issuer>"
 		},
 		{
 			"id": "iudx.resource.server.databroker.DataBrokerVerticle",

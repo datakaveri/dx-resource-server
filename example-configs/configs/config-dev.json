@@ -11,7 +11,8 @@
     "catServerHost": "",
     "catServerPort": 443,
     "timeLimit": "test,2020-10-22T00:00:00Z,365",
-    "timeLimitForAsync": 365
+    "timeLimitForAsync": 365,
+    "audience": "rs.iudx.io"
   },
   "modules": [
     {
@@ -31,7 +32,8 @@
       "audience": "rs.iudx.io",
       "authServerHost": "",
       "jwtIgnoreExpiry": true,
-      "enableLimits": false
+      "enableLimits": false,
+      "issuer": "<token-issuer>"
     },
     {
       "id": "iudx.resource.server.databroker.DataBrokerVerticle",

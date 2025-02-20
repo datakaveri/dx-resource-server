@@ -12,6 +12,7 @@ import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.handler.FailureHandler;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
+import iudx.resource.server.authenticator.handler.authentication.TokenIntrospectHandler;
 import iudx.resource.server.authenticator.handler.authorization.AuthValidationHandler;
 import iudx.resource.server.authenticator.handler.authorization.AuthorizationHandler;
 import iudx.resource.server.authenticator.handler.authorization.GetIdHandler;
@@ -44,19 +45,23 @@ public class UserManagementController {
   public void init() {
     createProxy();
     CatalogueService catalogueService = new CatalogueService(cacheService, config, vertx);
-    AuthHandler authHandler = new AuthHandler(api, authenticator);
+    AuthHandler authHandler = new AuthHandler(authenticator);
     Handler<RoutingContext> getIdHandler = new GetIdHandler(api).withNormalisedPath(api.getManagementApiPath());
     Handler<RoutingContext> validateToken =
-            new AuthValidationHandler(api, cacheService, audience, catalogueService);
+            new AuthValidationHandler(api, cacheService, catalogueService);
     Handler<RoutingContext> adminAndUserAccessHandler =
             new AuthorizationHandler()
                     .setUserRolesForEndpoint(
                             DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
     FailureHandler validationsFailureHandler = new FailureHandler();
+    Handler<RoutingContext> tokenIntrospectHandler =
+            new TokenIntrospectHandler().validateTokenForRs(audience);
+
 
     router.post(api.getManagementApiPath())
             .handler(getIdHandler)
             .handler(authHandler)
+            .handler(tokenIntrospectHandler)
             .handler(validateToken)
             .handler(adminAndUserAccessHandler)
             .handler(this::resetPassword)

@@ -1,12 +1,9 @@
-package iudx.resource.server.authenticator.service;
-
+package iudx.resource.server.authenticator;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.authentication.TokenCredentials;
 import io.vertx.ext.auth.jwt.JWTAuth;
-import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.model.JwtData;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -15,7 +12,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class JwtAuthenticationServiceImpl implements AuthenticationService {
-
   private static final Logger LOGGER = LogManager.getLogger(JwtAuthenticationServiceImpl.class);
   final JWTAuth jwtAuth;
 
@@ -24,17 +20,9 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
   }
 
   @Override
-  public Future<JwtData> tokenIntrospect(JsonObject authenticationInfo) {
-
-    LOGGER.info("authInfo " + authenticationInfo);
-    String token = authenticationInfo.getString("token");
-    return decodeJwt(token);
-  }
-
-  Future<JwtData> decodeJwt(String jwtToken) {
+  public Future<JwtData> decodeToken(String token) {
     Promise<JwtData> promise = Promise.promise();
-    TokenCredentials creds = new TokenCredentials(jwtToken);
-
+    TokenCredentials creds = new TokenCredentials(token);
     jwtAuth
         .authenticate(creds)
         .onSuccess(
@@ -51,8 +39,8 @@ public class JwtAuthenticationServiceImpl implements AuthenticationService {
             })
         .onFailure(
             err -> {
-              LOGGER.error("failed to decode/validate jwt token : " + err.getMessage());
-              promise.fail("failed");
+              LOGGER.error("failed to decode/validate jwt token : {}", err.getMessage());
+              promise.fail(err.getMessage());
             });
 
     return promise.future();

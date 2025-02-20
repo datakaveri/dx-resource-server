@@ -1,6 +1,7 @@
 package iudx.resource.server.authenticator;
 
 import static iudx.resource.server.authenticator.util.Constants.AUTH_JWKS_PATH;
+import static iudx.resource.server.authenticator.util.Constants.JWT_LEEWAY_TIME;
 import static iudx.resource.server.common.Constants.AUTH_SERVICE_ADDRESS;
 import static iudx.resource.server.common.Constants.CACHE_SERVICE_ADDRESS;
 
@@ -79,7 +80,7 @@ public class AuthenticationVerticle extends AbstractVerticle {
               binder = new ServiceBinder(vertx);
 
               JWTAuthOptions jwtAuthOptions = new JWTAuthOptions();
-              jwtAuthOptions.getJWTOptions().setLeeway(30);
+              jwtAuthOptions.getJWTOptions().setLeeway(JWT_LEEWAY_TIME);
                 jwtAuthOptions.setJwks(jwks);
               /*
                * Default jwtIgnoreExpiry is false. If set through config, then that value is taken
@@ -93,7 +94,7 @@ public class AuthenticationVerticle extends AbstractVerticle {
                     "JWT ignore expiration set to true, "
                         + "do not set IgnoreExpiration in production!!");
               }
-
+              jwtAuthOptions.getJWTOptions().setIssuer(config().getString("issuer"));
               cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
 
               dxApiBasePath = config().getString("dxApiBasePath");
