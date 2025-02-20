@@ -11,6 +11,7 @@ import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.handler.FailureHandler;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
+import iudx.resource.server.authenticator.handler.authentication.TokenIntrospectHandler;
 import iudx.resource.server.authenticator.handler.authorization.*;
 import iudx.resource.server.authenticator.model.DxAccess;
 import iudx.resource.server.authenticator.model.DxRole;
@@ -44,14 +45,16 @@ public class MeteringController {
     CatalogueService catalogueService = new CatalogueService(cacheService, config, vertx);
     FailureHandler validationsFailureHandler = new FailureHandler();
     GetIdHandler getIdHandler = new GetIdHandler(api);
-    AuthHandler authHandler = new AuthHandler(api, authenticator);
+    AuthHandler authHandler = new AuthHandler(authenticator);
     Handler<RoutingContext> validateToken =
-        new AuthValidationHandler(api, cacheService, audience, catalogueService);
+        new AuthValidationHandler(api, cacheService, catalogueService);
     Handler<RoutingContext> userAndAdminAccessHandler =
         new AuthorizationHandler()
             .setUserRolesForEndpoint(
                 DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
     Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
+    Handler<RoutingContext> tokenIntrospectHandler =
+        new TokenIntrospectHandler().validateTokenForRs(audience);
 
     Handler<RoutingContext> providerAndAdminAccessHandler =
         new AuthorizationHandler()
@@ -64,6 +67,7 @@ public class MeteringController {
         .get(api.getMonthlyOverview())
         .handler(getIdHandler.withNormalisedPath(api.getMonthlyOverview()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -74,6 +78,7 @@ public class MeteringController {
         .get(api.getSummaryPath())
         .handler(getIdHandler.withNormalisedPath(api.getSummaryPath()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -84,6 +89,7 @@ public class MeteringController {
         .get(api.getIudxConsumerAuditUrl())
         .handler(getIdHandler.withNormalisedPath(api.getIudxConsumerAuditUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -95,6 +101,7 @@ public class MeteringController {
         .get(api.getIudxProviderAuditUrl())
         .handler(getIdHandler.withNormalisedPath(api.getIudxProviderAuditUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
         .handler(isTokenRevoked)

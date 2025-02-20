@@ -27,6 +27,7 @@ import iudx.resource.server.apiserver.subscription.service.SubscriptionServiceIm
 import iudx.resource.server.apiserver.subscription.util.SubsType;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
+import iudx.resource.server.authenticator.handler.authentication.TokenIntrospectHandler;
 import iudx.resource.server.authenticator.handler.authorization.AuthValidationHandler;
 import iudx.resource.server.authenticator.handler.authorization.AuthorizationHandler;
 import iudx.resource.server.authenticator.handler.authorization.GetIdHandler;
@@ -62,7 +63,6 @@ public class SubscriptionController {
     this.vertx = vertx;
     this.router = router;
     this.api = api;
-    /*TODO: update example config-dev and config-dev */
     this.audience = config.getString("audience");
     this.config = config;
     this.subsValidationHandler = new ValidationHandler(vertx, RequestType.SUBSCRIPTION);
@@ -73,18 +73,22 @@ public class SubscriptionController {
     proxyRequired();
     CatalogueService catalogueService = new CatalogueService(cacheService, config, vertx);
 
-    AuthHandler authHandler = new AuthHandler(api, authenticator);
+    AuthHandler authHandler = new AuthHandler(authenticator);
     Handler<RoutingContext> getIdHandler =
         new GetIdHandler(api).withNormalisedPath(api.getSubscriptionUrl());
 
     Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
     Handler<RoutingContext> validateToken =
-        new AuthValidationHandler(api, cacheService, audience, catalogueService);
+        new AuthValidationHandler(api, cacheService, catalogueService);
 
     Handler<RoutingContext> userAndAdminAccessHandler =
         new AuthorizationHandler()
             .setUserRolesForEndpoint(
                 DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
+    Handler<RoutingContext> tokenIntrospectHandler =
+        new TokenIntrospectHandler().validateTokenForRs(audience);
+
+    // TODO: Need to add auth and auditing insert
 
     /*MeteringHandler meteringHandler = new MeteringHandler(meteringService);*/
 
@@ -95,6 +99,7 @@ public class SubscriptionController {
         .handler(subsValidationHandler)
         .handler(getIdHandler)
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -107,6 +112,7 @@ public class SubscriptionController {
         .handler(subsValidationHandler)
         .handler(getIdHandler)
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -119,6 +125,7 @@ public class SubscriptionController {
         .handler(subsValidationHandler)
         .handler(getIdHandler)
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -130,6 +137,7 @@ public class SubscriptionController {
         .get(api.getSubscriptionUrl() + "/:userid/:alias")
         .handler(getIdHandler)
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -141,6 +149,7 @@ public class SubscriptionController {
         .get(api.getSubscriptionUrl())
         .handler(getIdHandler)
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -151,6 +160,7 @@ public class SubscriptionController {
         .delete(api.getSubscriptionUrl() + "/:userid/:alias")
         .handler(getIdHandler)
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)

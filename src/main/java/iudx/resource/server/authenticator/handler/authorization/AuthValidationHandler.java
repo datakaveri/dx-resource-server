@@ -15,6 +15,7 @@ import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.cache.util.CacheType;
 import iudx.resource.server.common.*;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,15 +26,13 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
   private static final Logger LOGGER = LogManager.getLogger(AuthValidationHandler.class);
   final CacheService cache;
   private Api apis;
-  private String audience;
-  private CatalogueService catService;
+  private CatalogueService catalogueService;
 
   public AuthValidationHandler(
-      Api api, final CacheService cache, String audience, CatalogueService catalogueService) {
+      Api api, final CacheService cache, CatalogueService catalogueService) {
     this.apis = api;
     this.cache = cache;
-    this.audience = audience;
-    this.catService = catalogueService;
+    this.catalogueService = catalogueService;
   }
 
   /**
@@ -61,16 +60,8 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
     LOGGER.debug("checkResourceFlag " + skipResourceIdCheck);
 
     String id = RoutingContextHelper.getId(event);
-    Future<Boolean> isValidAudience = isValidAudienceValue(audience, jwtData);
-    isValidAudience
-        .compose(
-            audienceHandler -> {
-              if (!skipResourceIdCheck && !jwtData.getIss().equals(jwtData.getSub())) {
-                return isOpenResource(id);
-              } else {
-                return Future.succeededFuture("OPEN");
-              }
-            })
+    Future<String> openResourceFuture = checkIfResourceIsOpen(skipResourceIdCheck, jwtData, id);
+    openResourceFuture
         .compose(
             openResourceHandler -> {
               LOGGER.debug("isOpenResource message {}", openResourceHandler);
@@ -78,7 +69,6 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
               if (endPoint.equalsIgnoreCase(apis.getIngestionPathEntities())) {
                 return isValidId(jwtData, id);
               }
-
               if (isOpen && checkOpenEndPoints(endPoint)) {
                 return Future.succeededFuture(true);
               } else if (!skipResourceIdCheck
@@ -92,15 +82,15 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
             })
         .compose(
             validIdHandler -> {
-              if (endPoint.equals(apis.getIngestionPathEntities())) {
-                return catService.getProviderUserId(id);
+              if (endPoint.equalsIgnoreCase(apis.getIngestionPathEntities())) {
+                return catalogueService.getProviderUserId(id);
               } else {
                 return Future.succeededFuture("");
               }
             })
         .compose(
             providerUserHandler -> {
-              if (endPoint.equals(apis.getIngestionPathEntities())) {
+              if (endPoint.equalsIgnoreCase(apis.getIngestionPathEntities())) {
                 return validateProviderUser(providerUserHandler, jwtData);
               } else {
                 return Future.succeededFuture(true);
@@ -115,6 +105,14 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
               LOGGER.error("error : " + failureHandler.getMessage());
               processAuthFailure(event, failureHandler.getMessage());
             });
+  }
+
+  Future<String> checkIfResourceIsOpen(boolean skipResourceIdCheck, JwtData jwtData, String id) {
+    if (!skipResourceIdCheck && !jwtData.getIss().equals(jwtData.getSub())) {
+      return isOpenResource(id);
+    } else {
+      return Future.succeededFuture("OPEN");
+    }
   }
 
   Future<Boolean> validateProviderUser(String providerUserId, JwtData jwtData) {
@@ -142,7 +140,7 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
         promise.fail("invalid role");
       }
     } catch (Exception e) {
-      LOGGER.error("exception occurred while validating provider user : " + e.getMessage());
+      LOGGER.error("exception occurred while validating provider user : {}", e.getMessage());
       promise.fail("exception occurred while validating provider user");
     }
     return promise.future();
@@ -183,7 +181,7 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
 
   public Future<JwtData> validateAccess(JwtData jwtData, boolean openResource, String endpoint) {
     LOGGER.trace("validateAccess() started");
-    Promise<JwtData> promise = Promise.promise();
+    //    Promise<JwtData> promise = Promise.promise();
     /*TODO: why is this used ? open resource and open end point*/
     if (openResource && checkOpenEndPoints(endpoint)) {
       LOGGER.info("User access is allowed.");
@@ -226,7 +224,6 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
         isResourceExistHandler -> {
           if (isResourceExistHandler.failed()) {
             promise.fail("Not Found  : " + id);
-            return;
           } else {
             Set<String> type =
                 new HashSet<String>(isResourceExistHandler.result().getJsonArray("type").getList());
@@ -253,7 +250,6 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
                     } else {
                       LOGGER.error("ACL not defined in group or resource item");
                       promise.fail("ACL not defined in group or resource item");
-                      return;
                     }
                   } else {
                     String acl = null;
@@ -271,7 +267,6 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
                     if (acl == null) {
                       LOGGER.error("ACL not defined in group or resource item");
                       promise.fail("ACL not defined in group or resource item");
-                      return;
                     } else {
                       promise.complete(acl);
                     }
@@ -280,17 +275,6 @@ public class AuthValidationHandler implements Handler<RoutingContext> {
           }
         });
 
-    return promise.future();
-  }
-
-  Future<Boolean> isValidAudienceValue(String audience, JwtData jwtData) {
-    Promise<Boolean> promise = Promise.promise();
-    if (audience != null && audience.equalsIgnoreCase(jwtData.getAud())) {
-      promise.complete(true);
-    } else {
-      LOGGER.error("Incorrect audience value in jwt");
-      promise.fail("Incorrect audience value in jwt");
-    }
     return promise.future();
   }
 }

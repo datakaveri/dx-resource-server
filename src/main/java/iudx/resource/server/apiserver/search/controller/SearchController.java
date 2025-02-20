@@ -11,6 +11,7 @@ import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.handler.FailureHandler;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
+import iudx.resource.server.authenticator.handler.authentication.TokenIntrospectHandler;
 import iudx.resource.server.authenticator.handler.authorization.*;
 import iudx.resource.server.authenticator.model.DxAccess;
 import iudx.resource.server.authenticator.model.DxRole;
@@ -42,7 +43,7 @@ public class SearchController {
   public void init() {
     createProxy();
     catalogueService = new CatalogueService(cacheService, config, vertx);
-    AuthHandler authHandler = new AuthHandler(api, authenticator);
+    AuthHandler authHandler = new AuthHandler(authenticator);
     GetIdHandler getIdHandler = new GetIdHandler(api);
     Handler<RoutingContext> userAndAdminAccessHandler =
         new AuthorizationHandler()
@@ -54,12 +55,15 @@ public class SearchController {
     Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
 
     Handler<RoutingContext> validateToken =
-        new AuthValidationHandler(api, cacheService, audience, catalogueService);
+        new AuthValidationHandler(api, cacheService, catalogueService);
+    Handler<RoutingContext> tokenIntrospectHandler =
+        new TokenIntrospectHandler().validateTokenForRs(audience);
 
     router
         .get(api.getEntitiesUrl())
         .handler(getIdHandler.withNormalisedPath(api.getEntitiesUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -71,6 +75,7 @@ public class SearchController {
         .get(api.getEntitiesUrl() + "/*")
         .handler(getIdHandler.withNormalisedPath(api.getEntitiesUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -82,6 +87,7 @@ public class SearchController {
         .post(api.getPostTemporalQueryPath())
         .handler(getIdHandler.withNormalisedPath(api.getPostTemporalQueryPath()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -92,6 +98,7 @@ public class SearchController {
         .post(api.getPostEntitiesQueryPath())
         .handler(getIdHandler.withNormalisedPath(api.getPostEntitiesQueryPath()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -103,6 +110,7 @@ public class SearchController {
         .get(api.getTemporalUrl())
         .handler(getIdHandler.withNormalisedPath(api.getTemporalUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
