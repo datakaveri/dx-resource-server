@@ -6,12 +6,9 @@ import io.vertx.core.json.JsonObject;
 
 public interface IngestionService {
 
-  Future<JsonObject> registerAdapter(
-      JsonObject json);
+  Future<JsonObject> registerAdapter(JsonObject json);
 
-  Future<JsonObject> deleteAdapter(
-      String adapterId,
-      String userId);
+  Future<JsonObject> deleteAdapter(String adapterId, String userId);
 
   Future<JsonObject> getAdapterDetails(String adapterId);
 

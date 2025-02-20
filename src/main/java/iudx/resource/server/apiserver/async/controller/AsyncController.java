@@ -8,7 +8,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.async.service.AsyncService;
-import iudx.resource.server.apiserver.handler.FailureHandler;
+import iudx.resource.server.apiserver.exception.FailureHandler;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
 import iudx.resource.server.authenticator.handler.authentication.TokenIntrospectHandler;
