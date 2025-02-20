@@ -28,7 +28,7 @@ public class AdapterGroupLevelAPIsIT {
                 .put("entities", new JsonArray().add(adapter_id_GL));
         given()
                 .header("Content-Type", "application/json")
-                .header("token", providerToken)
+                .header("Authorization", "Bearer " +providerToken)
                 .body(requestBody.encodePrettily())
                 .when()
                 .post("/ingestion")
@@ -50,7 +50,7 @@ public class AdapterGroupLevelAPIsIT {
                 .put("entities", new JsonArray().add(adapter_id_GL));
         given()
                 .header("Content-Type", "application/json")
-                .header("token", providerToken)
+                .header("Authorization", "Bearer " + providerToken)
                 .body(requestBody.encodePrettily())
                 .when()
                 .post("/ingestion")
@@ -69,7 +69,7 @@ public class AdapterGroupLevelAPIsIT {
                 .put("entities", new JsonArray().add(adapter_id_GL));
         given()
                 .header("Content-Type", "application/json")
-                .header("token", invalidToken)
+                .header("Authorization", "Bearer " + invalidToken)
                 .body(requestBody.encodePrettily())
                 .when()
                 .post("/ingestion")
@@ -87,7 +87,7 @@ public class AdapterGroupLevelAPIsIT {
     public void getRegisterAdaptersTest(){
         given()
                 .header("Content-Type", "application/json")
-                .header("token", providerToken)
+                .header("Authorization", "Bearer " + providerToken)
                 .pathParam("adapter_id_GL", adapter_id_GL)
                 .when()
                 .get("/ingestion/{adapter_id_GL}")
@@ -104,7 +104,7 @@ public class AdapterGroupLevelAPIsIT {
     public void getNonExistingRegisterAdaptersTest(){
         given()
                 .header("Content-Type", "application/json")
-                .header("token", providerToken)
+                .header("Authorization", "Bearer " + providerToken)
                 .pathParam("nonExisting_adapter_id_GL", nonExisting_adapter_id_GL)
                 .when()
                 .get("/ingestion/{nonExisting_adapter_id_GL}")
@@ -122,7 +122,7 @@ public class AdapterGroupLevelAPIsIT {
         String adapter_id_GL="935f2045-f5c6-4c76-b14a-c29a88589bf3";
         given()
                 .header("Content-Type", "application/json")
-                .header("token", invalidToken)
+                .header("Authorization", "Bearer " + invalidToken)
                 .pathParam("adapter_id_GL", adapter_id_GL)
                 .when()
                 .get("/ingestion/{adapter_id_GL}")
@@ -141,7 +141,7 @@ public class AdapterGroupLevelAPIsIT {
     public void deleteRegisterAdaptersTest(){
         given()
                 .header("Content-Type", "application/json")
-                .header("token", providerToken)
+                .header("Authorization", "Bearer " + providerToken)
                 .pathParam("adapter_id_GL", adapter_id_GL)
                 .when()
                 .delete("/ingestion/{adapter_id_GL}")
@@ -158,7 +158,7 @@ public class AdapterGroupLevelAPIsIT {
     public void deleteNonExistingRegisterAdaptersTest(){
         given()
                 .header("Content-Type", "application/json")
-                .header("token", providerToken)
+                .header("Authorization", "Bearer " + providerToken)
                 .pathParam("invalid_adapter_id_GL", nonExisting_adapter_id_GL)
                 .when()
                 .delete("/ingestion/{invalid_adapter_id_GL}")
@@ -175,7 +175,7 @@ public class AdapterGroupLevelAPIsIT {
     public void deleteRegisterAdaptersWithInvalidTokenTest(){
         given()
                 .header("Content-Type", "application/json")
-                .header("token", invalidToken)
+                .header("Authorization", "Bearer " + invalidToken)
                 .pathParam("adapter_id_GL", adapter_id_GL)
                 .when()
                 .delete("/ingestion/{adapter_id_GL}")

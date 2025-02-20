@@ -51,7 +51,6 @@ public class UniqueAttribQlistener implements RmqListeners {
                             JsonObject uniqueAttribJson = new JsonObject(body);
                             LOGGER.debug(
                                 "received message from unique-attrib Q :" + uniqueAttribJson);
-                            String key = uniqueAttribJson.getString("id");
                             String value = uniqueAttribJson.getString("unique-attribute");
                             String eventType = uniqueAttribJson.getString("eventType");
                             BroadcastEventType event = BroadcastEventType.from(eventType);
@@ -68,6 +67,7 @@ public class UniqueAttribQlistener implements RmqListeners {
                               // pass key and value only for create event, for others update,delete
                               // cache will
                               // fetch from DB.
+                              String key = uniqueAttribJson.getString("id");
                               cacheJson.put("key", key);
                               cacheJson.put("value", value);
                             }

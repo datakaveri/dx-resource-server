@@ -2,7 +2,6 @@ package iudx.resource.server.apiserver.subscription;
 
 import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.apiserver.util.Constants.SUBSCRIPTION_ID;
-import static iudx.resource.server.authenticator.Constants.ROLE;
 import static iudx.resource.server.cache.cachelmpl.CacheType.CATALOGUE_CACHE;
 import static iudx.resource.server.databroker.util.Constants.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -12,6 +11,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import iudx.resource.server.apiserver.response.ResponseType;
+import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.common.ResponseUrn;
 import iudx.resource.server.database.postgres.PostgresService;
@@ -49,7 +49,7 @@ public class SubscriptionService {
       JsonObject json,
       DataBrokerService databroker,
       PostgresService pgService,
-      JsonObject authInfo,
+      JwtData jwtData,
       CacheService cacheService) {
     LOGGER.info("createSubscription() method started");
     Promise<JsonObject> promise = Promise.promise();
@@ -77,18 +77,20 @@ public class SubscriptionService {
                         cacheResult -> {
                           LOGGER.debug("cacheResult: " + cacheResult);
 
-                          String role = authInfo.getString(ROLE);
-                          String drl = authInfo.getString(DRL);
+                          String role = jwtData.getRole();
+                          String drl = jwtData.getDrl();
+                          String userId = jwtData.getSub();
                           String delegatorId;
                           if (role.equalsIgnoreCase("delegate") && drl != null) {
-                            delegatorId = authInfo.getString(DID);
+                            delegatorId = jwtData.getDid();
                           } else {
-                            delegatorId = authInfo.getString("userid");
+                            delegatorId = userId;
                           }
                           String type =
                               cacheResult.containsKey(RESOURCE_GROUP)
                                   ? "RESOURCE"
                                   : "RESOURCE_GROUP";
+                          String expiry = jwtData.getExpiry();
                           StringBuilder query =
                               new StringBuilder(
                                   CREATE_SUB_SQL
@@ -96,10 +98,10 @@ public class SubscriptionService {
                                       .replace("$2", subType.type)
                                       .replace("$3", brokerResponse.getString("id"))
                                       .replace("$4", json.getJsonArray("entities").getString(0))
-                                      .replace("$5", authInfo.getString("expiry"))
+                                      .replace("$5", expiry)
                                       .replace("$6", cacheResult.getString("name"))
                                       .replace("$7", cacheResult.toString())
-                                      .replace("$8", authInfo.getString("userid"))
+                                      .replace("$8", userId)
                                       .replace("$9", cacheResult.getString(RESOURCE_GROUP))
                                       .replace("$a", cacheResult.getString("provider"))
                                       .replace("$b", delegatorId)
@@ -116,9 +118,10 @@ public class SubscriptionService {
                                   deleteJson
                                       .put("instanceID", json.getString("instanceID"))
                                       .put("subscriptionType", json.getString("subscriptionType"));
-                                  deleteJson.put("userid", authInfo.getString("userid"));
+                                  deleteJson.put("userid", userId);
                                   deleteJson.put("subscriptionID", brokerResponse.getString("id"));
-                                  deleteSubscription(deleteJson, databroker, pgService)
+                                  /*TODO: what should the entity value be here*/
+                                  deleteSubscription(deleteJson, databroker, pgService, null)
                                       .onComplete(
                                           handlers -> {
                                             if (handlers.succeeded()) {
@@ -153,10 +156,7 @@ public class SubscriptionService {
    * @return a future of josbObject
    */
   public Future<JsonObject> updateSubscription(
-      JsonObject json,
-      DataBrokerService databroker,
-      PostgresService pgService,
-      JsonObject authInfo) {
+      JsonObject json, DataBrokerService databroker, PostgresService pgService, JwtData jwtData) {
     LOGGER.info("updateSubscription() method started");
     Promise<JsonObject> promise = Promise.promise();
 
@@ -179,10 +179,11 @@ public class SubscriptionService {
                   .put(JSON_DETAIL, "Subscription not found for [queue,entity]");
               promise.fail(res.toString());
             } else {
+              String expiry = jwtData.getExpiry();
               StringBuilder updateQuery =
                   new StringBuilder(
                       UPDATE_SUB_SQL
-                          .replace("$1", authInfo.getString("expiry"))
+                          .replace("$1", expiry)
                           .replace("$2", queueName)
                           .replace("$3", entity));
               LOGGER.debug(updateQuery);
@@ -229,7 +230,7 @@ public class SubscriptionService {
    * @return a future of josbObject
    */
   public Future<JsonObject> deleteSubscription(
-      JsonObject json, DataBrokerService databroker, PostgresService pgService) {
+      JsonObject json, DataBrokerService databroker, PostgresService pgService, Object entity) {
     LOGGER.info("deleteSubscription() method started");
     Promise<JsonObject> promise = Promise.promise();
     if (subscription == null) {
@@ -273,7 +274,7 @@ public class SubscriptionService {
    * @return a future of josbObject
    */
   public Future<JsonObject> getSubscription(
-      JsonObject json, DataBrokerService databroker, PostgresService pgService) {
+      JsonObject json, DataBrokerService databroker, PostgresService pgService, Object entity) {
     LOGGER.info("getSubscription() method started");
     Promise<JsonObject> promise = Promise.promise();
     if (subscription == null) {
@@ -327,7 +328,7 @@ public class SubscriptionService {
       JsonObject json,
       DataBrokerService databroker,
       PostgresService pgService,
-      JsonObject authInfo,
+      JwtData jwtData,
       CacheService cacheService) {
     LOGGER.info("appendSubscription() method started");
     Promise<JsonObject> promise = Promise.promise();
@@ -351,13 +352,15 @@ public class SubscriptionService {
                     .get(cacheJson)
                     .onSuccess(
                         cacheResult -> {
-                          String role = authInfo.getString(ROLE);
-                          String drl = authInfo.getString(DRL);
+                          String role = jwtData.getRole();
+                          String drl = jwtData.getDrl();
+                          String userId = jwtData.getSub();
+                          String expiry = jwtData.getExpiry();
                           String delegatorId;
                           if (role.equalsIgnoreCase("delegate") && drl != null) {
-                            delegatorId = authInfo.getString(DID);
+                            delegatorId = jwtData.getDid();
                           } else {
-                            delegatorId = authInfo.getString("userid");
+                            delegatorId = userId;
                           }
                           String type =
                               cacheResult.containsKey(RESOURCE_GROUP)
@@ -371,10 +374,10 @@ public class SubscriptionService {
                                       .replace("$2", subType.type)
                                       .replace("$3", json.getString(SUBSCRIPTION_ID))
                                       .replace("$4", json.getJsonArray("entities").getString(0))
-                                      .replace("$5", authInfo.getString("expiry"))
+                                      .replace("$5", expiry)
                                       .replace("$6", cacheResult.getString("name"))
                                       .replace("$7", cacheResult.toString())
-                                      .replace("$8", authInfo.getString("userid"))
+                                      .replace("$8", userId)
                                       .replace("$9", cacheResult.getString(RESOURCE_GROUP))
                                       .replace("$a", cacheResult.getString("provider"))
                                       .replace("$b", delegatorId)
@@ -394,9 +397,10 @@ public class SubscriptionService {
                                   deleteJson
                                       .put("instanceID", json.getString("instanceID"))
                                       .put("subscriptionType", subType);
-                                  deleteJson.put("userid", authInfo.getString("userid"));
+                                  deleteJson.put("userid", userId);
                                   deleteJson.put("subscriptionID", json.getString(SUBSCRIPTION_ID));
-                                  deleteSubscription(deleteJson, databroker, pgService)
+                                  /* TODO: what should the entity value be here */
+                                  deleteSubscription(deleteJson, databroker, pgService, null)
                                       .onComplete(
                                           handlers -> {
                                             if (handlers.succeeded()) {

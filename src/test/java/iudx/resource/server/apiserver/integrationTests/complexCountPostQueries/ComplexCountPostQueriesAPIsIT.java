@@ -41,7 +41,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -68,7 +68,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -97,7 +97,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -122,7 +122,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -148,7 +148,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -174,7 +174,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -200,7 +200,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -227,7 +227,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -252,7 +252,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -278,7 +278,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -304,7 +304,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -330,7 +330,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -355,7 +355,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", openResourceToken)
+                .header("Authorization", "Bearer " + openResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -381,7 +381,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -406,7 +406,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -431,7 +431,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -456,7 +456,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -489,7 +489,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -522,7 +522,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -553,7 +553,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -585,7 +585,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -616,7 +616,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -648,7 +648,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -683,7 +683,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -714,7 +714,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -745,7 +745,7 @@ public class ComplexCountPostQueriesAPIsIT {
                         .put("geoproperty", "location"));
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -777,7 +777,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -806,7 +806,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -836,7 +836,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -864,7 +864,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -893,7 +893,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -922,7 +922,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -951,7 +951,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -984,7 +984,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -1012,7 +1012,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -1044,7 +1044,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()
@@ -1073,7 +1073,7 @@ public class ComplexCountPostQueriesAPIsIT {
                 .put("options", "count");
 
         Response response = given()
-                .header("token", "abc")
+                .header("Authorization", "Bearer " + "abc")
                 .contentType("application/json")
                 .body(requestBody.toString())
                 .when()

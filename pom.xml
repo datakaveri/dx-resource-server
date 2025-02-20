@@ -29,7 +29,7 @@
         <elasticsearch-rest-client.version>8.12.2</elasticsearch-rest-client.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <exec.mainClass>iudx.resource.server.deploy.Deployer</exec.mainClass>
-        <exec.mainClassDev>iudx.resource.server.deploy.DeployerDev </exec.mainClassDev>
+        <exec.mainClassDev>iudx.resource.server.deploy.Deployer </exec.mainClassDev>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -527,7 +527,7 @@
                     <execution>
                         <id>resource-server</id>
                         <configuration>
-                            <mainClass>iudx.resource.server.deploy.DeployerDev</mainClass>
+                            <mainClass>iudx.resource.server.deploy.Deployer</mainClass>
                             <arguments>
                                 <argument>-jar</argument>
                                 <argument>{project.build.directory}/${project.artifactId}-dev-${project.version}-fat.jar </argument>

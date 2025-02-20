@@ -276,7 +276,7 @@ public class QueryMapper {
   }
 
   public int failureCode() {
-    return HttpStatusCode.BAD_REQUEST.getValue();
+    return BAD_REQUEST.getValue();
   }
 
   public String failureMessage() {

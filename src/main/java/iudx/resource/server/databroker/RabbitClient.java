@@ -35,7 +35,8 @@ public class RabbitClient {
   private final PostgresClient pgSqlClient;
   private final String amqpUrl;
   private final int amqpPort;
-  private final String vhost;
+
+  //  private final String vhost;
 
   public RabbitClient(
       Vertx vertx,
@@ -45,7 +46,7 @@ public class RabbitClient {
       JsonObject configs) {
     this.amqpUrl = configs.getString("brokerAmqpIp");
     this.amqpPort = configs.getInteger("brokerAmqpPort");
-    this.vhost = configs.getString("dataBrokerVhost");
+    //    this.vhost = configs.getString("dataBrokerVhost");
 
     String internalVhost = configs.getString(Vhosts.IUDX_INTERNAL.name());
     rabbitConfigs.setVirtualHost(internalVhost);

@@ -11,8 +11,10 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.response.ResponseType;
+import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.common.HttpStatusCode;
 import iudx.resource.server.common.ResponseUrn;
+import iudx.resource.server.common.RoutingContextHelper;
 import iudx.resource.server.databroker.DataBrokerService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,9 +33,10 @@ public class ManagementRestApi {
     LOGGER.trace("Info: resetPassword method started");
 
     HttpServerResponse response = routingContext.response();
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    String userId = jwtData.getSub();
     JsonObject request = new JsonObject();
-    request.put(USER_ID, authInfo.getString(USER_ID));
+    request.put(USER_ID, userId);
 
     rmqBrokerService.resetPassword(
         request,

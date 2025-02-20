@@ -47,7 +47,7 @@ public class FailureHandler implements Handler<RoutingContext> {
           .response()
           .putHeader(CONTENT_TYPE, APPLICATION_JSON)
           .setStatusCode(HttpStatus.SC_BAD_REQUEST)
-          .end(validationFailureReponse(validationErrorMessage).toString());
+          .end(validationFailureResponse(validationErrorMessage).toString());
     }
 
     if (context.response().ended()) {
@@ -58,7 +58,7 @@ public class FailureHandler implements Handler<RoutingContext> {
     context.next();
   }
 
-  private JsonObject validationFailureReponse(String message) {
+  private JsonObject validationFailureResponse(String message) {
     return new JsonObject()
         .put(JSON_TYPE, HttpStatus.SC_BAD_REQUEST)
         .put(JSON_TITLE, "Bad Request")

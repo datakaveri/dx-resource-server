@@ -17,6 +17,16 @@ public final class JwtData {
   private JsonObject cons;
   private String drl;
   private String did;
+  private String expiry;
+
+  public JwtData() {
+    super();
+  }
+
+  public JwtData(JsonObject json) {
+    JwtDataConverter.fromJson(json, this);
+    setAccessToken(json.getString("access_token"));
+  }
 
   public String getDrl() {
     return drl;
@@ -34,19 +44,18 @@ public final class JwtData {
     this.did = did;
   }
 
-  public JwtData() {
-    super();
-  }
-
-  public JwtData(JsonObject json) {
-    JwtDataConverter.fromJson(json, this);
-    setAccessToken(json.getString("access_token"));
-  }
-
   public JsonObject toJson() {
     JsonObject json = new JsonObject();
     JwtDataConverter.toJson(this, json);
     return json;
+  }
+
+  public String getExpiry() {
+    return this.expiry;
+  }
+
+  public void setExpiry(String exp) {
+    this.expiry = exp;
   }
 
   public String getAccessToken() {
@@ -145,6 +154,8 @@ public final class JwtData {
         + drl
         + ", did="
         + did
+        + ", expiry="
+        + expiry
         + "]";
   }
 }

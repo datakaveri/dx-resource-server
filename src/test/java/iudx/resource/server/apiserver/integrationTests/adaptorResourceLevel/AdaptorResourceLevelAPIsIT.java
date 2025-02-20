@@ -32,7 +32,7 @@ public class AdaptorResourceLevelAPIsIT {
         JsonObject requestBody = new JsonObject()
                 .put("entities", new JsonArray().add(adapter_id_RL));
         Response response = given()
-                .header("token", providerToken)
+                .header("Authorization", "Bearer " + providerToken)
                 .body(requestBody.toString())
                 .contentType("application/json")
                 .when()
@@ -51,7 +51,7 @@ public class AdaptorResourceLevelAPIsIT {
         JsonObject requestBody = new JsonObject()
                 .put("entities", new JsonArray().add(adapter_id_RL));
         Response response = given()
-                .header("token", providerToken)
+                .header("Authorization", "Bearer " + providerToken)
                 .body(requestBody.toString())
                 .contentType("application/json")
                 .when()
@@ -70,7 +70,7 @@ public class AdaptorResourceLevelAPIsIT {
         JsonObject requestBody = new JsonObject()
                 .put("entities", new JsonArray().add(adapter_id_RL));
         Response response = given()
-                .header("token", "public_1")
+                .header("Authorization", "Bearer " + "public_1")
                 .body(requestBody.toString())
                 .contentType("application/json")
                 .when()
@@ -87,7 +87,7 @@ public class AdaptorResourceLevelAPIsIT {
     @DisplayName("testing adaptor resource level  - 200 (Success) Get adaptor details")
     void GetIngestionAdaptor() {
         Response response = given()
-                .header("token", providerToken)
+                .header("Authorization", "Bearer " + providerToken)
                 .contentType("application/json")
                 .pathParam("adapter_id_RL", adapter_id_RL)
                 .when()
@@ -105,7 +105,7 @@ public class AdaptorResourceLevelAPIsIT {
     void GetIngestionAdaptorNotFound() {
         String adapter_id_RL= "123";
         Response response = given()
-                .header("token", providerToken)
+                .header("Authorization", "Bearer " + providerToken)
                 .contentType("application/json")
                 .pathParam("adapter_id_RL", adapter_id_RL)
                 .when()
@@ -123,7 +123,7 @@ public class AdaptorResourceLevelAPIsIT {
     @DisplayName("testing adaptor resource level  - 401 (Not Authorized) Get adaptor details")
     void GetIngestionAdaptorUnAuth() {
         Response response = given()
-                .header("token", "public_1")
+                .header("Authorization", "Bearer " + "public_1")
                 .contentType("application/json")
                 .pathParam("adapter_id_RL", adapter_id_RL)
                 .when()
@@ -140,7 +140,7 @@ public class AdaptorResourceLevelAPIsIT {
     @DisplayName("testing adaptor resource level  - 401 (Not Authorized) Delete adaptor")
     void DeleteIngestionAdaptorUnAuth() {
         Response response = given()
-                .header("token", "public_1")
+                .header("Authorization", "Bearer " + "public_1")
                 .contentType("application/json")
                 .pathParam("adapter_id_RL", adapter_id_RL)
                 .when()
@@ -157,7 +157,7 @@ public class AdaptorResourceLevelAPIsIT {
     @DisplayName("testing adaptor resource level  - 200 (Success) Delete adaptor")
     void DeleteIngestionAdaptor() {
         Response response = given()
-                .header("token", providerToken)
+                .header("Authorization", "Bearer " + providerToken)
                 .contentType("application/json")
                 .pathParam("adapter_id_RL", adapter_id_RL)
                 .when()
@@ -174,7 +174,7 @@ public class AdaptorResourceLevelAPIsIT {
     @DisplayName("testing adaptor resource level  - 404 (Not Found) Delete adaptor")
     void DeleteIngestionAdaptorNotFound() {
         Response response = given()
-                .header("token", providerToken)
+                .header("Authorization", "Bearer " + providerToken)
                 .contentType("application/json")
                 .pathParam("adapter_id_RL", adapter_id_RL)
                 .when()
@@ -193,7 +193,7 @@ public class AdaptorResourceLevelAPIsIT {
         JsonObject requestBody = new JsonObject()
                 .put("entities", new JsonArray().add(adapter_id_RL2));
         Response response = given()
-                .header("token", adaptorToken)
+                .header("Authorization", "Bearer " + adaptorToken)
                 .body(new JsonArray().add(requestBody).toString())
                 .contentType("application/json")
                 .when()
@@ -212,7 +212,7 @@ public class AdaptorResourceLevelAPIsIT {
         JsonObject requestBody = new JsonObject()
                 .put("entities", new JsonArray().add(adapter_id_RL2));
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .body(new JsonArray().add(requestBody).toString())
                 .contentType("application/json")
                 .when()
@@ -231,7 +231,7 @@ public class AdaptorResourceLevelAPIsIT {
         JsonObject requestBody = new JsonObject()
                 .put("entities", new JsonArray().add("adapter_id_RL2"));
         Response response = given()
-                .header("token", secureResourceToken)
+                .header("Authorization", "Bearer " + secureResourceToken)
                 .body(new JsonArray().add(requestBody).toString())
                 .contentType("application/json")
                 .when()
@@ -251,7 +251,7 @@ public class AdaptorResourceLevelAPIsIT {
         JsonObject requestBody2 = new JsonObject()
                 .put("entities", new JsonArray().add(adapter_id_RL2));
         Response response = given()
-                .header("token", adaptorToken)
+                .header("Authorization", "Bearer " + adaptorToken)
                 .body(new JsonArray().add(requestBody).add(requestBody2).toString())
                 .contentType("application/json")
                 .when()

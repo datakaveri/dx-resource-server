@@ -15,8 +15,7 @@ public class Constants {
   public static final String API_METHOD = "method";
   public static final String ID = "id";
   public static final String RESOURCE_ID_DEFAULT =
-      "iisc.ac.in/89a36273d77dac4cf38114fca1bbe64392547f86/rs.iudx.io/"
-          + "surat-itms-realtime-information/surat-itms-live-eta";
+      "8b95ab80-2aaf-4636-a65e-7f2563d0d371";
   public static final String RESPONSE_SIZE = "response_size";
   public static final String IDS = "ids";
 
@@ -79,7 +78,6 @@ public class Constants {
   public static final String ROUTE_STATIC_SPEC = "/apis/spec";
 
   public static final String ROUTE_DOC = "/apis";
-  public static final List<String> bypassEndpoint = List.of(ROUTE_STATIC_SPEC, ROUTE_DOC);
   public static final List<String> openEndPoints =
       List.of("/temporal/entities", "/entities", "/entityOperations/query");
   public static final String REVOKE_TOKEN = "/revokeToken";
@@ -123,6 +121,8 @@ public class Constants {
 
   // Header params
   public static final String HEADER_TOKEN = "token";
+  public static final String HEADER_AUTHORIZATION = "Authorization";
+  public static final String HEADER_BEARER_AUTHORIZATION = "Bearer";
   public static final String HEADER_CSV = "csv";
   public static final String HEADER_JSON = "json";
   public static final String HEADER_PARQUET = "parquet";
@@ -136,7 +136,6 @@ public class Constants {
   public static final String HEADER_OPTIONS = "options";
 
   public static final String COUNT_HEADER = "Count";
-  public static final String PUBLIC_TOKEN = "public";
   public static final String HEADER_PUBLIC_KEY = "publicKey";
   public static final String HEADER_RESPONSE_FILE_FORMAT = "format";
 
@@ -257,6 +256,9 @@ public class Constants {
   public static final int VALIDATIONS_MAX_ATTR_LENGTH = 100;
   public static final int VALIDATION_ALLOWED_COORDINATES = 10;
   public static final List<String> VALIDATION_ALLOWED_HEADERS = List.of("token", "options");
+  public static final int BEARER_TOKEN_MIN_LENGTH = 8;
+  public static final Pattern BEARER_TOKEN_PATTERN =
+          Pattern.compile("Bearer [a-zA-Z0-9_*\\-*\\.\\/]+$");
 
   public static final String ENCODED_PUBLIC_KEY_REGEX = "^[a-zA-Z0-9_-]{42,43}={0,2}$";
 
@@ -322,4 +324,15 @@ public class Constants {
   public static final String EVENTTYPE_DELETED = "SUBS_DELETED";
   public static final String EVENTTYPE_APPEND = "SUBS_APPEND";
   public static final String EVENTTYPE_UPDATE = "SUBS_UPDATED";
+
+  //user
+  public static final String EMAIL_ID = "emailId";
+  public static final String FIRST_NAME = "firstName";
+  public static final String LAST_NAME = "lastName";
+  public static final String RS_SERVER_URL = "resourceServerUrl";
+  public static final String USERID = "userId";
+  public static final String USER_ROLE = "userRole";
+  public static final String USER = "user";
+  public static final String CONSTRAINTS = "accessConstraints";
+
 }

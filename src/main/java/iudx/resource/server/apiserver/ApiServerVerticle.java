@@ -3,10 +3,8 @@ package iudx.resource.server.apiserver;
 import static iudx.resource.server.apiserver.response.ResponseUtil.generateResponse;
 import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.apiserver.util.Util.errorResponse;
-import static iudx.resource.server.authenticator.Constants.ROLE;
 import static iudx.resource.server.cache.cachelmpl.CacheType.CATALOGUE_CACHE;
-import static iudx.resource.server.common.Constants.CACHE_SERVICE_ADDRESS;
-import static iudx.resource.server.common.Constants.PG_SERVICE_ADDRESS;
+import static iudx.resource.server.common.Constants.*;
 import static iudx.resource.server.common.HttpStatusCode.BAD_REQUEST;
 import static iudx.resource.server.common.HttpStatusCode.NOT_FOUND;
 import static iudx.resource.server.common.HttpStatusCode.UNAUTHORIZED;
@@ -21,10 +19,7 @@ import static iudx.resource.server.metering.util.Constants.TYPE_KEY;
 
 import io.netty.handler.codec.http.HttpConstants;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
-import io.vertx.core.MultiMap;
-import io.vertx.core.Promise;
+import io.vertx.core.*;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
@@ -41,9 +36,7 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.TimeoutHandler;
 import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
-import iudx.resource.server.apiserver.handlers.AuthHandler;
-import iudx.resource.server.apiserver.handlers.FailureHandler;
-import iudx.resource.server.apiserver.handlers.ValidationHandler;
+import iudx.resource.server.apiserver.handlers.*;
 import iudx.resource.server.apiserver.management.ManagementApi;
 import iudx.resource.server.apiserver.management.ManagementApiImpl;
 import iudx.resource.server.apiserver.query.NgsildQueryParams;
@@ -53,10 +46,18 @@ import iudx.resource.server.apiserver.service.CatalogueService;
 import iudx.resource.server.apiserver.subscription.SubsType;
 import iudx.resource.server.apiserver.subscription.SubscriptionService;
 import iudx.resource.server.apiserver.util.RequestType;
+import iudx.resource.server.authenticator.AuthenticationService;
+import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
+import iudx.resource.server.authenticator.handler.authentication.TokenIntrospectHandler;
+import iudx.resource.server.authenticator.handler.authorization.*;
+import iudx.resource.server.authenticator.model.DxAccess;
+import iudx.resource.server.authenticator.model.DxRole;
+import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.common.Api;
 import iudx.resource.server.common.HttpStatusCode;
 import iudx.resource.server.common.ResponseUrn;
+import iudx.resource.server.common.RoutingContextHelper;
 import iudx.resource.server.database.archives.DatabaseService;
 import iudx.resource.server.database.latest.LatestDataService;
 import iudx.resource.server.database.postgres.PostgresService;
@@ -168,6 +169,7 @@ public class ApiServerVerticle extends AbstractVerticle {
     /* Get base paths from config */
     dxApiBasePath = config().getString("dxApiBasePath");
     api = Api.getInstance(dxApiBasePath);
+    cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
 
     /* Define the APIs, methods, endpoints and associated methods. */
 
@@ -215,14 +217,52 @@ public class ApiServerVerticle extends AbstractVerticle {
             });
 
     router.route().handler(BodyHandler.create());
-    router.route().handler(TimeoutHandler.create(10000, 408));
+    router.route().handler(TimeoutHandler.create(50000, 408));
     FailureHandler validationsFailureHandler = new FailureHandler();
-    /* NGSI-LD api endpoints */
     ValidationHandler entityValidationHandler = new ValidationHandler(vertx, RequestType.ENTITY);
+    AuthenticationService authenticator =
+        AuthenticationService.createProxy(vertx, AUTH_SERVICE_ADDRESS);
+    AuthHandler authHandler = new AuthHandler(authenticator);
+    GetIdHandler getIdHandler = new GetIdHandler(api);
+    catalogueService = new CatalogueService(cacheService, config(), vertx);
+
+    Handler<RoutingContext> userAndAdminAccessHandler =
+        new AuthorizationHandler()
+            .setUserRolesForEndpoint(
+                DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
+    Handler<RoutingContext> providerAndAdminAccessHandler =
+        new AuthorizationHandler()
+            .setUserRolesForEndpoint(DxRole.DELEGATE, DxRole.PROVIDER, DxRole.ADMIN);
+    //    Handler<RoutingContext> providerAccessHandler =
+    //        new AuthorizationHandler().setUserRolesForEndpoint(DxRole.DELEGATE, DxRole.PROVIDER);
+
+    Handler<RoutingContext> apiConstraint =
+        new ConstraintsHandlerForConsumer().consumerConstraintsForEndpoint(DxAccess.API);
+    //    Handler<RoutingContext> mgmtConstraint =
+    //        new
+    // ConstraintsHandlerForConsumer().consumerConstraintsForEndpoint(DxAccess.MANAGEMENT);
+    Handler<RoutingContext> subscriptionConstraint =
+        new ConstraintsHandlerForConsumer().consumerConstraintsForEndpoint(DxAccess.SUBSCRIPTION);
+
+    /*TODO: update example config-dev and config-dev */
+    String audience = config().getString("audience");
+    Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
+    Handler<RoutingContext> validateToken =
+        new AuthValidationHandler(api, cacheService, catalogueService);
+    Handler<RoutingContext> tokenIntrospectHandler =
+        new TokenIntrospectHandler().validateTokenForRs(audience);
+
+    /* NGSI-LD api endpoints */
     router
         .get(api.getEntitiesUrl())
         .handler(entityValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(getIdHandler.withNormalisedPath(api.getEntitiesUrl()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(apiConstraint)
+        .handler(isTokenRevoked)
         .handler(this::handleEntitiesQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -230,7 +270,13 @@ public class ApiServerVerticle extends AbstractVerticle {
     router
         .get(api.getEntitiesUrl() + "/*")
         .handler(latestValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(getIdHandler.withNormalisedPath(api.getEntitiesUrl()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(apiConstraint)
+        .handler(isTokenRevoked)
         .handler(this::handleLatestEntitiesQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -240,7 +286,13 @@ public class ApiServerVerticle extends AbstractVerticle {
         .post(api.getPostTemporalQueryPath())
         .consumes(APPLICATION_JSON)
         .handler(postTemporalValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(getIdHandler.withNormalisedPath(api.getPostTemporalQueryPath()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(apiConstraint)
+        .handler(isTokenRevoked)
         .handler(this::handlePostEntitiesQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -250,7 +302,13 @@ public class ApiServerVerticle extends AbstractVerticle {
         .post(api.getPostEntitiesQueryPath())
         .consumes(APPLICATION_JSON)
         .handler(postEntitiesValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(getIdHandler.withNormalisedPath(api.getPostEntitiesQueryPath()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(apiConstraint)
+        .handler(isTokenRevoked)
         .handler(this::handlePostEntitiesQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -259,7 +317,13 @@ public class ApiServerVerticle extends AbstractVerticle {
     router
         .get(api.getTemporalUrl())
         .handler(temporalValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(getIdHandler.withNormalisedPath(api.getTemporalUrl()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(apiConstraint)
+        .handler(isTokenRevoked)
         .handler(this::handleTemporalQuery)
         .failureHandler(validationsFailureHandler);
 
@@ -269,92 +333,191 @@ public class ApiServerVerticle extends AbstractVerticle {
     router
         .post(api.getSubscriptionUrl())
         .handler(subsValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(getIdHandler.withNormalisedPath(api.getSubscriptionUrl()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(isTokenRevoked)
         .handler(this::handleSubscriptions)
         .failureHandler(validationsFailureHandler);
     // append sub
     router
         .patch(api.getSubscriptionUrl() + "/:userid/:alias")
         .handler(subsValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(getIdHandler.withNormalisedPath(api.getSubscriptionUrl()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(isTokenRevoked)
         .handler(this::appendSubscription)
         .failureHandler(validationsFailureHandler);
     // update sub
     router
         .put(api.getSubscriptionUrl() + "/:userid/:alias")
         .handler(subsValidationHandler)
-        .handler(AuthHandler.create(vertx, api))
+        .handler(getIdHandler.withNormalisedPath(api.getSubscriptionUrl()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(isTokenRevoked)
         .handler(this::updateSubscription)
         .failureHandler(validationsFailureHandler);
     // get sub
     router
         .get(api.getSubscriptionUrl() + "/:userid/:alias")
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::getSubscription);
+        .handler(getIdHandler.withNormalisedPath(api.getSubscriptionUrl()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(isTokenRevoked)
+        .handler(this::getSubscription)
+        .failureHandler(validationsFailureHandler);
 
     // get sub for all queue
     router
         .get(api.getSubscriptionUrl())
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::getAllSubscriptionForUser);
+        .handler(getIdHandler.withNormalisedPath(api.getSubscriptionUrl()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(isTokenRevoked)
+        .handler(this::getAllSubscriptionForUser)
+        .failureHandler(validationsFailureHandler);
+
     // delete sub
     router
         .delete(api.getSubscriptionUrl() + "/:userid/:alias")
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::deleteSubscription);
+        .handler(getIdHandler.withNormalisedPath(api.getSubscriptionUrl()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(subscriptionConstraint)
+        .handler(isTokenRevoked)
+        .handler(this::deleteSubscription)
+        .failureHandler(validationsFailureHandler);
 
     /* Management Api endpoints */
     // Exchange
 
     router
         .get(api.getIudxConsumerAuditUrl())
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::getConsumerAuditDetail);
+        .handler(getIdHandler.withNormalisedPath(api.getIudxConsumerAuditUrl()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(apiConstraint)
+        .handler(isTokenRevoked)
+        .handler(this::getConsumerAuditDetail)
+        .failureHandler(validationsFailureHandler);
+
     router
         .get(api.getIudxProviderAuditUrl())
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::getProviderAuditDetail);
+        .handler(getIdHandler.withNormalisedPath(api.getIudxProviderAuditUrl()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(providerAndAdminAccessHandler)
+        .handler(isTokenRevoked)
+        .handler(this::getProviderAuditDetail)
+        .failureHandler(validationsFailureHandler);
 
     // adapter
     router
         .post(api.getIngestionPath())
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::registerAdapter);
+        .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(providerAndAdminAccessHandler)
+        .handler(isTokenRevoked)
+        .handler(this::registerAdapter)
+        .failureHandler(validationsFailureHandler);
 
     router
         .delete(api.getIngestionPath() + "/*")
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::deleteAdapter);
+        .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(providerAndAdminAccessHandler)
+        .handler(isTokenRevoked)
+        .handler(this::deleteAdapter)
+        .failureHandler(validationsFailureHandler);
 
     router
         .get(api.getIngestionPath() + "/:UUID")
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::getAdapterDetails);
+        .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(providerAndAdminAccessHandler)
+        .handler(isTokenRevoked)
+        .handler(this::getAdapterDetails)
+        .failureHandler(validationsFailureHandler);
 
     router
         .post(api.getIngestionPath() + "/heartbeat")
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::publishHeartbeat);
+        .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(providerAndAdminAccessHandler)
+        .handler(isTokenRevoked)
+        .handler(this::publishHeartbeat)
+        .failureHandler(validationsFailureHandler);
+
     router
         .post(api.getIngestionPathEntities())
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::publishDataFromAdapter);
+        .handler(getIdHandler.withNormalisedPath(api.getIngestionPathEntities()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(providerAndAdminAccessHandler)
+        .handler(isTokenRevoked)
+        .handler(this::publishDataFromAdapter)
+        .failureHandler(validationsFailureHandler);
+
     router
         .get(api.getIngestionPath())
-        .handler(AuthHandler.create(vertx, api))
-        .handler(this::getAllAdaptersForUsers);
+        .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(providerAndAdminAccessHandler)
+        .handler(isTokenRevoked)
+        .handler(this::getAllAdaptersForUsers)
+        .failureHandler(validationsFailureHandler);
 
     // Metering extension
     router
         .get(api.getMonthlyOverview())
-        .handler(AuthHandler.create(vertx, api))
+        .handler(getIdHandler.withNormalisedPath(api.getMonthlyOverview()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(apiConstraint)
+        .handler(isTokenRevoked)
         .handler(this::getMonthlyOverview)
         .failureHandler(validationsFailureHandler);
 
     // Metering Summary
     router
         .get(api.getSummaryPath())
-        .handler(AuthHandler.create(vertx, api))
+        .handler(getIdHandler.withNormalisedPath(api.getSummaryPath()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        .handler(apiConstraint)
+        .handler(isTokenRevoked)
         .handler(this::getAllSummaryHandler)
         .failureHandler(validationsFailureHandler);
 
@@ -424,10 +587,8 @@ public class ApiServerVerticle extends AbstractVerticle {
     databroker = DataBrokerService.createProxy(vertx, BROKER_SERVICE_ADDRESS);
     meteringService = MeteringService.createProxy(vertx, METERING_SERVICE_ADDRESS);
     latestDataService = LatestDataService.createProxy(vertx, LATEST_SEARCH_ADDRESS);
-    cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
     managementApi = new ManagementApiImpl();
     subsService = new SubscriptionService();
-    catalogueService = new CatalogueService(cacheService);
     validator = new ParamsValidator(catalogueService);
 
     postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
@@ -435,17 +596,24 @@ public class ApiServerVerticle extends AbstractVerticle {
 
     router
         .route(api.getAsyncPath() + "/*")
-        .subRouter(new AsyncRestApi(vertx, router, api, timeLimitForAsync).init());
+        .subRouter(new AsyncRestApi(vertx, router, api, timeLimitForAsync, config()).init());
 
-    router.route(ADMIN + "/*").subRouter(new AdminRestApi(vertx, router, api).init());
+    router.route(ADMIN + "/*").subRouter(new AdminRestApi(vertx, router, api, audience).init());
 
     router
-        .post(dxApiBasePath + RESET_PWD)
-        .handler(AuthHandler.create(vertx, api))
+        .post(api.getManagementApiPath())
+        .handler(getIdHandler.withNormalisedPath(api.getManagementApiPath()))
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(userAndAdminAccessHandler)
+        //        .handler(mgmtConstraint) //TODO: uncomment after DxAccess.MANAGEMENT is added in
+        // token constraints
         .handler(
             handler -> {
               new ManagementRestApi(databroker).resetPassword(handler);
-            });
+            })
+        .failureHandler(validationsFailureHandler);
 
     router
         .route()
@@ -465,15 +633,13 @@ public class ApiServerVerticle extends AbstractVerticle {
   }
 
   private void getMonthlyOverview(RoutingContext routingContext) {
-    HttpServerRequest request = routingContext.request();
     LOGGER.trace("Info: getMonthlyOverview Started.");
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
-    authInfo.put(STARTT, request.getParam(STARTT));
-    authInfo.put(ENDT, request.getParam(ENDT));
     HttpServerResponse response = routingContext.response();
-
-    String iid = authInfo.getString("iid");
-    String role = authInfo.getString("role");
+    String startTime = RoutingContextHelper.getStartTime(routingContext);
+    String endTime = RoutingContextHelper.getEndTime(routingContext);
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    String iid = jwtData.getIid().split(":")[1];
+    String role = jwtData.getRole();
 
     if (!VALIDATION_ID_PATTERN.matcher(iid).matches()
         && (role.equalsIgnoreCase("provider") || role.equalsIgnoreCase("delegate"))) {
@@ -487,7 +653,9 @@ public class ApiServerVerticle extends AbstractVerticle {
     }
 
     meteringService.monthlyOverview(
-        authInfo,
+        jwtData,
+        startTime,
+        endTime,
         handler -> {
           if (handler.succeeded()) {
             LOGGER.debug("Successful");
@@ -501,15 +669,14 @@ public class ApiServerVerticle extends AbstractVerticle {
 
   private void getAllSummaryHandler(RoutingContext routingContext) {
     LOGGER.trace("Info: getAllSummary Started.");
-    HttpServerRequest request = routingContext.request();
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
-    authInfo.put(STARTT, request.getParam(STARTT));
-    authInfo.put(ENDT, request.getParam(ENDT));
-    LOGGER.debug("auth info = " + authInfo);
+
+    String startTime = RoutingContextHelper.getStartTime(routingContext);
+    String endTime = RoutingContextHelper.getEndTime(routingContext);
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
     HttpServerResponse response = routingContext.response();
 
-    String iid = authInfo.getString("iid");
-    String role = authInfo.getString("role");
+    String iid = jwtData.getIid().split(":")[1];
+    String role = jwtData.getRole();
 
     if (!VALIDATION_ID_PATTERN.matcher(iid).matches()
         && (role.equalsIgnoreCase("provider") || role.equalsIgnoreCase("delegate"))) {
@@ -523,7 +690,9 @@ public class ApiServerVerticle extends AbstractVerticle {
     }
 
     meteringService.summaryOverview(
-        authInfo,
+        jwtData,
+        startTime,
+        endTime,
         handler -> {
           if (handler.succeeded()) {
             JsonObject jsonObject = handler.result();
@@ -555,11 +724,13 @@ public class ApiServerVerticle extends AbstractVerticle {
     LOGGER.trace("Info: getConsumerAuditDetail Started.");
 
     JsonObject entries = new JsonObject();
-    JsonObject consumer = (JsonObject) routingContext.data().get("authInfo");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
     HttpServerRequest request = routingContext.request();
+    String userId = jwtData.getSub();
+    String apiEndpoint = api.getIudxConsumerAuditUrl();
 
-    entries.put("userid", consumer.getString("userid"));
-    entries.put("endPoint", consumer.getString("apiEndpoint"));
+    entries.put("userid", userId);
+    entries.put("endPoint", apiEndpoint);
     entries.put("startTime", request.getParam("time"));
     entries.put("endTime", request.getParam("endTime"));
     entries.put("timeRelation", request.getParam("timerel"));
@@ -600,12 +771,16 @@ public class ApiServerVerticle extends AbstractVerticle {
   private Future<Void> getProviderAuditDetail(RoutingContext routingContext) {
     LOGGER.trace("Info: getProviderAuditDetail Started.");
     JsonObject entries = new JsonObject();
-    JsonObject provider = (JsonObject) routingContext.data().get("authInfo");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
     HttpServerRequest request = routingContext.request();
 
-    entries.put("endPoint", provider.getString("apiEndpoint"));
-    entries.put("userid", provider.getString("userid"));
-    entries.put("iid", provider.getString("iid"));
+    String userId = jwtData.getSub();
+    String apiEndpoint = api.getIudxProviderAuditUrl();
+    String iid = jwtData.getIid().split(":")[1];
+
+    entries.put("endPoint", apiEndpoint);
+    entries.put("userid", userId);
+    entries.put("iid", iid);
     entries.put("startTime", request.getParam("time"));
     entries.put("endTime", request.getParam("endTime"));
     entries.put("timeRelation", request.getParam("timerel"));
@@ -1029,10 +1204,11 @@ public class ApiServerVerticle extends AbstractVerticle {
     String instanceId = request.getHeader(HEADER_HOST);
     String subscriptionType = SubsType.STREAMING.type;
     requestBody.put(SUB_TYPE, subscriptionType);
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    String userId = jwtData.getSub();
 
     JsonObject jsonObj = requestBody.copy();
-    jsonObj.put(USER_ID, authInfo.getString(USER_ID));
+    jsonObj.put(USER_ID, userId);
     jsonObj.put(JSON_INSTANCEID, instanceId);
     String entities = jsonObj.getJsonArray("entities").getString(0);
     JsonObject cacheJson = new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
@@ -1058,7 +1234,7 @@ public class ApiServerVerticle extends AbstractVerticle {
 
               Future<JsonObject> subsReq =
                   subsService.createSubscription(
-                      jsonObj, databroker, postgresService, authInfo, cacheService);
+                      jsonObj, databroker, postgresService, jwtData, cacheService);
               subsReq.onComplete(
                   subHandler -> {
                     if (subHandler.succeeded()) {
@@ -1097,7 +1273,8 @@ public class ApiServerVerticle extends AbstractVerticle {
     requestJson.put(JSON_INSTANCEID, instanceId);
     String subscriptionType = SubsType.STREAMING.type;
     requestJson.put(SUB_TYPE, subscriptionType);
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    String userId = jwtData.getSub();
     HttpServerResponse response = routingContext.response();
     String entities = requestJson.getJsonArray("entities").getString(0);
     JsonObject cacheJson = new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
@@ -1108,10 +1285,10 @@ public class ApiServerVerticle extends AbstractVerticle {
               requestJson.mergeIn(handler);
               if (requestJson.getString(JSON_NAME).equalsIgnoreCase(alias)) {
                 JsonObject jsonObj = requestJson.copy();
-                jsonObj.put(USER_ID, authInfo.getString(USER_ID));
+                jsonObj.put(USER_ID, userId);
                 Future<JsonObject> subsReq =
                     subsService.appendSubscription(
-                        jsonObj, databroker, postgresService, authInfo, cacheService);
+                        jsonObj, databroker, postgresService, jwtData, cacheService);
                 subsReq.onComplete(
                     subsRequestHandler -> {
                       if (subsRequestHandler.succeeded()) {
@@ -1164,14 +1341,15 @@ public class ApiServerVerticle extends AbstractVerticle {
     String instanceId = request.getHeader(HEADER_HOST);
     String subscriptionType = SubsType.STREAMING.type;
     requestJson.put(SUB_TYPE, subscriptionType);
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    String userId = jwtData.getSub();
     if (requestJson.getString(JSON_NAME).equalsIgnoreCase(alias)) {
       JsonObject jsonObj = requestJson.copy();
       jsonObj.put(SUBSCRIPTION_ID, subsId);
       jsonObj.put(JSON_INSTANCEID, instanceId);
-      jsonObj.put(USER_ID, authInfo.getString(USER_ID));
+      jsonObj.put(USER_ID, userId);
       Future<JsonObject> subsReq =
-          subsService.updateSubscription(jsonObj, databroker, postgresService, authInfo);
+          subsService.updateSubscription(jsonObj, databroker, postgresService, jwtData);
       subsReq.onComplete(
           subsRequestHandler -> {
             if (subsRequestHandler.succeeded()) {
@@ -1199,7 +1377,6 @@ public class ApiServerVerticle extends AbstractVerticle {
   private void getSubscription(RoutingContext routingContext) {
     LOGGER.trace("Info: getSubscription method started");
     HttpServerRequest request = routingContext.request();
-    HttpServerResponse response = routingContext.response();
     String domain = request.getParam(USER_ID);
     String alias = request.getParam(JSON_ALIAS);
     String subsId = domain + "/" + alias;
@@ -1209,25 +1386,27 @@ public class ApiServerVerticle extends AbstractVerticle {
     requestJson.put(JSON_INSTANCEID, instanceId);
     String subscriptionType = SubsType.STREAMING.type;
     requestJson.put(SUB_TYPE, subscriptionType);
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
 
     if (requestJson != null && requestJson.containsKey(SUB_TYPE)) {
       JsonObject jsonObj = requestJson.copy();
-      jsonObj.put(JSON_CONSUMER, authInfo.getString(JSON_CONSUMER));
+      /* TODO: JSON_CONSUMER is always null as it is not being set anywhere in the authentication */
+      //      jsonObj.put(JSON_CONSUMER, authInfo.getString(JSON_CONSUMER));
       Future<JsonObject> entityName = getEntityName(requestJson);
       entityName
           .onSuccess(
               entityNameHandler -> {
-                ((JsonObject) routingContext.data().get("authInfo"))
-                    .put("id", entityNameHandler.getValue("id"));
+                /*TODO: why is this entity object being added here */
+                //                ((JsonObject) routingContext.data().get("authInfo"))
+                //                    .put("id", entityNameHandler.getValue("id"));
+                var entity = entityNameHandler.getValue("id");
                 Future<JsonObject> subsReq =
-                    subsService.getSubscription(jsonObj, databroker, postgresService);
+                    subsService.getSubscription(jsonObj, databroker, postgresService, entity);
                 subsReq.onComplete(
                     subHandler -> {
+                      HttpServerResponse response = routingContext.response();
                       if (subHandler.succeeded()) {
                         LOGGER.info("Success: Getting subscription");
                         routingContext.data().put(RESPONSE_SIZE, 0);
-
                         Future.future(fu -> updateAuditTable(routingContext));
                         handleSuccessResponse(
                             response, ResponseType.Ok.getCode(), subHandler.result().toString());
@@ -1239,6 +1418,7 @@ public class ApiServerVerticle extends AbstractVerticle {
               })
           .onFailure(
               entityNameFailureHandler -> {
+                HttpServerResponse response = routingContext.response();
                 LOGGER.error("Fail: Bad request from DB ");
                 handleResponse(
                     response,
@@ -1247,6 +1427,7 @@ public class ApiServerVerticle extends AbstractVerticle {
                     entityNameFailureHandler.getLocalizedMessage());
               });
     } else {
+      HttpServerResponse response = routingContext.response();
       LOGGER.error("Fail: Bad request");
       handleResponse(response, BAD_REQUEST, INVALID_PARAM_URN, MSG_SUB_TYPE_NOT_FOUND);
     }
@@ -1260,9 +1441,10 @@ public class ApiServerVerticle extends AbstractVerticle {
   private void getAllSubscriptionForUser(RoutingContext routingContext) {
     LOGGER.trace("Info: getSubscriptionQueue method started");
     HttpServerResponse response = routingContext.response();
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    String userId = jwtData.getSub();
     JsonObject jsonObj = new JsonObject();
-    jsonObj.put(USER_ID, authInfo.getString(USER_ID));
+    jsonObj.put(USER_ID, userId);
     Future<JsonObject> subsReq =
         subsService.getAllSubscriptionQueueForUser(jsonObj, postgresService);
     subsReq.onComplete(
@@ -1298,18 +1480,21 @@ public class ApiServerVerticle extends AbstractVerticle {
     requestJson.put(JSON_INSTANCEID, instanceId);
     String subscriptionType = SubsType.STREAMING.type;
     requestJson.put(SUB_TYPE, subscriptionType);
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    String userId = jwtData.getSub();
     if (requestJson.containsKey(SUB_TYPE)) {
       JsonObject jsonObj = requestJson.copy();
-      jsonObj.put(USER_ID, authInfo.getString(USER_ID));
+      jsonObj.put(USER_ID, userId);
       Future<JsonObject> entityName = getEntityName(requestJson);
       entityName
           .onSuccess(
               entityNameSuccessHandler -> {
-                ((JsonObject) routingContext.data().get("authInfo"))
-                    .put("id", entityNameSuccessHandler.getValue("id"));
+                /* TODO: why is the entity object being added in the authInfo */
+                //                ((JsonObject) routingContext.data().get("authInfo"))
+                //                    .put("id", entityNameSuccessHandler.getValue("id"));
+                var entity = entityNameSuccessHandler.getValue("id");
                 Future<JsonObject> subsReq =
-                    subsService.deleteSubscription(jsonObj, databroker, postgresService);
+                    subsService.deleteSubscription(jsonObj, databroker, postgresService, entity);
                 subsReq.onComplete(
                     subHandler -> {
                       if (subHandler.succeeded()) {
@@ -1349,8 +1534,9 @@ public class ApiServerVerticle extends AbstractVerticle {
     HttpServerResponse response = routingContext.response();
     String instanceId = request.getHeader(HEADER_HOST);
     requestJson.put(JSON_INSTANCEID, instanceId);
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
-    requestJson.put(USER_ID, authInfo.getString(USER_ID));
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    String userId = jwtData.getSub();
+    requestJson.put(USER_ID, userId);
 
     Future<JsonObject> brokerResult =
         managementApi.registerAdapter(requestJson, databroker, cacheService, postgresService);
@@ -1383,8 +1569,8 @@ public class ApiServerVerticle extends AbstractVerticle {
 
     StringBuilder adapterIdBuilder = new StringBuilder();
     adapterIdBuilder.append(id);
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
-    String userId = authInfo.getString(USER_ID);
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    String userId = jwtData.getSub();
     Future<JsonObject> brokerResult =
         managementApi.deleteAdapter(
             adapterIdBuilder.toString(), userId, databroker, postgresService);
@@ -1468,6 +1654,50 @@ public class ApiServerVerticle extends AbstractVerticle {
     }
   }
 
+  Future<Boolean> validateProviderUser(String providerUserId, JwtData jwtData) {
+    LOGGER.trace("validateProviderUser() started");
+    Promise<Boolean> promise = Promise.promise();
+    try {
+      if (jwtData.getRole().equalsIgnoreCase("delegate")) {
+        if (jwtData.getDid().equalsIgnoreCase(providerUserId)) {
+          LOGGER.info("success");
+          promise.complete(true);
+        } else {
+          LOGGER.error("fail");
+          promise.fail("incorrect providerUserId");
+        }
+      } else if (jwtData.getRole().equalsIgnoreCase("provider")) {
+        if (jwtData.getSub().equalsIgnoreCase(providerUserId)) {
+          LOGGER.info("success");
+          promise.complete(true);
+        } else {
+          LOGGER.error("fail");
+          promise.fail("incorrect providerUserId");
+        }
+      } else {
+        LOGGER.error("fail");
+        promise.fail("invalid role");
+      }
+    } catch (Exception e) {
+      LOGGER.error("exception occurred while validating provider user : " + e.getMessage());
+      promise.fail("exception occurred while validating provider user");
+    }
+    return promise.future();
+  }
+
+  Future<Boolean> isValidId(JwtData jwtData, String id) {
+    Promise<Boolean> promise = Promise.promise();
+    String jwtId = jwtData.getIid().split(":")[1];
+    if (id.equalsIgnoreCase(jwtId)) {
+      promise.complete(true);
+    } else {
+      LOGGER.error("Incorrect id value in jwt");
+      promise.fail("Incorrect id value in jwt");
+    }
+
+    return promise.future();
+  }
+
   /**
    * publish data from adapter to rabbit MQ.
    *
@@ -1476,43 +1706,29 @@ public class ApiServerVerticle extends AbstractVerticle {
   public void publishDataFromAdapter(RoutingContext routingContext) {
     LOGGER.trace("Info: publishDataFromAdapter method started;");
     JsonArray requestJson = routingContext.body().asJsonArray();
-    HttpServerRequest request = routingContext.request();
     HttpServerResponse response = routingContext.response();
-    /*String instanceId = request.getHeader(HEADER_HOST);*/
-    JsonObject authenticationInfo = new JsonObject();
-    authenticationInfo.put(API_ENDPOINT, "/iudx/v1/adapter");
-    /*requestJson.put(JSON_INSTANCEID, instanceId);*/
-    if (request.headers().contains(HEADER_TOKEN)) {
-      authenticationInfo.put(HEADER_TOKEN, request.getHeader(HEADER_TOKEN));
-
-      Future<JsonObject> brokerResult =
-          managementApi.publishDataFromAdapter(requestJson, databroker);
-      brokerResult.onComplete(
-          brokerResultHandler -> {
-            if (brokerResultHandler.succeeded()) {
-              LOGGER.debug("Success: publishing data from adapter");
-              routingContext.data().put(RESPONSE_SIZE, 0);
-              Future.future(fu -> updateAuditTable(routingContext));
-              handleSuccessResponse(
-                  response, ResponseType.Ok.getCode(), brokerResultHandler.result().toString());
-            } else {
-              LOGGER.debug("Fail: Bad request;" + brokerResultHandler.cause().getMessage());
-              processBackendResponse(response, brokerResultHandler.cause().getMessage());
-            }
-          });
-
-    } else {
-      LOGGER.debug("Fail: Unauthorized");
-      handleResponse(response, UNAUTHORIZED, MISSING_TOKEN_URN);
-    }
+    Future<JsonObject> brokerResult = managementApi.publishDataFromAdapter(requestJson, databroker);
+    brokerResult.onComplete(
+        brokerResultHandler -> {
+          if (brokerResultHandler.succeeded()) {
+            LOGGER.debug("Success: publishing data from adapter");
+            routingContext.data().put(RESPONSE_SIZE, 0);
+            Future.future(fu -> updateAuditTable(routingContext));
+            handleSuccessResponse(
+                response, ResponseType.Ok.getCode(), brokerResultHandler.result().toString());
+          } else {
+            LOGGER.debug("Fail: Bad request;" + brokerResultHandler.cause().getMessage());
+            processBackendResponse(response, brokerResultHandler.cause().getMessage());
+          }
+        });
   }
 
   private void getAllAdaptersForUsers(RoutingContext routingContext) {
     HttpServerResponse response = routingContext.response();
-    JsonObject authInfo = (JsonObject) routingContext.data().get("authInfo");
+    JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
+    String iid = jwtData.getIid().split(":")[1];
     JsonObject jsonObj = new JsonObject();
 
-    String iid = authInfo.getString(IID);
     JsonObject cacheRequest = new JsonObject();
     cacheRequest.put("type", CATALOGUE_CACHE);
     cacheRequest.put("key", iid);
@@ -1628,7 +1844,7 @@ public class ApiServerVerticle extends AbstractVerticle {
     } catch (IllegalArgumentException ex) {
       response
           .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-          .setStatusCode(HttpStatusCode.BAD_REQUEST.getValue())
+          .setStatusCode(BAD_REQUEST.getValue())
           .end(generateResponse(BAD_REQUEST, INVALID_PARAM_URN).toString());
     }
     return Optional.of(queryParams);
@@ -1646,13 +1862,15 @@ public class ApiServerVerticle extends AbstractVerticle {
   }
 
   private Future<Void> updateAuditTable(RoutingContext context) {
-    JsonObject authInfo = (JsonObject) context.data().get("authInfo");
-    LOGGER.debug("auth info" + authInfo);
+    JwtData jwtData = RoutingContextHelper.getJwtData(context);
+    String endPoint = RoutingContextHelper.getEndPoint(context);
+    String id = RoutingContextHelper.getId(context);
+
     Promise<Void> promise = Promise.promise();
     JsonObject request = new JsonObject();
     JsonObject cacheRequest = new JsonObject();
     cacheRequest.put("type", CATALOGUE_CACHE);
-    cacheRequest.put("key", authInfo.getValue(ID));
+    cacheRequest.put("key", id);
     cacheService
         .get(cacheRequest)
         .onComplete(
@@ -1665,14 +1883,14 @@ public class ApiServerVerticle extends AbstractVerticle {
                         ? cacheResult.getString(RESOURCE_GROUP)
                         : cacheResult.getString(ID);
                 ZonedDateTime zst = ZonedDateTime.now(ZoneId.of("Asia/Kolkata"));
-                String role = authInfo.getString(ROLE);
-                String drl = authInfo.getString(DRL);
+                String role = jwtData.getRole();
+                String drl = jwtData.getDrl();
                 if (role.equalsIgnoreCase("delegate") && drl != null) {
-                  request.put(DELEGATOR_ID, authInfo.getString(DID));
+                  request.put(DELEGATOR_ID, jwtData.getDid());
                 } else {
-                  request.put(DELEGATOR_ID, authInfo.getString(USER_ID));
+                  request.put(DELEGATOR_ID, jwtData.getSub());
                 }
-                if (authInfo.getString(API_ENDPOINT).contains("/ngsi-ld/v1/subscription")) {
+                if (endPoint.contains(api.getSubscriptionUrl())) {
                   request.put(EVENT, "subscriptions");
                 }
                 String type =
@@ -1684,9 +1902,9 @@ public class ApiServerVerticle extends AbstractVerticle {
                 request.put(TYPE_KEY, type);
                 request.put(EPOCH_TIME, time);
                 request.put(ISO_TIME, isoTime);
-                request.put(USER_ID, authInfo.getValue(USER_ID));
-                request.put(ID, authInfo.getValue(ID));
-                request.put(API, authInfo.getValue(API_ENDPOINT));
+                request.put(USER_ID, jwtData.getSub());
+                request.put(ID, id);
+                request.put(API, endPoint);
                 request.put(RESPONSE_SIZE, context.data().get(RESPONSE_SIZE));
                 request.put(PROVIDER_ID, providerId);
                 meteringService.insertMeteringValuesInRmq(
