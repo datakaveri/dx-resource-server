@@ -1,6 +1,7 @@
 package iudx.resource.server.authenticator;
 
 import static iudx.resource.server.authenticator.Constants.AUTH_JWKS_PATH;
+import static iudx.resource.server.authenticator.Constants.JWT_LEEWAY_TIME;
 import static iudx.resource.server.common.Constants.*;
 
 import io.vertx.core.AbstractVerticle;
@@ -69,7 +70,7 @@ public class AuthenticationVerticle extends AbstractVerticle {
               binder = new ServiceBinder(vertx);
 
               JWTAuthOptions jwtAuthOptions = new JWTAuthOptions();
-              jwtAuthOptions.getJWTOptions().setLeeway(30);
+              jwtAuthOptions.getJWTOptions().setLeeway(JWT_LEEWAY_TIME);
               jwtAuthOptions.setJwks(jwks);
               /*
                * Default jwtIgnoreExpiry is false. If set through config, then that value is taken
@@ -78,12 +79,12 @@ public class AuthenticationVerticle extends AbstractVerticle {
                   config().getBoolean("jwtIgnoreExpiry") != null
                       && config().getBoolean("jwtIgnoreExpiry");
               if (jwtIgnoreExpiry) {
-                jwtAuthOptions.getJWTOptions().setIgnoreExpiration(true).setLeeway(30);
+                jwtAuthOptions.getJWTOptions().setIgnoreExpiration(true).setLeeway(JWT_LEEWAY_TIME);
                 LOGGER.warn(
                     "JWT ignore expiration set to true, "
                         + "do not set IgnoreExpiration in production!!");
               }
-
+              jwtAuthOptions.getJWTOptions().setIssuer(config().getString("issuer"));
               JWTAuth jwtAuth = JWTAuth.create(vertx, jwtAuthOptions);
               jwtAuthenticationService = new JwtAuthenticationServiceImpl(jwtAuth);
 
@@ -92,8 +93,6 @@ public class AuthenticationVerticle extends AbstractVerticle {
                   binder
                       .setAddress(AUTH_SERVICE_ADDRESS)
                       .register(AuthenticationService.class, jwtAuthenticationService);
-
-              LOGGER.info("Authentication verticle deployed");
             })
         .onFailure(
             handler -> {
@@ -117,10 +116,11 @@ public class AuthenticationVerticle extends AbstractVerticle {
             handler -> {
               if (handler.succeeded()) {
                 JsonObject json = handler.result().bodyAsJsonObject();
-                JsonObject x5c = json.getJsonArray("keys").getJsonObject(0);
-                promise.complete(x5c);
+                JsonObject keySet = json.getJsonArray("keys").getJsonObject(0);
+                promise.complete(keySet);
               } else {
-                promise.fail("fail to get JWT public key");
+                LOGGER.error("failed to get jwks : {}", handler.cause().getMessage());
+                promise.fail(handler.cause().getMessage());
               }
             });
     return promise.future();

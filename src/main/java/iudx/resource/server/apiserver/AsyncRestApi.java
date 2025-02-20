@@ -32,6 +32,7 @@ import iudx.resource.server.apiserver.response.ResponseType;
 import iudx.resource.server.apiserver.service.CatalogueService;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
+import iudx.resource.server.authenticator.handler.authentication.TokenIntrospectHandler;
 import iudx.resource.server.authenticator.handler.authorization.*;
 import iudx.resource.server.authenticator.model.DxAccess;
 import iudx.resource.server.authenticator.model.DxRole;
@@ -92,14 +93,17 @@ public class AsyncRestApi {
         new ConstraintsHandlerForConsumer().consumerConstraintsForEndpoint(DxAccess.ASYNC);
 
     asyncService = AsyncService.createProxy(vertx, ASYNC_SERVICE_ADDRESS);
-    AuthHandler authHandler = new AuthHandler(api, authenticator);
+    AuthHandler authHandler = new AuthHandler(authenticator);
     GetIdHandler getIdHandler = new GetIdHandler(api);
     Handler<RoutingContext> adminAndUserAccessHandler =
         new AuthorizationHandler()
             .setUserRolesForEndpoint(
                 DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
     Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
-    Handler<RoutingContext> validateToken = new AuthValidationHandler(api, cacheService, audience, catalogueService);
+    Handler<RoutingContext> validateToken =
+        new AuthValidationHandler(api, cacheService, catalogueService);
+    Handler<RoutingContext> tokenIntrospectHandler =
+        new TokenIntrospectHandler().validateTokenForRs(audience);
 
     ValidationHandler asyncSearchValidation = new ValidationHandler(vertx, ASYNC_SEARCH);
     router
@@ -107,6 +111,7 @@ public class AsyncRestApi {
         .handler(asyncSearchValidation)
         .handler(getIdHandler.withNormalisedPath(api.getIudxAsyncSearchApi()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(adminAndUserAccessHandler)
         .handler(asyncConstraint)
@@ -120,6 +125,7 @@ public class AsyncRestApi {
         .handler(asyncStatusValidation)
         .handler(getIdHandler.withNormalisedPath(api.getIudxAsyncStatusApi()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(adminAndUserAccessHandler)
         .handler(asyncConstraint)

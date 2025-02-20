@@ -103,6 +103,7 @@ configs/
 | authServerHost    |     String     | abc.iudx.io   | Hostname of the authentication server                                       |
 | jwtIgnoreExpiry   |    boolean     | false         | To ignore JWT Expiry                                                        |
 | enableLimits      |    boolean     | false         | To enable Limits (data limits)                                              |
+| issuer            |     String     | cos.iudx.io   | Issuer of the token                                                         |
 
 ## Metering Verticle
 

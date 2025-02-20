@@ -44,11 +44,10 @@ public interface AuthenticationService {
    * APIs. It caches the result of the TIP from the auth server for a duration specified by the
    * Constants TIP_CACHE_TIMEOUT_AMOUNT and TIP_CACHE_TIMEOUT_UNIT.
    *
-   * @param authenticationInfo which is a JsonObject containing token: String and apiEndpoint:
-   *                           String
+   * @param token which is a header token
    * @return AuthenticationService which is a service
    */
 
-  Future<JwtData> tokenIntrospect(JsonObject authenticationInfo);
+  Future<JwtData> decodeToken(String token);
 
 }

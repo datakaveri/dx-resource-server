@@ -26,8 +26,8 @@ import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.handlers.*;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
+import iudx.resource.server.authenticator.handler.authentication.TokenIntrospectHandler;
 import iudx.resource.server.authenticator.handler.authorization.GetIdHandler;
-import iudx.resource.server.authenticator.handler.authorization.TokenInterospectionForAdminApis;
 import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.cache.CacheService;
 import iudx.resource.server.cache.cachelmpl.CacheType;
@@ -47,7 +47,7 @@ public final class AdminRestApi {
 
   private static final Logger LOGGER = LogManager.getLogger(AdminRestApi.class);
 
-  //  private final Vertx vertx;
+  //    private final Vertx vertx;
   private final Router router;
   private final DataBrokerService rmqBrokerService;
   private final PostgresService pgService;
@@ -56,9 +56,10 @@ public final class AdminRestApi {
   private final CacheService cacheService;
   private Api api;
   private AuthenticationService authenticator;
+  private String rsUrl;
 
-  AdminRestApi(Vertx vertx, Router router, Api api) {
-    //    this.vertx = vertx;
+  AdminRestApi(Vertx vertx, Router router, Api api, String audience) {
+    //        this.vertx = vertx;
     this.router = router;
     this.rmqBrokerService = DataBrokerService.createProxy(vertx, BROKER_SERVICE_ADDRESS);
     this.auditService = MeteringService.createProxy(vertx, METERING_SERVICE_ADDRESS);
@@ -66,20 +67,23 @@ public final class AdminRestApi {
     this.api = api;
     this.authenticator = AuthenticationService.createProxy(vertx, AUTH_SERVICE_ADDRESS);
     cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
+    this.rsUrl = audience;
   }
 
   public Router init() {
 
-    AuthHandler authHandler = new AuthHandler(api, authenticator);
+    AuthHandler authHandler = new AuthHandler(authenticator);
     GetIdHandler getIdHandler = new GetIdHandler(api);
-    Handler<RoutingContext> validateToken = new TokenInterospectionForAdminApis();
     FailureHandler validationsFailureHandler = new FailureHandler();
+
+    Handler<RoutingContext> tokenIntrospectHandler =
+        new TokenIntrospectHandler().validateKeycloakToken(rsUrl);
 
     router
         .post(REVOKE_TOKEN)
         .handler(getIdHandler.withNormalisedPath(api.getAdminRevokeToken()))
         .handler(authHandler)
-        .handler(validateToken)
+        .handler(tokenIntrospectHandler)
         .handler(this::handleRevokeTokenRequest)
         .failureHandler(validationsFailureHandler);
 
@@ -87,7 +91,7 @@ public final class AdminRestApi {
         .post(RESOURCE_ATTRIBS)
         .handler(getIdHandler.withNormalisedPath(api.getAdminUniqueAttributeOfResource()))
         .handler(authHandler)
-        .handler(validateToken)
+        .handler(tokenIntrospectHandler)
         .handler(this::createUniqueAttribute)
         .failureHandler(validationsFailureHandler);
 
@@ -95,7 +99,7 @@ public final class AdminRestApi {
         .put(RESOURCE_ATTRIBS)
         .handler(getIdHandler.withNormalisedPath(api.getAdminUniqueAttributeOfResource()))
         .handler(authHandler)
-        .handler(validateToken)
+        .handler(tokenIntrospectHandler)
         .handler(this::updateUniqueAttribute)
         .failureHandler(validationsFailureHandler);
 
@@ -103,7 +107,7 @@ public final class AdminRestApi {
         .delete(RESOURCE_ATTRIBS)
         .handler(getIdHandler.withNormalisedPath(api.getAdminUniqueAttributeOfResource()))
         .handler(authHandler)
-        .handler(validateToken)
+        .handler(tokenIntrospectHandler)
         .handler(this::deleteUniqueAttribute)
         .failureHandler(validationsFailureHandler);
 

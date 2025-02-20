@@ -39,7 +39,8 @@
 			"catServerHost": "",
 			"catServerPort": "",
 			"jwtIgnoreExpiry": true,
-			"enableLimits": false
+			"enableLimits": false,
+			"issuer": "<token-issuer>"
 		},
 		{
 			"id": "iudx.resource.server.databroker.DataBrokerVerticle",

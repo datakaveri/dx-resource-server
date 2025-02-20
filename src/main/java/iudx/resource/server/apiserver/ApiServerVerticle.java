@@ -48,6 +48,7 @@ import iudx.resource.server.apiserver.subscription.SubscriptionService;
 import iudx.resource.server.apiserver.util.RequestType;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
+import iudx.resource.server.authenticator.handler.authentication.TokenIntrospectHandler;
 import iudx.resource.server.authenticator.handler.authorization.*;
 import iudx.resource.server.authenticator.model.DxAccess;
 import iudx.resource.server.authenticator.model.DxRole;
@@ -221,7 +222,7 @@ public class ApiServerVerticle extends AbstractVerticle {
     ValidationHandler entityValidationHandler = new ValidationHandler(vertx, RequestType.ENTITY);
     AuthenticationService authenticator =
         AuthenticationService.createProxy(vertx, AUTH_SERVICE_ADDRESS);
-    AuthHandler authHandler = new AuthHandler(api, authenticator);
+    AuthHandler authHandler = new AuthHandler(authenticator);
     GetIdHandler getIdHandler = new GetIdHandler(api);
     catalogueService = new CatalogueService(cacheService, config(), vertx);
 
@@ -247,7 +248,9 @@ public class ApiServerVerticle extends AbstractVerticle {
     String audience = config().getString("audience");
     Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
     Handler<RoutingContext> validateToken =
-        new AuthValidationHandler(api, cacheService, audience, catalogueService);
+        new AuthValidationHandler(api, cacheService, catalogueService);
+    Handler<RoutingContext> tokenIntrospectHandler =
+        new TokenIntrospectHandler().validateTokenForRs(audience);
 
     /* NGSI-LD api endpoints */
     router
@@ -255,6 +258,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .handler(entityValidationHandler)
         .handler(getIdHandler.withNormalisedPath(api.getEntitiesUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -268,6 +272,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .handler(latestValidationHandler)
         .handler(getIdHandler.withNormalisedPath(api.getEntitiesUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -283,6 +288,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .handler(postTemporalValidationHandler)
         .handler(getIdHandler.withNormalisedPath(api.getPostTemporalQueryPath()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -298,6 +304,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .handler(postEntitiesValidationHandler)
         .handler(getIdHandler.withNormalisedPath(api.getPostEntitiesQueryPath()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -312,6 +319,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .handler(temporalValidationHandler)
         .handler(getIdHandler.withNormalisedPath(api.getTemporalUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -327,6 +335,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .handler(subsValidationHandler)
         .handler(getIdHandler.withNormalisedPath(api.getSubscriptionUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -338,6 +347,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .handler(subsValidationHandler)
         .handler(getIdHandler.withNormalisedPath(api.getSubscriptionUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -349,6 +359,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .handler(subsValidationHandler)
         .handler(getIdHandler.withNormalisedPath(api.getSubscriptionUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -359,6 +370,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .get(api.getSubscriptionUrl() + "/:userid/:alias")
         .handler(getIdHandler.withNormalisedPath(api.getSubscriptionUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -370,6 +382,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .get(api.getSubscriptionUrl())
         .handler(getIdHandler.withNormalisedPath(api.getSubscriptionUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -381,6 +394,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .delete(api.getSubscriptionUrl() + "/:userid/:alias")
         .handler(getIdHandler.withNormalisedPath(api.getSubscriptionUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(subscriptionConstraint)
@@ -395,6 +409,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .get(api.getIudxConsumerAuditUrl())
         .handler(getIdHandler.withNormalisedPath(api.getIudxConsumerAuditUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -406,6 +421,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .get(api.getIudxProviderAuditUrl())
         .handler(getIdHandler.withNormalisedPath(api.getIudxProviderAuditUrl()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -417,6 +433,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .post(api.getIngestionPath())
         .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -427,6 +444,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .delete(api.getIngestionPath() + "/*")
         .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -437,6 +455,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .get(api.getIngestionPath() + "/:UUID")
         .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -447,6 +466,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .post(api.getIngestionPath() + "/heartbeat")
         .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -457,6 +477,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .post(api.getIngestionPathEntities())
         .handler(getIdHandler.withNormalisedPath(api.getIngestionPathEntities()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -467,6 +488,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .get(api.getIngestionPath())
         .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
         .handler(isTokenRevoked)
@@ -478,6 +500,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .get(api.getMonthlyOverview())
         .handler(getIdHandler.withNormalisedPath(api.getMonthlyOverview()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -490,6 +513,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         .get(api.getSummaryPath())
         .handler(getIdHandler.withNormalisedPath(api.getSummaryPath()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(apiConstraint)
@@ -574,12 +598,13 @@ public class ApiServerVerticle extends AbstractVerticle {
         .route(api.getAsyncPath() + "/*")
         .subRouter(new AsyncRestApi(vertx, router, api, timeLimitForAsync, config()).init());
 
-    router.route(ADMIN + "/*").subRouter(new AdminRestApi(vertx, router, api).init());
+    router.route(ADMIN + "/*").subRouter(new AdminRestApi(vertx, router, api, audience).init());
 
     router
         .post(api.getManagementApiPath())
         .handler(getIdHandler.withNormalisedPath(api.getManagementApiPath()))
         .handler(authHandler)
+        .handler(tokenIntrospectHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         //        .handler(mgmtConstraint) //TODO: uncomment after DxAccess.MANAGEMENT is added in
