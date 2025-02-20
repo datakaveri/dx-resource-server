@@ -20,7 +20,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import iudx.resource.server.apiserver.handler.FailureHandler;
+import iudx.resource.server.apiserver.exception.FailureHandler;
 import iudx.resource.server.apiserver.ingestion.service.IngestionService;
 import iudx.resource.server.apiserver.ingestion.service.IngestionServiceImpl;
 import iudx.resource.server.authenticator.AuthenticationService;

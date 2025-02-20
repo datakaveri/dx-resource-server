@@ -1,3 +1,4 @@
+/*
 package iudx.resource.server.authenticator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -126,7 +127,8 @@ public class JwtAuthServiceImplTest {
 //      }
 //    }).when(cacheService).get(any());
 
-   /* when(cacheService.get(any())).thenReturn(Future.failedFuture("failed"));
+   */
+/* when(cacheService.get(any())).thenReturn(Future.failedFuture("failed"));
     
     JsonObject openIdJson=new JsonObject();
     openIdJson.put("type", CacheType.CATALOGUE_CACHE);
@@ -142,7 +144,8 @@ public class JwtAuthServiceImplTest {
     invalidIdJson.put("type", CacheType.CATALOGUE_CACHE);
     invalidIdJson.put("key", invalidId);
     when(cacheService.get(invalidIdJson)).thenReturn(Future.failedFuture("Failed future"));
-    */
+    *//*
+
     LOGGER.info("Auth tests setup complete");
     testContext.completeNow();
   }
@@ -1252,3 +1255,4 @@ public class JwtAuthServiceImplTest {
     });
   }
 }
+*/

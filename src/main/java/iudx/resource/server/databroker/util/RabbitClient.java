@@ -81,7 +81,6 @@ public class RabbitClient {
                   if (response != null && !response.equals(" ")) {
                     int status = response.statusCode();
                     if (status == HttpStatus.SC_NO_CONTENT) {
-                      /*finalResponse.put(QUEUE, queueName);*/
                       promise.complete();
                     } else if (status == HttpStatus.SC_NOT_FOUND) {
                       finalResponse.mergeIn(
@@ -137,10 +136,9 @@ public class RabbitClient {
                                 oroutingKeys.add(rkeys);
                               }
                             });
-                        /*finalResponse.put(ENTITIES, oroutingKeys);*/
                         promise.complete(oroutingKeys);
                       }
-                    } else if (status == HttpStatus.SC_NOT_FOUND) {
+                    } else {
                       finalResponse
                           .clear()
                           .mergeIn(
@@ -152,8 +150,6 @@ public class RabbitClient {
                       promise.fail(finalResponse.toString());
                     }
                   }
-                  LOGGER.debug("Info : " + finalResponse);
-
                 } else {
                   LOGGER.error("Error : Listing of Queue failed - " + ar.cause());
                   finalResponse.mergeIn(
@@ -193,18 +189,16 @@ public class RabbitClient {
                         if (handler.succeeded()) {
                           /* Handle the response */
                           UserResponse result = handler.result();
-                          /*response.put(USER_ID, userid);
-                          response.put(APIKEY, password);
-                          response.put(TYPE, result.getInteger("type"));
-                          response.put(TITLE, result.getString("title"));
-                          response.put(DETAILS, result.getString("detail"));
-                          response.put(VHOST_PERMISSIONS, vhost);*/
-                          promise.complete(/*response*/ result);
+                          promise.complete(result);
                         } else {
                           LOGGER.error(
                               "Error : Error in user creation. Cause : " + handler.cause());
                           response.mergeIn(
-                              getResponseJson(INTERNAL_ERROR_CODE, ERROR, USER_CREATION_ERROR));
+                              getResponseJson(
+                                  HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
+                                  INTERNAL_ERROR_CODE,
+                                  ERROR,
+                                  USER_CREATION_ERROR));
                           promise.fail(response.toString());
                         }
                       });
@@ -214,20 +208,28 @@ public class RabbitClient {
                   UserResponse userResponse = new UserResponse();
                   userResponse.setUserId(userid);
                   userResponse.setPassword(API_KEY_MESSAGE);
-                  /*response.put(USER_ID, userid);
-                  response.put(APIKEY, API_KEY_MESSAGE);*/
-                  /*response.mergeIn(
-                  getResponseJson(SUCCESS_CODE, DATABASE_READ_SUCCESS, DATABASE_READ_SUCCESS));*/
-                  /*response.put(VHOST_PERMISSIONS, vhost);*/
                   promise.complete(userResponse);
+                } else {
+                  /* Handle API error */
+                  LOGGER.error("Error : Something went wrong while finding user " + reply.cause());
+                  response.mergeIn(
+                      getResponseJson(
+                          HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
+                          INTERNAL_ERROR_CODE,
+                          FAILURE,
+                          USER_CREATION_ERROR));
+                  promise.fail(response.toString());
                 }
-
               } else {
                 /* Handle API error */
-                LOGGER.error(
-                    "Error : Something went wrong while finding user using mgmt API: "
-                        + reply.cause());
-                promise.fail(reply.cause().toString());
+                LOGGER.error("Error : Something went wrong while finding user " + reply.cause());
+                response.mergeIn(
+                    getResponseJson(
+                        HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
+                        INTERNAL_ERROR_CODE,
+                        FAILURE,
+                        USER_CREATION_ERROR));
+                promise.fail(response.toString());
               }
             });
     return promise.future();
@@ -264,25 +266,38 @@ public class RabbitClient {
                         if (handler.succeeded()) {
                           promise.complete(userResponse);
                         } else {
-
                           LOGGER.error(
                               "Error : error in setting vhostPermissions. Cause : ",
                               handler.cause());
-                          promise.fail("Error : error in setting vhostPermissions");
+                          response.mergeIn(
+                              getResponseJson(
+                                  HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
+                                  INTERNAL_ERROR_CODE,
+                                  FAILURE,
+                                  VHOST_PERMISSION_SET_ERROR));
+                          promise.fail(response.toString());
                         }
                       });
 
                 } else {
                   LOGGER.error(
                       "Error : createUser method - Some network error. cause" + ar.cause());
-                  response.put(FAILURE, NETWORK_ISSUE);
+                  response.mergeIn(
+                      getResponseJson(
+                          HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
+                          INTERNAL_ERROR_CODE,
+                          FAILURE,
+                          NETWORK_ISSUE));
                   promise.fail(response.toString());
                 }
               } else {
-                LOGGER.info(
-                    "Error : Something went wrong while creating user using mgmt API :",
-                    ar.cause());
-                response.put(FAILURE, CHECK_CREDENTIALS);
+                LOGGER.info("Error : Something went wrong while creating user :", ar.cause());
+                response.mergeIn(
+                    getResponseJson(
+                        HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
+                        INTERNAL_ERROR_CODE,
+                        FAILURE,
+                        CHECK_CREDENTIALS));
                 promise.fail(response.toString());
               }
             });
@@ -316,8 +331,6 @@ public class RabbitClient {
                           + " ] in vHost [ "
                           + vhost
                           + "]");
-                  vhostPermissionResponse.mergeIn(
-                      getResponseJson(SUCCESS_CODE, VHOST_PERMISSIONS, VHOST_PERMISSIONS_WRITE));
                   promise.complete();
                 } else {
                   LOGGER.error(
@@ -378,10 +391,8 @@ public class RabbitClient {
                   if (response != null && !response.equals(" ")) {
                     int status = response.statusCode();
                     if (status == HttpStatus.SC_CREATED) {
-                      /*finalResponse.put(QUEUE, queueName);*/
                       promise.complete(queueName);
                     } else if (status == HttpStatus.SC_NO_CONTENT) {
-                      /*throw new DxRuntimeException(409,QUEUE_ERROR_URN);*/
                       finalResponse.mergeIn(
                           getResponseJson(
                               HttpStatusCode.CONFLICT.getUrn(),
@@ -445,10 +456,6 @@ public class RabbitClient {
                     int status = response.statusCode();
                     LOGGER.info("Info : Binding " + entities.getString(0) + " Status is " + status);
                     if (status == HttpStatus.SC_CREATED) {
-                      /*finalResponse.put(EXCHANGE, exchangeName);
-                      finalResponse.put(QUEUE, queueName);
-                      finalResponse.put(ENTITIES, entities);
-                      LOGGER.debug("Success : " + finalResponse);*/
                       promise.complete();
                     } else if (status == HttpStatus.SC_NOT_FOUND) {
                       finalResponse.mergeIn(
@@ -550,14 +557,21 @@ public class RabbitClient {
                                 new Response.Builder()
                                     .withStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR)
                                     .withTitle(ResponseUrn.BAD_REQUEST_URN.getUrn())
-                                    .withDetail(updatePermissionHandler.cause().getMessage())
+                                    .withDetail(HttpStatusCode.BAD_REQUEST.getDescription())
                                     .withUrn(ResponseUrn.BAD_REQUEST_URN.getUrn())
                                     .build();
                             promise.fail(response.toString());
                           }
                         });
               } else {
-                promise.fail(handler.cause().getMessage());
+                Response response =
+                    new Response.Builder()
+                        .withStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR)
+                        .withTitle(ResponseUrn.BAD_REQUEST_URN.getUrn())
+                        .withDetail(HttpStatusCode.INTERNAL_SERVER_ERROR.getDescription())
+                        .withUrn(ResponseUrn.BAD_REQUEST_URN.getUrn())
+                        .build();
+                promise.fail(response.toString());
               }
             });
     return promise.future();

@@ -2,7 +2,7 @@ package iudx.resource.server.authenticator.handler.authorization;
 
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
-import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
+import iudx.resource.server.apiserver.exception.DxRuntimeException;
 import iudx.resource.server.authenticator.model.DxAccess;
 import iudx.resource.server.authenticator.model.DxRole;
 import iudx.resource.server.authenticator.model.JwtData;
