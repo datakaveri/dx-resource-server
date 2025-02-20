@@ -14,7 +14,7 @@ import iudx.resource.server.common.RoutingContextHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-/** IUDX Authentication handler to authenticate token passed in HEADER */
+/** DX Authentication handler to authenticate token passed in HEADER */
 public class AuthHandler implements Handler<RoutingContext> {
 
   private static final Logger LOGGER = LogManager.getLogger(AuthHandler.class);
@@ -29,7 +29,6 @@ public class AuthHandler implements Handler<RoutingContext> {
     String token = RoutingContextHelper.getToken(context);
     LOGGER.debug("Info :{}", context.request().path());
     Future<JwtData> jwtDataFuture = authenticator.decodeToken(token);
-
     jwtDataFuture
         .onSuccess(
             jwtData -> {

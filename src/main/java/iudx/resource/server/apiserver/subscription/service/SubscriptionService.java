@@ -1,7 +1,6 @@
 package iudx.resource.server.apiserver.subscription.service;
 
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonObject;
 import iudx.resource.server.apiserver.subscription.model.DeleteSubsResultModel;
 import iudx.resource.server.apiserver.subscription.model.GetResultModel;
 import iudx.resource.server.apiserver.subscription.model.PostModelSubscription;
@@ -15,9 +14,9 @@ public interface SubscriptionService {
 
   Future<SubscriptionData> createSubscription(PostModelSubscription postModelSubscription);
 
-  Future<JsonObject> updateSubscription(String entities, String subId, JsonObject authInfo);
+  Future<GetResultModel> updateSubscription(String entities, String subId, String expiry);
 
-  Future<SubscriptionData> appendSubscription(
+  Future<GetResultModel> appendSubscription(
       PostModelSubscription postModelSubscription, String subId);
 
   Future<DeleteSubsResultModel> deleteSubscription(

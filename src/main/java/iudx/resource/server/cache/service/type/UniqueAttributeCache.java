@@ -59,11 +59,12 @@ public class UniqueAttributeCache implements IudxCache {
     LOGGER.trace(cacheType + " refreshCache() called");
     String query = SELECT_UNIQUE_ATTRIBUTE;
     postgresService
-        .executeQuery(query)
+        .executeQuery1(query)
         .onComplete(
             handler -> {
               if (handler.succeeded()) {
-                JsonArray clientIdArray = handler.result().getJsonArray("result");
+                JsonArray clientIdArray = /*handler.result().getJsonArray("result")*/
+                    handler.result().getResult();
                 cache.invalidateAll();
                 clientIdArray.forEach(
                     e -> {
