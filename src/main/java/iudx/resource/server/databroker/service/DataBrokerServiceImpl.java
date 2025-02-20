@@ -159,12 +159,13 @@ public class DataBrokerServiceImpl implements DataBrokerService {
               })
           .onFailure(
               failure -> {
+                LOGGER.error("fail:: " + failure.getMessage());
                 if (resultContainer.isQueueCreated) {
                   Future<Void> resultDeleteQueue = rabbitClient.deleteQueue(queueName, vhostProd);
                   resultDeleteQueue.onComplete(
                       resultHandlerDeleteQueue -> {
                         if (resultHandlerDeleteQueue.succeeded()) {
-                          promise.fail(failure.getCause());
+                          promise.complete();
                         } else {
                           LOGGER.error("fail:: in deleteQueue " + failure.getMessage());
                           promise.fail(failure.getMessage());
@@ -316,8 +317,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
                 if (resultHandler.succeeded()) {
                   LOGGER.debug(resultHandler.result());
                   promise.complete(resultHandler.result());
-                }
-                if (resultHandler.failed()) {
+                } else {
                   LOGGER.error("failed ::" + resultHandler.cause());
                   promise.fail(
                       getResponseJson(
