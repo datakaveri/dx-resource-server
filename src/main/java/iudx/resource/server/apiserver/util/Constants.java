@@ -4,39 +4,23 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class Constants {
-
-  // date-time format
-  public static final String APP_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss[.SSSSSS]'Z'";
-  public static final String APP_NAME_REGEX = "[a-zA-Z0-9._\\-]*$";
-
-  public static final String APP_TEST_NAME = "vasanth";
   public static final String EVENT = "event";
   public static final String API_ENDPOINT = "apiEndpoint";
   public static final String API_METHOD = "method";
   public static final String ID = "id";
-  public static final String RESOURCE_ID_DEFAULT =
-          "8b95ab80-2aaf-4636-a65e-7f2563d0d371";
   public static final String RESPONSE_SIZE = "response_size";
-  public static final String IDS = "ids";
-
-  // config
-  public static final String CONFIG_FILE = "config.properties";
-
-  // NGSI-LD endpoints
-  public static final String NGSILD_BASE_PATH = "/ngsi-ld/v1";
   public static final String NGSILD_ENTITIES_URL = "/entities";
   // path regex
   public static final String ENTITITES_URL_REGEX = NGSILD_ENTITIES_URL + "(.*)";
   public static final String NGSILD_TEMPORAL_URL = "/temporal/entities";
   public static final String TEMPORAL_URL_REGEX = NGSILD_TEMPORAL_URL + "(.*)";
   public static final String NGSILD_SUBSCRIPTION_URL = "/subscription";
-  public static final String SUBSCRIPTION_URL_REGEX = NGSILD_SUBSCRIPTION_URL + "(.*)";
   public static final String NGSILD_POST_TEMPORAL_QUERY_PATH = "/temporal/entityOperations/query";
   public static final String TEMPORAL_POST_QUERY_URL_REGEX =
-          NGSILD_POST_TEMPORAL_QUERY_PATH + "(.*)";
+      NGSILD_POST_TEMPORAL_QUERY_PATH + "(.*)";
   public static final String NGSILD_POST_ENTITIES_QUERY_PATH = "/entityOperations/query";
   public static final String ENTITIES_POST_QUERY_URL_REGEX =
-          NGSILD_POST_ENTITIES_QUERY_PATH + "(.*)";
+      NGSILD_POST_ENTITIES_QUERY_PATH + "(.*)";
 
   // Async endpoints
   public static final String STATUS = "/status";
@@ -48,30 +32,12 @@ public class Constants {
 
   // IUDX management endpoints
   public static final String IUDX_MANAGEMENT_URL = "/management";
-  public static final String IUDX_ADAPTOR_URL = "/ngsi-ld/v1";
   public static final String IUDX_CONSUMER_AUDIT_URL = "/consumer/audit";
   public static final String IUDX_PROVIDER_AUDIT_URL = "/provider/audit";
-  public static final String IUDX_MANAGEMENT_EXCHANGE_URL = IUDX_MANAGEMENT_URL + "/exchange";
-  public static final String EXCHANGE_URL_REGEX = IUDX_MANAGEMENT_EXCHANGE_URL + "(.*)";
-  public static final String EXCHANGE_PATH = "/exchange";
-  public static final String QUEUE_PATH = "/queue";
-  public static final String IUDX_MANAGEMENT_QUEUE_URL = IUDX_MANAGEMENT_URL + "/queue";
-  public static final String QUEUE_URL_REGEX = IUDX_MANAGEMENT_QUEUE_URL + "(.*)";
-  public static final String BIND = "/bind";
-  public static final String UNBIND = "/unbind";
-  public static final String IUDX_MANAGEMENT_BIND_URL = IUDX_MANAGEMENT_URL + "/bind";
-  public static final String BIND_URL_REGEX = IUDX_MANAGEMENT_BIND_URL + "(.*)";
-  public static final String IUDX_MANAGEMENT_UNBIND_URL = IUDX_MANAGEMENT_URL + "/unbind";
-  public static final String UNBIND_URL_REGEX = IUDX_MANAGEMENT_UNBIND_URL + "(.*)";
-  public static final String IUDX_MANAGEMENT_VHOST_URL = IUDX_MANAGEMENT_URL + "/vhost";
-  public static final String VHOST_URL_REGEX = IUDX_MANAGEMENT_VHOST_URL + "(.*)";
-  public static final String VHOST = "/vhost";
-  public static final String IUDX_MANAGEMENT_ADAPTER_URL = "/ingestion";
-  public static final String ADAPTER_URL_REGEX = IUDX_MANAGEMENT_ADAPTER_URL + "(.*)";
   public static final String INGESTION_PATH = "/ingestion";
   public static final String IUDX_MANAGEMENT_RESET_PWD =
-          IUDX_MANAGEMENT_URL + "/user/resetPassword";
-  public static final String RESET_URL_REGEX = IUDX_MANAGEMENT_RESET_PWD + "(.*)";
+      IUDX_MANAGEMENT_URL + "/user/resetPassword";
+
   public static final String RESET_PWD = "/user/resetPassword";
 
   /** API Documentation endpoint */
@@ -79,11 +45,9 @@ public class Constants {
 
   public static final String ROUTE_DOC = "/apis";
   public static final List<String> openEndPoints =
-          List.of("/temporal/entities", "/entities", "/entityOperations/query");
+      List.of("/temporal/entities", "/entities", "/entityOperations/query");
   public static final String REVOKE_TOKEN = "/revokeToken";
-  public static final String REVOKE_TOKEN_REGEX = "/admin/revokeToken" + "(.*)";
   public static final String RESOURCE_ATTRIBS = "/resourceattribute";
-  public static final String UNIQUE_ATTR_REGEX = "/admin/resourceattribute";
   public static final String ADMIN = "/admin";
 
   public static final String MONTHLY_OVERVIEW = "/overview";
@@ -142,13 +106,11 @@ public class Constants {
   // request/response params
   public static final String CONTENT_TYPE = "content-type";
   public static final String APPLICATION_JSON = "application/json";
-  public static final String SUBSCRIPTION_ID = "subscriptionID";
-  public static final String EXCHANGE_ID = "exId";
 
   // json fields
   public static final String JSON_INSTANCEID = "instanceID";
   public static final String JSON_CONSUMER = "consumer";
-  public static final String JSON_PROVIDER = "provider";
+
   public static final String JSON_TYPE = "type";
   public static final String JSON_NAME = "name";
   public static final String JSON_ENTITIES = "entities";
@@ -176,8 +138,6 @@ public class Constants {
   public static final String JSON_VALUE = "value";
   public static final String JSON_TITLE = "title";
   public static final String JSON_DETAIL = "detail";
-  public static final String JSON_EXCHANGE_NAME = "exchangeName";
-  public static final String JSON_QUEUE_NAME = "queueName";
   public static final String JSON_VHOST_NAME = "vHostName";
   public static final String JSON_VHOST = "vHost";
   public static final String JSON_VHOST_ID = "vhostId";
@@ -185,9 +145,6 @@ public class Constants {
   public static final String USERSHA = "userSha";
   public static final String JSON_ALIAS = "alias";
   public static final String JSON_COUNT = "Count";
-  public static final String JSON_URL = "url";
-  public static final String JSON_METHOD = "method";
-  public static final String JSON_PASSWORD = "password";
   public static final String RESOURCE_SERVER = "resourceServer";
   public static final String RESOURCE_GROUP = "resourceGroup";
   public static final String RESOURCE_NAME = "resourceName";
@@ -200,8 +157,6 @@ public class Constants {
   public static final String ENCODED_KEY = "encodedKey";
   public static final String ENCODED_CIPHER_TEXT = "encodedCipherText";
   public static final String ENCRYPTED_DATA = "encryptedData";
-  public static final String JSON_EVENT_TYPE = "eventType";
-  public static final String JSON_RESOURCE = "resource";
 
   // searchtype
   public static final String JSON_SEARCH_TYPE = "searchType";
@@ -215,13 +170,6 @@ public class Constants {
   public static final String GEOM_POINT = "point";
   public static final String GEOM_POLYGON = "polygon";
   public static final String GEOM_LINESTRING = "linestring";
-
-  // subscription
-  public static final String SUBSCRIPTION = "subscription";
-  public static final String SUB_TYPE = "subscriptionType";
-  public static final String SUB_STREAMING = "streaming";
-  public static final String SUB_CALLBACK = "callback";
-  public static final String SUB_STREAMING_URL = "streamingURL";
 
   // messages (Error, Exception, messages..)
   public static final String MSG_INVALID_PARAM = "Invalid parameter in request.";
@@ -248,7 +196,7 @@ public class Constants {
   public static final int VALIDATION_ID_MIN_LEN = 0;
   public static final int VALIDATION_ID_MAX_LEN = 512;
   public static final Pattern VALIDATION_ID_PATTERN =
-          Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
+      Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
   public static final int VALIDATION_MAX_ATTRS = 5;
   public static final int VALIDATION_MAX_DAYS_INTERVAL_ALLOWED = 10;
   public static final int VALIDATION_MAX_DAYS_INTERVAL_ALLOWED_FOR_ASYNC = 365;
@@ -286,7 +234,6 @@ public class Constants {
 
   // subscriptions queries
 
-
   public static final String APPEND_SUB_SQL =
       "INSERT INTO subscriptions(_id,_type,queue_name,entity,expiry,dataset_name,dataset_json,user_id,"
           + "resource_group,provider_id,delegator_id,item_type) "
@@ -308,7 +255,7 @@ public class Constants {
   public static final String EVENTTYPE_APPEND = "SUBS_APPEND";
   public static final String EVENTTYPE_UPDATE = "SUBS_UPDATED";
 
-  //user
+  // user
   public static final String EMAIL_ID = "emailId";
   public static final String FIRST_NAME = "firstName";
   public static final String LAST_NAME = "lastName";

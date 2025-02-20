@@ -17,6 +17,7 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import iudx.resource.server.apiserver.exception.DxRuntimeException;
 import iudx.resource.server.apiserver.exception.FailureHandler;
 import iudx.resource.server.apiserver.metering.service.MeteringService;
 import iudx.resource.server.apiserver.subscription.model.DeleteSubsResultModel;
@@ -219,11 +220,7 @@ public class SubscriptionController {
               /*routingContext.next();*/
             } else {
               LOGGER.error("Fail: Bad request");
-              ResultModel rs = new ResultModel(subsRequestHandler.cause().getMessage(), response);
-              response
-                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                  .setStatusCode(rs.getStatusCode())
-                  .end(rs.toJson().toString());
+              routingContext.fail(new DxRuntimeException(subsRequestHandler.cause().getMessage()));
             }
           });
     } else {
@@ -266,11 +263,7 @@ public class SubscriptionController {
               /*routingContext.next();*/
             } else {
               LOGGER.error("Fail: Bad request");
-              ResultModel rs = new ResultModel(subsRequestHandler.cause().getMessage(), response);
-              response
-                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                  .setStatusCode(rs.getStatusCode())
-                  .end(rs.toJson().toString());
+              routingContext.fail(new DxRuntimeException(subsRequestHandler.cause().getMessage()));
             }
           });
     } else {
@@ -307,11 +300,7 @@ public class SubscriptionController {
                 .end(subHandler.result().constructSuccessResponse().toString());
             /*routingContext.next();*/
           } else {
-            ResultModel rs = new ResultModel(subHandler.cause().getMessage(), response);
-            response
-                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                .setStatusCode(rs.getStatusCode())
-                .end(rs.toJson().toString());
+            routingContext.fail(new DxRuntimeException(subHandler.cause().getMessage()));
           }
         });
   }
@@ -331,11 +320,7 @@ public class SubscriptionController {
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .end(subHandler.result().toJson().toString());
           } else {
-            ResultModel rs = new ResultModel(subHandler.cause().getMessage(), response);
-            response
-                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                .setStatusCode(rs.getStatusCode())
-                .end(rs.toJson().toString());
+            routingContext.fail(new DxRuntimeException(subHandler.cause().getMessage()));
           }
         });
   }
@@ -361,11 +346,7 @@ public class SubscriptionController {
                 .end(subHandler.result().toJson().toString());
             /*routingContext.next();*/
           } else {
-            ResultModel rs = new ResultModel(subHandler.cause().getMessage(), response);
-            response
-                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                .setStatusCode(rs.getStatusCode())
-                .end(rs.toJson().toString());
+            routingContext.fail(new DxRuntimeException(subHandler.cause().getMessage()));
           }
         });
   }
@@ -413,12 +394,7 @@ public class SubscriptionController {
             })
         .onFailure(
             failure -> {
-              ResultModel rs = new ResultModel(failure.getMessage(), response);
-              response
-                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                  .setStatusCode(rs.getStatusCode())
-                  .end(rs.toJson().toString());
-              // routingContext.fail(new DxRuntimeException(failure.getMessage()));
+              routingContext.fail(new DxRuntimeException(failure.getMessage()));
             });
   }
 

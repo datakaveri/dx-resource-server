@@ -201,7 +201,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                           if (handlers.succeeded()) {
                             LOGGER.info("subscription rolled back successfully");
                           } else {
-                            LOGGER.error("subscription rolled back failed");
+                            LOGGER.error("Failure occurred, rolling back subscription:", failure);
                           }
                           promise.fail(failure.toString());
                         });
@@ -253,14 +253,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             })
         .onSuccess(
             pgHandler -> {
-              /*JsonObject response = new JsonObject();
-              JsonArray jsonEntities = new JsonArray();
-              jsonEntities.add(entities);
-              JsonObject results = new JsonObject();
-              results.put("entities, jsonEntities);
-              response.put(TYPE, ResponseUrn.SUCCESS_URN.getUrn());
-              response.put(TITLE, "success");
-              response.put(RESULTS, new JsonArray().add(results));*/
               List<String> resultEntities = new ArrayList<String>();
               resultEntities.add(entities);
               promise.complete(new GetResultModel(resultEntities));
@@ -306,13 +298,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             })
         .compose(
             appendStreaming -> {
-              // JsonObject brokerResponse =
-              // appendStreaming.get()getJsonArray("results").getJsonObject(0);
-              LOGGER.debug("brokerResponse: " + appendStreaming);
+              LOGGER.trace("appendStreaming: " + appendStreaming);
 
               JsonObject cacheJson1 =
                   new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
-
               return cacheService
                   .get(cacheJson1)
                   .map(
@@ -498,13 +487,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             });
     return promise.future();
   }
-
-  /*private JsonObject constructSuccessResponse(JsonObject request) {
-    return new JsonObject()
-        .put("type", ResponseUrn.SUCCESS_URN.getUrn())
-        .put("title", ResponseUrn.SUCCESS_URN.getMessage().toLowerCase())
-        .put("results", new JsonArray().add(request));
-  }*/
 
   public class CreateResultContainer {
     public String queueName;
