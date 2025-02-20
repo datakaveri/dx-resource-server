@@ -89,8 +89,6 @@ public class SubscriptionController {
     Handler<RoutingContext> tokenIntrospectHandler =
         new TokenIntrospectHandler().validateTokenForRs(audience);
 
-    // TODO: Need to add auth and auditing insert
-
     /*MeteringHandler meteringHandler = new MeteringHandler(meteringService);*/
 
     // TODO: Need to add auditing insert
@@ -104,7 +102,6 @@ public class SubscriptionController {
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
-        .handler(this::postSubscriptions)
         /*.handler(meteringHandler)*/
         .failureHandler(failureHandler);
 
@@ -130,7 +127,6 @@ public class SubscriptionController {
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
-        .handler(this::updateSubscription)
         /*.handler(meteringHandler)*/
         .failureHandler(failureHandler);
 

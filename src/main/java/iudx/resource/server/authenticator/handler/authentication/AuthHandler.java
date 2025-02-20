@@ -1,12 +1,11 @@
 package iudx.resource.server.authenticator.handler.authentication;
 
-import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.common.ResponseUrn.*;
 
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
-import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
+import iudx.resource.server.apiserver.exception.DxRuntimeException;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.common.HttpStatusCode;

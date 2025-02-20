@@ -31,9 +31,9 @@ public class AdminController {
   private Api api;
   private AuthenticationService authenticator;
   private String rsUrl;
+  private AdminService adminService;
   private PostgresService postgresService;
   private DataBrokerService dataBrokerService;
-  private AdminService adminService;
 
   // TODO: Need to add auditing
 

@@ -54,26 +54,27 @@ public class UserManagementController {
     createProxy();
     CatalogueService catalogueService = new CatalogueService(cacheService, config, vertx);
     AuthHandler authHandler = new AuthHandler(authenticator);
-    Handler<RoutingContext> getIdHandler = new GetIdHandler(api).withNormalisedPath(api.getManagementApiPath());
+    Handler<RoutingContext> getIdHandler =
+        new GetIdHandler(api).withNormalisedPath(api.getManagementApiPath());
     Handler<RoutingContext> validateToken =
-            new AuthValidationHandler(api, cacheService, catalogueService);
+        new AuthValidationHandler(api, cacheService, catalogueService);
     Handler<RoutingContext> adminAndUserAccessHandler =
         new AuthorizationHandler()
             .setUserRolesForEndpoint(
                 DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
     FailureHandler validationsFailureHandler = new FailureHandler();
     Handler<RoutingContext> tokenIntrospectHandler =
-            new TokenIntrospectHandler().validateTokenForRs(audience);
-
-
-    router.post(api.getManagementApiPath())
-            .handler(getIdHandler)
-            .handler(authHandler)
-            .handler(tokenIntrospectHandler)
-            .handler(validateToken)
-            .handler(adminAndUserAccessHandler)
-            .handler(this::resetPassword)
-            .failureHandler(validationsFailureHandler);
+        new TokenIntrospectHandler().validateTokenForRs(audience);
+    userManagementService = new UserManagementServiceImpl(dataBrokerService);
+    router
+        .post(api.getManagementApiPath())
+        .handler(getIdHandler)
+        .handler(authHandler)
+        .handler(tokenIntrospectHandler)
+        .handler(validateToken)
+        .handler(adminAndUserAccessHandler)
+        .handler(this::resetPassword)
+        .failureHandler(validationsFailureHandler);
   }
 
   private void resetPassword(RoutingContext routingContext) {
