@@ -4,7 +4,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
+import iudx.resource.server.apiserver.exception.DxRuntimeException;
 import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.cache.util.CacheType;

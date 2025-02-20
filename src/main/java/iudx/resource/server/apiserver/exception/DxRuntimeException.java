@@ -1,30 +1,16 @@
 package iudx.resource.server.apiserver.exception;
 
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.common.HttpStatusCode;
 import iudx.resource.server.common.ResponseUrn;
-import iudx.resource.server.common.RestResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public final class DxRuntimeException extends RuntimeException {
   private static final Logger LOGGER = LogManager.getLogger(DxRuntimeException.class);
   private static final long serialVersionUID = 1L;
-
-  private  int statusCode = 0;
-  private  ResponseUrn urn = null;
-  private  String message= null;
-  JsonObject restResponse;
-
-  @Override
-  public String toString() {
-    return "DxRuntimeException{" +
-            "statusCode=" + statusCode +
-            ", urn=" + urn +
-            ", message='" + message + '\'' +
-            '}';
-  }
+  private int statusCode;
+  private ResponseUrn urn;
+  private String message;
 
   public DxRuntimeException(final int statusCode, final ResponseUrn urn) {
     super();
@@ -50,25 +36,28 @@ public final class DxRuntimeException extends RuntimeException {
   public DxRuntimeException(String message) {
     super(message);
     LOGGER.debug("Info : " + message);
-    try{
+    try {
       JsonObject resultJson = new JsonObject(message);
-      this.statusCode= resultJson.getInteger("status");
-      this.message = resultJson.getString("detail");
-      String urnTitle = resultJson.getString("title");
-
+      String urnTitle = resultJson.getString("type");
+      this.statusCode = resultJson.getInteger("status");
       this.urn = ResponseUrn.fromCode(urnTitle);
-      HttpStatusCode status = HttpStatusCode.getByValue(statusCode);
-      this.restResponse = new RestResponse.Builder().withType(status.getUrn())
-              .withTitle(status.getDescription()).withMessage(resultJson.getString("detail")).build().toJson();
-LOGGER.debug(restResponse);
-    }catch (Exception e){
+      this.message = resultJson.getString("detail", urn.getMessage());
+    } catch (Exception e) {
       LOGGER.debug("Exception : " + e);
     }
-
   }
 
-  public JsonObject getResult(){
-    return restResponse;
+  @Override
+  public String toString() {
+    return "DxRuntimeException{"
+        + "statusCode="
+        + statusCode
+        + ", urn="
+        + urn
+        + ", message='"
+        + message
+        + '\''
+        + '}';
   }
 
   public int getStatusCode() {
