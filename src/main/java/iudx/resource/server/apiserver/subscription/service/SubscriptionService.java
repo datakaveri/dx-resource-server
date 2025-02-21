@@ -10,7 +10,7 @@ import iudx.resource.server.database.postgres.model.PostgresResultModel;
 /** interface to define all subscription related operation. */
 public interface SubscriptionService {
 
-  Future<GetResultModel> getSubscription(String subscriptionID, String subType);
+  Future<GetResultModel> getSubscription(String subscriptionId, String subType);
 
   Future<SubscriptionData> createSubscription(PostModelSubscription postModelSubscription);
 

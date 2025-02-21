@@ -32,11 +32,11 @@ public class MeteringHandler implements Handler<RoutingContext> {
 
     /*if (STATUS_CODES_TO_AUDIT.contains(resultInfo.getStatusCode())) {*/
 
-      meteringService
+      /*meteringService
           .publishMeteringLogMessage(jwtData, 0, endPoint)
           .onSuccess(success -> LOGGER.info("Metering log published successfully"))
           .onFailure(
-              failure -> LOGGER.error("Failed to publish metering log: {}", failure.getMessage()));
+              failure -> LOGGER.error("Failed to publish metering log: {}", failure.getMessage()));*/
     /*}*/
   }
 }
