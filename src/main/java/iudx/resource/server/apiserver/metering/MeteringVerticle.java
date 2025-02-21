@@ -27,10 +27,10 @@ public class MeteringVerticle extends AbstractVerticle{
     @Override
     public void start() throws Exception {
         binder = new ServiceBinder(vertx);
-        postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
+        this.postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
         this.cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
         this.dataBrokerService = DataBrokerService.createProxy(vertx, DATA_BROKER_SERVICE_ADDRESS);
-       // meteringService = new MeteringServiceImpl(/*vertx, postgresService, cacheService*/dataBrokerService,cacheService);
+        meteringService = new MeteringServiceImpl(postgresService, cacheService,dataBrokerService);
         consumer =
                 binder.setAddress(METERING_SERVICE_ADDRESS).register(MeteringService.class, meteringService);
         LOGGER.info("Metering Verticle Started");

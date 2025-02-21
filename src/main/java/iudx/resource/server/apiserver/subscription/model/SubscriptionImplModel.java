@@ -2,62 +2,62 @@ package iudx.resource.server.apiserver.subscription.model;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
-import lombok.Getter;
 
 @DataObject
 public class SubscriptionImplModel {
-    private PostModelSubscription postModelSubscription;
-    private String type;
-    private String resourcegroup;
+  private PostModelSubscription postModelSubscription;
+  private String type;
+  private String resourceGroup;
 
-    // Default Constructor (Needed for Vert.x Codegen)
-    public SubscriptionImplModel() {}
+  // Default Constructor (Needed for Vert.x Codegen)
+  public SubscriptionImplModel() {}
 
-    // Existing Constructor
-    public SubscriptionImplModel(PostModelSubscription postModelSubscription, String type, String resourcegroup) {
-        this.postModelSubscription = postModelSubscription;
-        this.type = type;
-        this.resourcegroup = resourcegroup;
-    }
+  // Existing Constructor
+  public SubscriptionImplModel(
+      PostModelSubscription postModelSubscription, String type, String resourceGroup) {
+    this.postModelSubscription = postModelSubscription;
+    this.type = type;
+    this.resourceGroup = resourceGroup;
+  }
 
-    // JSON Constructor (IMPORTANT)
-    public SubscriptionImplModel(JsonObject json) {
-        this.postModelSubscription = new PostModelSubscription(json.getJsonObject("controllerModel"));
-        this.type = json.getString("type");
-        this.resourcegroup = json.getString("resourcegroup");
-    }
+  // JSON Constructor (IMPORTANT)
+  public SubscriptionImplModel(JsonObject json) {
+    this.postModelSubscription = new PostModelSubscription(json.getJsonObject("controllerModel"));
+    this.type = json.getString("type");
+    this.resourceGroup = json.getString("resourceGroup");
+  }
 
-    // toJson() Method (Needed for Serialization)
-    public JsonObject toJson() {
-        JsonObject json = new JsonObject();
-        json.put("controllerModel", postModelSubscription.toJson());
-        json.put("type", type);
-        json.put("resourcegroup", resourcegroup);
-        return json;
-    }
+  // toJson() Method (Needed for Serialization)
+  public JsonObject toJson() {
+    JsonObject json = new JsonObject();
+    json.put("controllerModel", postModelSubscription.toJson());
+    json.put("type", type);
+    json.put("resourceGroup", resourceGroup);
+    return json;
+  }
 
-    // Getters and Setters
-    public PostModelSubscription getControllerModel() {
-        return postModelSubscription;
-    }
+  // Getters and Setters
+  public PostModelSubscription getControllerModel() {
+    return postModelSubscription;
+  }
 
-    public void setControllerModel(PostModelSubscription postModelSubscription) {
-        this.postModelSubscription = postModelSubscription;
-    }
+  public void setControllerModel(PostModelSubscription postModelSubscription) {
+    this.postModelSubscription = postModelSubscription;
+  }
 
-    public String getType() {
-        return type;
-    }
+  public String getType() {
+    return type;
+  }
 
-    public void setType(String type) {
-        this.type = type;
-    }
+  public void setType(String type) {
+    this.type = type;
+  }
 
-    public String getResourcegroup() {
-        return resourcegroup;
-    }
+  public String getResourceGroup() {
+    return resourceGroup;
+  }
 
-    public void setResourcegroup(String resourcegroup) {
-        this.resourcegroup = resourcegroup;
-    }
+  public void setResourceGroup(String resourceGroup) {
+    this.resourceGroup = resourceGroup;
+  }
 }

@@ -11,6 +11,7 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import iudx.resource.server.apiserver.exception.DxRuntimeException;
 import iudx.resource.server.apiserver.exception.FailureHandler;
 import iudx.resource.server.apiserver.usermanagement.service.UserManagementServiceImpl;
 import iudx.resource.server.authenticator.AuthenticationService;
@@ -22,7 +23,6 @@ import iudx.resource.server.authenticator.model.DxRole;
 import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.common.Api;
 import iudx.resource.server.common.CatalogueService;
-import iudx.resource.server.common.ResultModel;
 import iudx.resource.server.common.RoutingContextHelper;
 import iudx.resource.server.databroker.service.DataBrokerService;
 import org.apache.logging.log4j.LogManager;
@@ -32,12 +32,12 @@ public class UserManagementController {
   private static final Logger LOGGER = LogManager.getLogger(UserManagementController.class);
 
   private final Router router;
-  private JsonObject config;
-  private Api api;
+  private final JsonObject config;
+  private final Api api;
+  private final Vertx vertx;
+  private final String audience;
   private AuthenticationService authenticator;
   private CacheService cacheService;
-  private Vertx vertx;
-  private String audience;
   private DataBrokerService dataBrokerService;
   private UserManagementServiceImpl userManagementService;
 
@@ -90,11 +90,7 @@ public class UserManagementController {
         .onFailure(
             failureHandler -> {
               LOGGER.error("Error while resetting password for user");
-              ResultModel rs = new ResultModel(failureHandler.getMessage(), response);
-              response
-                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                  .setStatusCode(rs.getStatusCode())
-                  .end(rs.toJson().toString());
+              routingContext.fail(new DxRuntimeException(failureHandler.getMessage()));
             });
   }
 

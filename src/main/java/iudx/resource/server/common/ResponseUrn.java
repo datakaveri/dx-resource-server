@@ -28,6 +28,7 @@ public enum ResponseUrn {
   LIMIT_EXCEED_URN(
       "urn:dx:rs:requestLimitExceeded", "Operation exceeds the default value of limit"),
   NOT_FOUND_URN("urn:dx:rs:notFound", "Not Found"),
+  NO_CONTENT("urn:dx:rs:noContent", "No Content"),
 
   PAYLOAD_TOO_LARGE_URN("urn:dx:rs:payloadTooLarge", "Response size exceeds limit"),
 
