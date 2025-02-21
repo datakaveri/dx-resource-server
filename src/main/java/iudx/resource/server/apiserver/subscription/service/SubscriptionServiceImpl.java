@@ -31,9 +31,9 @@ import org.apache.logging.log4j.Logger;
 
 public class SubscriptionServiceImpl implements SubscriptionService {
   private static final Logger LOGGER = LogManager.getLogger(SubscriptionServiceImpl.class);
-  private PostgresService postgresService;
-  private DataBrokerService dataBrokerService;
-  private CacheService cacheService;
+  private final PostgresService postgresService;
+  private final DataBrokerService dataBrokerService;
+  private final CacheService cacheService;
 
   public SubscriptionServiceImpl(
       PostgresService postgresService,
@@ -93,18 +93,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   }
 
   @Override
-  public Future<GetResultModel> getSubscription(String subscriptionID, String subType) {
+  public Future<GetResultModel> getSubscription(String subscriptionId, String subType) {
     LOGGER.info("getSubscription() method started");
     Promise<GetResultModel> promise = Promise.promise();
-    LOGGER.info("sub id :: " + subscriptionID);
+    LOGGER.info("sub id :: " + subscriptionId);
     if (subType != null) {
-      getEntityName(subscriptionID)
+      getEntityName(subscriptionId)
           .compose(
               postgresSuccess -> {
-                // TODO: think about this
-                /*json.getJsonObject("authInfo").put("id", postgresSuccess.getValue("id"));*/
                 return dataBrokerService
-                    .listStreamingSubscription(subscriptionID)
+                    .listStreamingSubscription(subscriptionId)
                     .map(GetResultModel::new);
               })
           .onComplete(
@@ -156,7 +154,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
               createResultContainer.isQueueCreated = true;
               JsonObject brokerResponse = registerStreaming.toJson();
 
-              LOGGER.debug("brokerResponse: " + brokerResponse);
+              LOGGER.trace("registerStreaming: " + registerStreaming);
               JsonObject cacheJson1 =
                   new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
               return cacheService
@@ -167,7 +165,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             })
         .compose(
             subscriptionDataResult -> {
-              LOGGER.debug("cacheResult: " + subscriptionDataResult.cacheResult());
+              LOGGER.trace("cacheResult: " + subscriptionDataResult.cacheResult());
 
               String type =
                   subscriptionDataResult.cacheResult().containsKey(RESOURCE_GROUP)
@@ -239,8 +237,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         HttpStatusCode.NOT_FOUND.getValue(),
                         HttpStatusCode.NOT_FOUND.getDescription(),
                         "Subscription not found for [queue,entity]");
-                promise.fail(failJson.toString());
-                return null;
+                return Future.failedFuture(failJson.toString());
               }
               StringBuilder updateQuery =
                   new StringBuilder(
@@ -248,7 +245,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                           .replace("$1", expiry)
                           .replace("$2", queueName)
                           .replace("$3", entity));
-              LOGGER.debug("updateQuery : " + updateQuery);
+              LOGGER.trace("updateQuery : " + updateQuery);
               return postgresService.executeQuery1(updateQuery.toString());
             })
         .onSuccess(
@@ -259,7 +256,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             })
         .onFailure(
             failure -> {
-              LOGGER.debug("res -->" + failure.getMessage());
+              LOGGER.error(failure.getMessage());
               promise.fail(failure.getMessage());
             });
 
@@ -311,7 +308,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             })
         .compose(
             appendSubscriptionResult -> {
-              LOGGER.debug("cacheResult: " + appendSubscriptionResult.cacheResult());
+              LOGGER.trace("cacheResult: " + appendSubscriptionResult.cacheResult());
               String type =
                   appendSubscriptionResult.cacheResult().containsKey(RESOURCE_GROUP)
                       ? "RESOURCE"
@@ -339,7 +336,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             })
         .onFailure(
             failed -> {
-              LOGGER.debug("Failed :: " + failed.getMessage());
+              LOGGER.error("Failed :: " + failed.getMessage());
               promise.fail(failed.getMessage());
             });
     return promise.future();
@@ -359,8 +356,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
               })
           .compose(
               postgresSuccess -> {
-                // TODO: Think about this line
-                /*json.getJsonObject("authInfo").put("id", postgresSuccess.getValue("id"));*/
                 return dataBrokerService.deleteStreamingSubscription(subsId, userid);
               })
           .onComplete(
@@ -385,9 +380,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     return promise.future();
   }
 
-  private Future<Void> deleteSubscriptionFromPg(String subscriptionID) {
+  private Future<Void> deleteSubscriptionFromPg(String subscriptionId) {
     Promise<Void> promise = Promise.promise();
-    String deleteQueueQuery = DELETE_SUB_SQL.replace("$1", subscriptionID);
+    String deleteQueueQuery = DELETE_SUB_SQL.replace("$1", subscriptionId);
     LOGGER.trace("delete query- " + deleteQueueQuery);
     postgresService
         .executeQuery1(deleteQueueQuery)
@@ -448,41 +443,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
               if (pgHandler.succeeded() && !pgHandler.result().getResult().isEmpty()) {
                 String entities =
                     pgHandler.result().getResult().getJsonObject(0).getString("entity");
-
                 LOGGER.debug("Entities: " + entities);
-
-                if (entities == null) {
-                  LOGGER.error("Entity not found.");
-                  JsonObject failJson =
-                      getResponseJson(
-                          HttpStatusCode.NOT_FOUND.getUrn(),
-                          HttpStatusCode.NOT_FOUND.getValue(),
-                          HttpStatusCode.NOT_FOUND.getDescription(),
-                          HttpStatusCode.NOT_FOUND.getDescription());
-                  promise.fail(failJson.toString());
-                } else {
-                  promise.complete(entities);
-                }
+                promise.complete(entities);
               } else {
-                if (pgHandler.result().getResult().isEmpty()) {
-                  LOGGER.error("Empty response from database.");
-                  JsonObject failJson =
-                      getResponseJson(
-                          HttpStatusCode.NOT_FOUND.getUrn(),
-                          HttpStatusCode.NOT_FOUND.getValue(),
-                          HttpStatusCode.NOT_FOUND.getDescription(),
-                          HttpStatusCode.NOT_FOUND.getDescription());
-                  promise.fail(failJson.toString());
-                } else {
-                  LOGGER.error("fail here");
-                  JsonObject failJson =
-                      getResponseJson(
-                          HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
-                          HttpStatusCode.INTERNAL_SERVER_ERROR.getValue(),
-                          HttpStatusCode.INTERNAL_SERVER_ERROR.getDescription(),
-                          HttpStatusCode.INTERNAL_SERVER_ERROR.getDescription());
-                  promise.fail(failJson.toString());
-                }
+                LOGGER.info("Empty response from database. Entities not found");
+                JsonObject failJson =
+                    getResponseJson(
+                        HttpStatusCode.NOT_FOUND.getUrn(),
+                        HttpStatusCode.NOT_FOUND.getValue(),
+                        HttpStatusCode.NOT_FOUND.getDescription(),
+                        HttpStatusCode.NOT_FOUND.getDescription());
+                promise.fail(failJson.toString());
               }
             });
     return promise.future();

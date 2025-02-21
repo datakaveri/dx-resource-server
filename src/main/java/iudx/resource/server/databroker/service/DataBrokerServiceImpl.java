@@ -128,11 +128,11 @@ public class DataBrokerServiceImpl implements DataBrokerService {
                 JsonArray entitiesArray = new JsonArray();
                 String exchangeName;
                 if (isGroupResource(
-                    new JsonObject().put("type", subscriptionImplModel.getResourcegroup()))) {
+                    new JsonObject().put("type", subscriptionImplModel.getResourceGroup()))) {
                   exchangeName = routingKey;
                   entitiesArray.add(exchangeName + DATA_WILDCARD_ROUTINGKEY);
                 } else {
-                  exchangeName = subscriptionImplModel.getResourcegroup();
+                  exchangeName = subscriptionImplModel.getResourceGroup();
                   entitiesArray.add(exchangeName + "/." + routingKey);
                 }
                 LOGGER.debug(" Exchange name = {}", exchangeName);
@@ -273,11 +273,11 @@ public class DataBrokerServiceImpl implements DataBrokerService {
               JsonArray entitiesArray = new JsonArray();
               String exchangeName;
               if (isGroupResource(
-                  new JsonObject().put("type", subscriptionImplModel.getResourcegroup()))) {
+                  new JsonObject().put("type", subscriptionImplModel.getResourceGroup()))) {
                 exchangeName = routingKey;
                 entitiesArray.add(exchangeName + DATA_WILDCARD_ROUTINGKEY);
               } else {
-                exchangeName = subscriptionImplModel.getResourcegroup();
+                exchangeName = subscriptionImplModel.getResourceGroup();
                 entitiesArray.add(exchangeName + "/." + routingKey);
               }
               return rabbitClient.bindQueue(exchangeName, queueName, entitiesArray, vhostProd);

@@ -1,121 +1,146 @@
 package iudx.resource.server.apiserver.metering.service;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static iudx.resource.server.apiserver.metering.util.Constant.*;
+import static iudx.resource.server.databroker.util.Util.getResponseJson;
+
 import io.vertx.core.*;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.apiserver.metering.model.MeteringLog;
-import iudx.resource.server.authenticator.model.JwtData;
+import iudx.resource.server.apiserver.metering.util.DateValidation;
+import iudx.resource.server.apiserver.metering.util.ParamsValidation;
+import iudx.resource.server.apiserver.metering.util.QueryBuilder;
+import iudx.resource.server.apiserver.metering.util.ResponseBuilder;
 import iudx.resource.server.cache.service.CacheService;
-import iudx.resource.server.common.Response;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Supplier;
+import iudx.resource.server.common.HttpStatusCode;
+import iudx.resource.server.database.postgres.service.PostgresService;
 import iudx.resource.server.databroker.service.DataBrokerService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import static iudx.resource.server.apiserver.metering.util.Constant.*;
-
-import static iudx.resource.server.cache.util.CacheType.CATALOGUE_CACHE;
 
 public class MeteringServiceImpl implements MeteringService {
-    @Override
-    public Future<Void> publishMeteringLogMessage(JwtData jwtData, long responseSize, String endPoint) {
-        return null;
+  private static final Logger LOGGER = LogManager.getLogger(MeteringServiceImpl.class);
+  private final QueryBuilder queryBuilder = new QueryBuilder();
+  private final ParamsValidation validation = new ParamsValidation();
+  private final DateValidation dateValidation = new DateValidation();
+  JsonObject validationCheck = new JsonObject();
+  String queryPg;
+  String queryCount;
+  String queryOverview;
+  String summaryOverview;
+  long total;
+  JsonArray jsonArray;
+  JsonArray resultJsonArray;
+  int loopi;
+  private PostgresService postgresService;
+  private CacheService cacheService;
+  private DataBrokerService dataBrokerService;
+  private ResponseBuilder responseBuilder;
+
+  public MeteringServiceImpl(
+      PostgresService postgresService,
+      CacheService cacheService,
+      DataBrokerService dataBrokerService) {
+    this.postgresService = postgresService;
+    this.cacheService = cacheService;
+    this.dataBrokerService = dataBrokerService;
+  }
+
+  @Override
+  public Future<JsonObject> executeReadQuery(JsonObject request) {
+    Promise<JsonObject> promise = Promise.promise();
+    JsonObject finalResponse = new JsonObject();
+    LOGGER.trace("Info: " + request.toString());
+    validationCheck = validation.paramsCheck(request);
+
+    if (validationCheck != null && validationCheck.containsKey(ERROR)) {
+      responseBuilder =
+          new ResponseBuilder().setTypeAndTitle(400).setMessage(validationCheck.getString(ERROR));
+      finalResponse.mergeIn(
+          getResponseJson(
+              HttpStatusCode.BAD_REQUEST.getUrn(),
+              HttpStatusCode.BAD_REQUEST.getValue(),
+              HttpStatusCode.BAD_REQUEST.getUrn(),
+              validationCheck.getString(ERROR)));
+      promise.fail(finalResponse.toString());
+      /* handler.handle(Future.failedFuture(responseBuilder.getResponse().toString()));*/
+      return promise.future();
     }
-   /* private static final Logger LOGGER = LogManager.getLogger(MeteringServiceImpl.class);
-    public DataBrokerService rmqService;
-    private CacheService cacheService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    Supplier<Long> epochSupplier = () -> LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
-    Supplier<String> isoTimeSupplier =
-            () -> ZonedDateTime.now(ZoneId.of(ZoneId.SHORT_IDS.get("IST"))).toString();
-    Supplier<String> primaryKeySuppler = () -> UUID.randomUUID().toString().replace("-", "");
-    private MeteringLog meteringLog;
-    String resourceGroup;
-    String providerId;
+    request.put(TABLE_NAME, RS_DATABASE_TABLE_NAME);
 
-    public MeteringServiceImpl(DataBrokerService dataBrokerService, CacheService cacheService) {
-        this.rmqService = dataBrokerService;
-        this.cacheService = cacheService;
+    String count = request.getString("options");
+    if (count == null) {
+      /*countQueryForRead(request, handler);*/
+    } else {
+      LOGGER.trace("--------------------------------");
+      countQuery(request, promise);
     }
+    return promise.future();
+  }
 
-    @Override
-    public Future<Void> publishMeteringLogMessage(JwtData jwtData, long responseSize, String endPoint) {
-        Promise<Void> promise = Promise.promise();
-        meteringLog  = createMeteringLog(jwtData, responseSize, endPoint);
-        LOGGER.trace("JWT DATA: " + jwtData);
-        LOGGER.debug("write message =  {}", meteringLog.toString());
-        rmqService.publishMessage(
-                meteringLog.toJson(),
-                EXCHANGE_NAME,
-                ROUTING_KEY).onComplete(
-                rmqHandler -> {
-                    if (rmqHandler.succeeded()) {
-                        LOGGER.info("inserted into rmq");
-                        promise.complete();
-                    } else {
-                        LOGGER.error(rmqHandler.cause());
-                        try {
-                            Response resp =
-                                    objectMapper.readValue(rmqHandler.cause().getMessage(), Response.class);
-                            LOGGER.debug("response from rmq " + resp);
-                            promise.fail(resp.toString());
-                        } catch (JsonProcessingException e) {
-                            LOGGER.error("Failure message not in format [type,title,detail]");
-                            promise.fail(e.getMessage());
-                        }
-                    }
-                });
-        return promise.future();
-    }
+  private void countQuery(JsonObject request, Promise<JsonObject> promise) {
+    queryCount = queryBuilder.buildCountReadQueryFromPg(request);
+    LOGGER.trace("queryCount " + queryCount);
+    JsonObject finalResponse = new JsonObject();
+    Future<JsonObject> resultCountPg = executeQueryDatabaseOperation(queryCount);
+    resultCountPg.onComplete(
+        countHandler -> {
+          if (countHandler.succeeded()) {
+            try {
+              var countHandle = countHandler.result().getJsonArray("result");
+              total = countHandle.getJsonObject(0).getInteger("count");
+              if (total == 0) {
+                finalResponse.mergeIn(
+                    getResponseJson(
+                        HttpStatusCode.NO_CONTENT.getUrn(),
+                        HttpStatusCode.NO_CONTENT.getValue(),
+                        HttpStatusCode.NO_CONTENT.getUrn(),
+                        HttpStatusCode.NO_CONTENT.getDescription()));
+                promise.fail(finalResponse.toString());
+                /*responseBuilder = new ResponseBuilder().setTypeAndTitle(204).setCount(0);
+                handler.handle(Future.succeededFuture(responseBuilder.getResponse()));*/
 
-    private MeteringLog createMeteringLog(JwtData jwtData, long responseSize, String endPoint) {
-        String delegatorId = getDelegatorId(jwtData);
-        String event = getEvent(jwtData);
-        *//*resourceGroup = getCacheResult(jwtData.getIid().split(":")[1]);*//*
-        JsonObject cacheJson =
-                new JsonObject().put("key", jwtData.getIid().split(":")[1]).put("type", CATALOGUE_CACHE);
+              } else {
 
-        return meteringLog =
-                new MeteringLog.Builder()
-                        .forUserId(jwtData.getSub())
-                        .forResourceId(jwtData.getIid().split(":")[1])
-                        .forResourceGroup(*//*jwtData.getIid()*//*"")
-                        .forApi(endPoint)
-                        .forEvent(event)
-                        .forType("RESOURCE")
-                        .withPrimaryKey(primaryKeySuppler.get())
-                        .withProviderId("authInfo.getProviderId()")
-                        .withDelegatorId(delegatorId)
-                        .withResponseSize(responseSize)
-                        .atEpoch(epochSupplier.get())
-                        .atIsoTime(isoTimeSupplier.get())
-                        .forOrigin(ORIGIN_SERVER)
-                        .build();
-    }
+                responseBuilder = new ResponseBuilder().setTypeAndTitle(200).setCount((int) total);
+                promise.complete(responseBuilder.getResponse());
+                /*handler.handle(Future.succeededFuture(responseBuilder.getResponse()));*/
+              }
+            } catch (NullPointerException nullPointerException) {
+              LOGGER.debug(nullPointerException.toString());
+            }
+          }
+        });
+  }
 
+  @Override
+  public Future<JsonObject> insertMeteringValuesInRmq(JsonObject request) {
+    return null;
+  }
 
-    private String getDelegatorId(JwtData jwtData) {
-        String delegatorId;
-        if (jwtData.getRole().equalsIgnoreCase("delegate") && jwtData.getDrl() != null) {
-            delegatorId = jwtData.getDid();
-        } else {
-            delegatorId = jwtData.getSub();
-        }
-        return delegatorId;
-    }
+  @Override
+  public Future<JsonObject> monthlyOverview(JsonObject request) {
+    return null;
+  }
 
-    private String getEvent(JwtData jwtData) {
-        String event = null;
-        *//*if (authInfo.getEndPoint().contains("/ngsi-ld/v1/subscription")) {
-            event = "subscriptions";
-        }*//*
-        return event;
-    }*/
+  @Override
+  public Future<JsonObject> summaryOverview(JsonObject request) {
+    return null;
+  }
 
+  private Future<JsonObject> executeQueryDatabaseOperation(String query) {
+    Promise<JsonObject> promise = Promise.promise();
+    postgresService
+        .executeQuery(query)
+        .onComplete(
+            dbHandler -> {
+              if (dbHandler.succeeded()) {
+                promise.complete(dbHandler.result());
+              } else {
+
+                promise.fail(dbHandler.cause().getMessage());
+              }
+            });
+
+    return promise.future();
+  }
 }
