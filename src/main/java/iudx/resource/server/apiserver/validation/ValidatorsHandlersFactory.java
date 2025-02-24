@@ -85,7 +85,7 @@ public class ValidatorsHandlersFactory {
     List<Validator> validators = new ArrayList<>();
     validators.add(new DateTypeValidator(parameters.get(STARTT), false));
     validators.add(new DateTypeValidator(parameters.get(ENDT), false));
-    validators.add(new BearerTokenTypeValidator(parameters.get(HEADER_AUTHORIZATION), false));
+    validators.add(new BearerTokenTypeValidator(parameters.get(HEADER_BEARER_AUTHORIZATION), false));
     return validators;
   }
 
@@ -109,7 +109,7 @@ public class ValidatorsHandlersFactory {
 
     // optional header public key
     validators.add(new HeaderKeyTypeValidation(parameters.get(HEADER_PUBLIC_KEY), false));
-    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_BEARER_AUTHORIZATION), false));
 
     return validators;
   }
@@ -138,7 +138,7 @@ public class ValidatorsHandlersFactory {
 
     // optional header public key
     validators.add(new HeaderKeyTypeValidation(parameters.get(HEADER_PUBLIC_KEY), false));
-    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_BEARER_AUTHORIZATION), false));
 
     return validators;
   }
@@ -150,7 +150,7 @@ public class ValidatorsHandlersFactory {
 
     // optional header public key
     validators.add(new HeaderKeyTypeValidation(parameters.get(HEADER_PUBLIC_KEY), false));
-    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_BEARER_AUTHORIZATION), false));
 
     return validators;
   }
@@ -170,7 +170,7 @@ public class ValidatorsHandlersFactory {
 
     // optional header public key
     validators.add(new HeaderKeyTypeValidation(parameters.get(HEADER_PUBLIC_KEY), false));
-    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_BEARER_AUTHORIZATION), false));
 
     return validators;
   }
@@ -189,7 +189,7 @@ public class ValidatorsHandlersFactory {
 
     // optional header public key
     validators.add(new HeaderKeyTypeValidation(parameters.get(HEADER_PUBLIC_KEY), false));
-    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_BEARER_AUTHORIZATION), false));
 
     return validators;
   }
@@ -199,7 +199,7 @@ public class ValidatorsHandlersFactory {
     List<Validator> validators = new ArrayList<>();
     validators.add(new OptionsHeaderValidator(headers.get(HEADER_OPTIONS), true));
     validators.addAll(getRequestSchemaValidator(vertx, body, RequestType.SUBSCRIPTION));
-    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_BEARER_AUTHORIZATION), false));
 
     return validators;
   }
@@ -228,7 +228,7 @@ public class ValidatorsHandlersFactory {
     validators.add(
         new ElasticSearchFileResponseTypeValidator(
             parameters.get(HEADER_RESPONSE_FILE_FORMAT), false));
-    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_BEARER_AUTHORIZATION), false));
 
     return validators;
   }
@@ -239,7 +239,7 @@ public class ValidatorsHandlersFactory {
 
     // optional header public key
     validators.add(new HeaderKeyTypeValidation(parameters.get(HEADER_PUBLIC_KEY), false));
-    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_AUTHORIZATION), false));
+    validators.add(new BearerTokenTypeValidator(headers.get(HEADER_BEARER_AUTHORIZATION), false));
 
     return validators;
   }
