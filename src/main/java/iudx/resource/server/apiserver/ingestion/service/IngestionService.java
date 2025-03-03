@@ -2,17 +2,21 @@ package iudx.resource.server.apiserver.ingestion.service;
 
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import iudx.resource.server.apiserver.ingestion.model.GetResultModel;
+import iudx.resource.server.apiserver.ingestion.model.IngestionData;
+import iudx.resource.server.apiserver.ingestion.model.IngestionEntitiesResponseModel;
+import iudx.resource.server.database.postgres.model.PostgresResultModel;
 
 public interface IngestionService {
 
-  Future<JsonObject> registerAdapter(JsonObject json);
+  /*Future<JsonObject> registerAdapter(JsonObject json);*/
+  Future<IngestionData> registerAdapter(String entities, String instanceId, String userId);
 
-  Future<JsonObject> deleteAdapter(String adapterId, String userId);
+  Future<Void> deleteAdapter(String adapterId, String userId);
 
-  Future<JsonObject> getAdapterDetails(String adapterId);
+  Future<GetResultModel> getAdapterDetails(String adapterId);
 
-  Future<JsonObject> publishDataFromAdapter(JsonArray json);
+  Future<IngestionEntitiesResponseModel> publishDataFromAdapter(JsonArray json);
 
-  Future<JsonObject> getAllAdapterDetailsForUser(String iid);
+  Future<PostgresResultModel> getAllAdapterDetailsForUser(String iid);
 }

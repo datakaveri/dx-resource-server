@@ -1,21 +1,20 @@
 package iudx.resource.server.apiserver.ingestion.controller;
 
+import static iudx.resource.server.apiserver.subscription.util.Constants.RESULTS;
 import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.common.Constants.AUTH_SERVICE_ADDRESS;
 import static iudx.resource.server.common.Constants.CACHE_SERVICE_ADDRESS;
-import static iudx.resource.server.common.HttpStatusCode.BAD_REQUEST;
-import static iudx.resource.server.common.HttpStatusCode.UNAUTHORIZED;
+import static iudx.resource.server.common.HttpStatusCode.*;
 import static iudx.resource.server.common.ResponseUrn.*;
-import static iudx.resource.server.common.ResponseUtil.generateResponse;
 import static iudx.resource.server.database.postgres.util.Constants.PG_SERVICE_ADDRESS;
 import static iudx.resource.server.databroker.util.Constants.*;
+import static iudx.resource.server.databroker.util.Util.getResponseJson;
 
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -32,6 +31,7 @@ import iudx.resource.server.authenticator.handler.authorization.TokenRevokedHand
 import iudx.resource.server.authenticator.model.DxRole;
 import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.common.*;
+import iudx.resource.server.database.postgres.model.PostgresResultModel;
 import iudx.resource.server.database.postgres.service.PostgresService;
 import iudx.resource.server.databroker.service.DataBrokerService;
 import java.util.Map;
@@ -41,12 +41,12 @@ import org.apache.logging.log4j.Logger;
 public class IngestionController {
   private static final Logger LOGGER = LogManager.getLogger(IngestionController.class);
   private final Router router;
-  private Vertx vertx;
-  private Api api;
-  private JsonObject config;
+  private final Vertx vertx;
+  private final Api api;
+  private final JsonObject config;
+  private final String audience;
   private AuthenticationService authenticator;
   private CacheService cacheService;
-  private String audience;
   private IngestionService ingestionService;
   private DataBrokerService dataBrokerService;
   private PostgresService postgresService;
@@ -134,99 +134,111 @@ public class IngestionController {
     requestJson.put(JSON_INSTANCEID, instanceId);
     String userId = RoutingContextHelper.getJwtData(routingContext).getSub();
     requestJson.put(USER_ID, userId);
-
-    Future<JsonObject> brokerResult = ingestionService.registerAdapter(requestJson);
-
-    brokerResult.onComplete(
-        handler -> {
-          if (handler.succeeded()) {
-            LOGGER.info("Success: Registering adapter");
-            routingContext.data().put(RESPONSE_SIZE, 0);
-            /*Future.future(fu -> updateAuditTable(routingContext));*/
-            handleSuccessResponse(
-                response, ResponseType.Created.getCode(), handler.result().toString());
-          } else if (brokerResult.failed()) {
-            LOGGER.error("Fail: Bad request" + handler.cause().getMessage());
-            processBackendResponse(response, handler.cause().getMessage());
-          }
-        });
+    String entities = requestJson.getJsonArray("entities").getString(0);
+    ingestionService
+        .registerAdapter(entities, instanceId, userId)
+        .onComplete(
+            handler -> {
+              if (handler.succeeded()) {
+                LOGGER.info("Success: Registering adapter");
+                routingContext.data().put(RESPONSE_SIZE, 0);
+                response
+                    .setStatusCode(201)
+                    .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                    .end(handler.result().constructSuccessResponse().toString());
+                /*routingContext.next();*/
+              } else {
+                LOGGER.error("Fail: " + handler.cause());
+                routingContext.fail(handler.cause());
+              }
+            });
   }
 
   private void deleteAdapter(RoutingContext routingContext) {
     LOGGER.trace("Info: deleteAdapter method starts;");
-
     Map<String, String> pathParams = routingContext.pathParams();
-    String id = pathParams.get("*");
+    String adaptorId = pathParams.get("*");
 
-    StringBuilder adapterIdBuilder = new StringBuilder();
-    adapterIdBuilder.append(id);
     String userId = RoutingContextHelper.getJwtData(routingContext).getSub();
-    Future<JsonObject> brokerResult =
-        ingestionService.deleteAdapter(adapterIdBuilder.toString(), userId);
     HttpServerResponse response = routingContext.response();
-    brokerResult.onComplete(
-        brokerResultHandler -> {
-          if (brokerResultHandler.succeeded()) {
-            LOGGER.info("Success: Deleting adapter");
-            routingContext.data().put(RESPONSE_SIZE, 0);
-            /*Future.future(fu -> updateAuditTable(routingContext));*/
-            handleSuccessResponse(
-                response, ResponseType.Ok.getCode(), brokerResultHandler.result().toString());
-          } else {
-            LOGGER.error("Fail: Bad request;" + brokerResultHandler.cause().getMessage());
-            processBackendResponse(response, brokerResultHandler.cause().getMessage());
-          }
-        });
+    ingestionService
+        .deleteAdapter(adaptorId, userId)
+        .onSuccess(
+            brokerResultHandler -> {
+              LOGGER.info("Success: Deleting adapter");
+              routingContext.data().put(RESPONSE_SIZE, 0);
+              JsonObject deleteResponse = new JsonObject();
+              deleteResponse.put(TYPE, ResponseUrn.SUCCESS_URN.getUrn());
+              deleteResponse.put(TITLE, "Success");
+              deleteResponse.put(RESULTS, "Adapter deleted");
+              response
+                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                  .setStatusCode(200)
+                  .end(deleteResponse.toString());
+              /*routingContext.next();*/
+            })
+        .onFailure(
+            failure -> {
+              LOGGER.error("Fail: Deleting adapter");
+              routingContext.fail(failure);
+            });
   }
 
   private void getAdapterDetails(RoutingContext routingContext) {
     LOGGER.trace("getAdapterDetails method starts");
-
     Map<String, String> pathParams = routingContext.pathParams();
-    String id = pathParams.get("UUID");
-    Future<JsonObject> brokerResult = ingestionService.getAdapterDetails(id);
     HttpServerResponse response = routingContext.response();
-    brokerResult.onComplete(
-        brokerResultHandler -> {
-          if (brokerResultHandler.succeeded()) {
-            routingContext.data().put(RESPONSE_SIZE, 0);
-            /*Future.future(fu -> updateAuditTable(routingContext));*/
-            handleSuccessResponse(
-                response, ResponseType.Ok.getCode(), brokerResultHandler.result().toString());
-          } else {
-            processBackendResponse(response, brokerResultHandler.cause().getMessage());
-          }
-        });
+    String id = pathParams.get("UUID");
+    ingestionService
+        .getAdapterDetails(id)
+        .onSuccess(
+            brokerResultHandler -> {
+              routingContext.data().put(RESPONSE_SIZE, 0);
+              response
+                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                  .setStatusCode(200)
+                  .end(brokerResultHandler.constructSuccessResponse().toString());
+              /*routingContext.next();*/
+            })
+        .onFailure(
+            failure -> {
+              routingContext.fail(failure);
+            });
   }
 
   private void publishDataFromAdapter(RoutingContext routingContext) {
     LOGGER.trace("Info: publishDataFromAdapter method started;");
-    JsonArray requestJson = routingContext.body().asJsonArray();
-    HttpServerRequest request = routingContext.request();
     HttpServerResponse response = routingContext.response();
-    JsonObject authenticationInfo = new JsonObject();
-    authenticationInfo.put(API_ENDPOINT, "/iudx/v1/adapter");
-    if (request.headers().contains(HEADER_TOKEN)) {
-      authenticationInfo.put(HEADER_TOKEN, request.getHeader(HEADER_TOKEN));
-
-      Future<JsonObject> brokerResult = ingestionService.publishDataFromAdapter(requestJson);
-      brokerResult.onComplete(
-          brokerResultHandler -> {
-            if (brokerResultHandler.succeeded()) {
-              LOGGER.debug("Success: publishing data from adapter");
-              routingContext.data().put(RESPONSE_SIZE, 0);
-              /*Future.future(fu -> updateAuditTable(routingContext));*/
-              handleSuccessResponse(
-                  response, ResponseType.Ok.getCode(), brokerResultHandler.result().toString());
-            } else {
-              LOGGER.debug("Fail: Bad request;" + brokerResultHandler.cause().getMessage());
-              processBackendResponse(response, brokerResultHandler.cause().getMessage());
-            }
-          });
-
-    } else {
-      LOGGER.debug("Fail: Unauthorized");
-      handleResponse(response, UNAUTHORIZED, MISSING_TOKEN_URN);
+    try {
+      JsonArray requestJson = routingContext.body().asJsonArray();
+      ingestionService
+          .publishDataFromAdapter(requestJson)
+          .onComplete(
+              brokerResultHandler -> {
+                if (brokerResultHandler.succeeded()) {
+                  LOGGER.debug("Success: publishing data from adapter");
+                  routingContext.data().put(RESPONSE_SIZE, 0);
+                  response
+                      .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                      .setStatusCode(200)
+                      .end(brokerResultHandler.result().constructSuccessResponse().toString());
+                  /*routingContext.next();*/
+                } else {
+                  LOGGER.debug("Fail: Bad request");
+                  routingContext.fail(brokerResultHandler.cause());
+                }
+              });
+    } catch (Exception e) {
+      LOGGER.error("Fail: Bad request;" + e.getMessage());
+      response
+          .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+          .setStatusCode(500)
+          .end(
+              getResponseJson(
+                      INTERNAL_SERVER_ERROR.getUrn(),
+                      INTERNAL_SERVER_ERROR.getDescription(),
+                      "Error occurred while parsing")
+                  .toString());
     }
   }
 
@@ -234,23 +246,38 @@ public class IngestionController {
     HttpServerResponse response = routingContext.response();
     String iid = RoutingContextHelper.getJwtData(routingContext).getIid().split(":")[1];
     LOGGER.debug("Getting all adapters for user : " + iid);
-    Future<JsonObject> allAdapterForUser = ingestionService.getAllAdapterDetailsForUser(iid);
-    allAdapterForUser.onComplete(
-        handler -> {
-          if (handler.succeeded()) {
-            LOGGER.debug("Successful");
-            if (handler.result().getJsonArray("result").isEmpty()) {
-              handleSuccessResponse(
-                  response, ResponseType.NoContent.getCode(), handler.result().toString());
+    if (iid != null) {
+      Future<PostgresResultModel> allAdapterForUser =
+          ingestionService.getAllAdapterDetailsForUser(iid);
+      allAdapterForUser.onComplete(
+          handler -> {
+            if (handler.succeeded()) {
+              LOGGER.debug("Successful");
+              if (handler.result().getResult().isEmpty()) {
+                response.putHeader(CONTENT_TYPE, APPLICATION_JSON).setStatusCode(204).end();
+              } else {
+                response
+                    .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                    .setStatusCode(200)
+                    .end(handler.result().toJson().toString());
+              }
             } else {
-              handleSuccessResponse(
-                  response, ResponseType.Ok.getCode(), handler.result().toString());
+              LOGGER.error("failed to complete request");
+              routingContext.fail(handler.cause());
             }
-          } else {
-            LOGGER.debug(handler.cause());
-            processBackendResponse(response, handler.cause().getMessage());
-          }
-        });
+          });
+    } else {
+      LOGGER.error("Fail: Bad request");
+      response
+          .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+          .setStatusCode(400)
+          .end(
+              getResponseJson(
+                      BAD_REQUEST.getUrn(),
+                      HttpStatusCode.BAD_REQUEST.getDescription(),
+                      "iid not found")
+                  .toString());
+    }
   }
 
   void createProxy() {
@@ -258,49 +285,5 @@ public class IngestionController {
     this.cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
     this.dataBrokerService = DataBrokerService.createProxy(vertx, DATA_BROKER_SERVICE_ADDRESS);
     this.postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
-  }
-
-  private void handleSuccessResponse(HttpServerResponse response, int statusCode, String result) {
-    response.putHeader(CONTENT_TYPE, APPLICATION_JSON).setStatusCode(statusCode).end(result);
-  }
-
-  private void processBackendResponse(HttpServerResponse response, String failureMessage) {
-    LOGGER.debug("Info : " + failureMessage);
-    try {
-      JsonObject json = new JsonObject(failureMessage);
-      int type = json.getInteger(JSON_TYPE);
-      HttpStatusCode status = HttpStatusCode.getByValue(type);
-      String urnTitle = json.getString(JSON_TITLE);
-      ResponseUrn urn;
-      if (urnTitle != null) {
-        urn = fromCode(urnTitle);
-      } else {
-        urn = fromCode(String.valueOf(type));
-      }
-      // return urn in body
-      if (json.getString("details") != null) {
-        handleResponse(response, status, urn, json.getString("details"));
-        return;
-      }
-      response
-          .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-          .setStatusCode(type)
-          .end(generateResponse(status, urn).toString());
-    } catch (DecodeException ex) {
-      LOGGER.error("ERROR : Expecting Json from backend service [ jsonFormattingException ]");
-      handleResponse(response, BAD_REQUEST, BACKING_SERVICE_FORMAT_URN);
-    }
-  }
-
-  private void handleResponse(HttpServerResponse response, HttpStatusCode code, ResponseUrn urn) {
-    handleResponse(response, code, urn, code.getDescription());
-  }
-
-  private void handleResponse(
-      HttpServerResponse response, HttpStatusCode statusCode, ResponseUrn urn, String message) {
-    response
-        .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-        .setStatusCode(statusCode.getValue())
-        .end(generateResponse(statusCode, urn, message).toString());
   }
 }
