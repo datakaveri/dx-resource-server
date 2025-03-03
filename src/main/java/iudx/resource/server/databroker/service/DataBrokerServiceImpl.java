@@ -1,11 +1,7 @@
 package iudx.resource.server.databroker.service;
 
-import static iudx.resource.server.apiserver.util.Constants.ID;
-import static iudx.resource.server.apiserver.util.Constants.RESOURCE_GROUP;
-import static iudx.resource.server.cache.util.CacheType.CATALOGUE_CACHE;
-import static iudx.resource.server.database.util.Constants.ERROR;
+import static iudx.resource.server.common.HttpStatusCode.INTERNAL_SERVER_ERROR;
 import static iudx.resource.server.databroker.util.Constants.*;
-import static iudx.resource.server.databroker.util.Util.getResponseJson;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -13,18 +9,20 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rabbitmq.RabbitMQClient;
+import io.vertx.serviceproxy.ServiceException;
+import iudx.resource.server.apiserver.ingestion.model.IngestionModel;
 import iudx.resource.server.apiserver.subscription.model.SubscriptionImplModel;
-import iudx.resource.server.cache.service.CacheService;
-import iudx.resource.server.common.HttpStatusCode;
 import iudx.resource.server.common.ResponseUrn;
-import iudx.resource.server.common.Vhosts;
+import iudx.resource.server.databroker.model.ExchangeSubscribersResponse;
+import iudx.resource.server.databroker.model.IngestionResponseModel;
 import iudx.resource.server.databroker.model.SubscriptionResponseModel;
 import iudx.resource.server.databroker.util.PermissionOpType;
 import iudx.resource.server.databroker.util.RabbitClient;
 import iudx.resource.server.databroker.util.Util;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.http.HttpStatus;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,36 +30,30 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   private static final Logger LOGGER = LogManager.getLogger(DataBrokerServiceImpl.class);
   private final String amqpUrl;
   private final int amqpPort;
-  CacheService cacheService;
-  private String vhostProd;
-  private String iudxInternalVhost;
-  private String externalVhost;
-  private RabbitClient rabbitClient;
-  private RabbitMQClient iudxInternalRabbitMqClient;
-  private RabbitMQClient iudxRabbitMqClient;
-  private JsonObject config;
+  private final String vhostProd;
+  private final String iudxInternalVhost;
+  private final String externalVhost;
+  private final RabbitClient rabbitClient;
+  private final RabbitMQClient iudxInternalRabbitMqClient;
+  private final RabbitMQClient iudxRabbitMqClient;
 
   public DataBrokerServiceImpl(
       RabbitClient client,
       String amqpUrl,
       int amqpPort,
-      CacheService cacheService,
       String iudxInternalVhost,
       String prodVhost,
       String externalVhost,
       RabbitMQClient iudxInternalRabbitMqClient,
-      RabbitMQClient iudxRabbitMqClient,
-      JsonObject config) {
+      RabbitMQClient iudxRabbitMqClient) {
     this.rabbitClient = client;
     this.amqpUrl = amqpUrl;
     this.amqpPort = amqpPort;
-    this.cacheService = cacheService;
     this.vhostProd = prodVhost;
     this.iudxInternalVhost = iudxInternalVhost;
     this.externalVhost = externalVhost;
     this.iudxInternalRabbitMqClient = iudxInternalRabbitMqClient;
     this.iudxRabbitMqClient = iudxRabbitMqClient;
-    this.config = config;
     LOGGER.trace("Info : DataBrokerServiceImpl#constructor() completed");
   }
 
@@ -84,13 +76,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
         .onFailure(
             failureHandler -> {
               LOGGER.error("failed ::" + failureHandler.getMessage());
-              promise.fail(
-                  getResponseJson(
-                          HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
-                          INTERNAL_ERROR_CODE,
-                          ERROR,
-                          QUEUE_DELETE_ERROR)
-                      .toString());
+              promise.fail(new ServiceException(0, QUEUE_DELETE_ERROR));
             });
 
     return promise.future();
@@ -101,7 +87,9 @@ public class DataBrokerServiceImpl implements DataBrokerService {
       SubscriptionImplModel subscriptionImplModel) {
     LOGGER.trace("Info : SubscriptionService#registerStreamingSubscription() started");
     Promise<SubscriptionResponseModel> promise = Promise.promise();
-    ResultContainer resultContainer = new ResultContainer();
+    AtomicReference<String> apiKey = new AtomicReference<>(null);
+    AtomicReference<String> userId = new AtomicReference<>(null);
+    AtomicBoolean isQueueCreated = new AtomicBoolean(false);
     if (subscriptionImplModel != null) {
       String userid = subscriptionImplModel.getControllerModel().getUserId();
       String queueName = userid + "/" + subscriptionImplModel.getControllerModel().getName();
@@ -113,30 +101,29 @@ public class DataBrokerServiceImpl implements DataBrokerService {
               checkUserExist -> {
                 LOGGER.debug("success :: createUserIfNotExist " + checkUserExist);
 
-                resultContainer.apiKey = checkUserExist.getPassword();
-                resultContainer.userId = checkUserExist.getUserId();
+                apiKey.set(checkUserExist.getPassword());
+                userId.set(checkUserExist.getUserId());
 
                 return rabbitClient.createQueue(queueName, vhostProd);
               })
           .compose(
               createQueue -> {
-                resultContainer.isQueueCreated = true;
+                isQueueCreated.set(true);
 
                 String routingKey = entities;
                 LOGGER.debug("Info : routingKey is " + routingKey);
-
-                JsonArray entitiesArray = new JsonArray();
+                String topic;
                 String exchangeName;
                 if (isGroupResource(
                     new JsonObject().put("type", subscriptionImplModel.getResourceGroup()))) {
                   exchangeName = routingKey;
-                  entitiesArray.add(exchangeName + DATA_WILDCARD_ROUTINGKEY);
+                  topic = exchangeName + DATA_WILDCARD_ROUTINGKEY;
                 } else {
                   exchangeName = subscriptionImplModel.getResourceGroup();
-                  entitiesArray.add(exchangeName + "/." + routingKey);
+                  topic = exchangeName + "/." + routingKey;
                 }
                 LOGGER.debug(" Exchange name = {}", exchangeName);
-                return rabbitClient.bindQueue(exchangeName, queueName, entitiesArray, vhostProd);
+                return rabbitClient.bindQueue(exchangeName, queueName, topic, vhostProd);
               })
           .compose(
               bindQueueSuccess -> {
@@ -148,32 +135,27 @@ public class DataBrokerServiceImpl implements DataBrokerService {
               updateUserPermissionHandler -> {
                 SubscriptionResponseModel subscriptionResponseModel =
                     new SubscriptionResponseModel(
-                        resultContainer.userId,
-                        resultContainer.apiKey,
-                        queueName,
-                        amqpUrl,
-                        amqpPort,
-                        vhostProd);
+                        userId.get(), apiKey.get(), queueName, amqpUrl, amqpPort, vhostProd);
                 LOGGER.debug(subscriptionResponseModel.toJson());
                 promise.complete(subscriptionResponseModel);
               })
           .onFailure(
               failure -> {
                 LOGGER.error("fail:: " + failure.getMessage());
-                if (resultContainer.isQueueCreated) {
+                if (isQueueCreated.get()) {
                   Future<Void> resultDeleteQueue = rabbitClient.deleteQueue(queueName, vhostProd);
                   resultDeleteQueue.onComplete(
                       resultHandlerDeleteQueue -> {
                         if (resultHandlerDeleteQueue.succeeded()) {
                           promise.complete();
                         } else {
-                          LOGGER.error("fail:: in deleteQueue " + failure.getMessage());
-                          promise.fail(failure.getMessage());
+                          LOGGER.error("fail:: in deleteQueue " + failure /*.getMessage()*/);
+                          promise.fail(failure);
                         }
                       });
                 } else {
-                  LOGGER.error("fail:: " + failure.getMessage());
-                  promise.fail(failure.getMessage());
+                  LOGGER.error("fail:: " + failure);
+                  promise.fail(failure);
                 }
               });
     }
@@ -181,71 +163,132 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<JsonObject> registerAdaptor(JsonObject request, String vhost) {
-    Promise<JsonObject> promise = Promise.promise();
-    String virtualHost = getVhost(vhost);
-    if (request != null && !request.isEmpty()) {
-      Future<JsonObject> result = rabbitClient.registerAdapter(request, virtualHost);
-      result.onComplete(
-          resultHandler -> {
-            if (resultHandler.succeeded()) {
-              promise.complete(resultHandler.result());
-            } else {
-              LOGGER.error("registerAdaptor resultHandler failed : " + resultHandler.cause());
-              promise.fail(resultHandler.cause().getMessage());
-            }
-          });
-    }
-    return promise.future();
-  }
+  public Future<IngestionResponseModel> registerAdaptor(IngestionModel ingestionModel) {
+    Promise<IngestionResponseModel> promise = Promise.promise();
 
-  @Override
-  public Future<JsonObject> deleteAdaptor(JsonObject request, String vhost) {
-    Promise<JsonObject> promise = Promise.promise();
-    String virtualHost = getVhost(vhost);
-    if (request != null && !request.isEmpty()) {
-      Future<JsonObject> result = rabbitClient.deleteAdapter(request, virtualHost);
-      result.onComplete(
-          resultHandler -> {
-            if (resultHandler.succeeded()) {
-              promise.complete(resultHandler.result());
-            }
-            if (resultHandler.failed()) {
-              LOGGER.error("getExchange resultHandler failed : " + resultHandler.cause());
-              promise.fail(resultHandler.cause().getMessage());
-            }
-          });
-    }
-    return promise.future();
-  }
-
-  @Override
-  public Future<JsonObject> listAdaptor(JsonObject request, String vhost) {
-    Promise<JsonObject> promise = Promise.promise();
-    JsonObject finalResponse = new JsonObject();
-    String virtualHost = getVhost(vhost);
-    if (request != null && !request.isEmpty()) {
-      Future<JsonObject> result = rabbitClient.listExchangeSubscribers(request, virtualHost);
-      result.onComplete(
-          resultHandler -> {
-            if (resultHandler.succeeded()) {
-              promise.complete(resultHandler.result());
-            }
-            if (resultHandler.failed()) {
-              LOGGER.error("deleteAdaptor - resultHandler failed : " + resultHandler.cause());
-              promise.fail(resultHandler.cause().getMessage());
-            }
-          });
+    AtomicReference<String> apiKey = new AtomicReference<>(null);
+    AtomicReference<String> userId = new AtomicReference<>(null);
+    AtomicBoolean isExchangeCreated = new AtomicBoolean(false);
+    String topic;
+    if (ingestionModel.getType().equalsIgnoreCase("resourceGroup")) {
+      topic = ingestionModel.getResourceIdForIngestion() + DATA_WILDCARD_ROUTINGKEY;
     } else {
-      promise.fail(finalResponse.toString());
-      ;
+      topic = ingestionModel.getResourceIdForIngestion() + "/." + ingestionModel.getEntities();
     }
+    rabbitClient
+        .createUserIfNotExist(ingestionModel.getUserId(), vhostProd)
+        .compose(
+            userCreation -> {
+              LOGGER.debug("success :: userCreation ");
+
+              apiKey.set(userCreation.getPassword());
+              userId.set(userCreation.getUserId());
+
+              return rabbitClient.createExchange(
+                  ingestionModel.getResourceIdForIngestion(), vhostProd);
+            })
+        .compose(
+            createExchangeResult -> {
+              isExchangeCreated.set(true);
+              LOGGER.debug("Success : Exchange created successfully.");
+              return rabbitClient.updateUserPermissions(
+                  vhostProd,
+                  ingestionModel.getUserId(),
+                  PermissionOpType.ADD_WRITE,
+                  ingestionModel.getResourceIdForIngestion());
+            })
+        .compose(
+            updatePermissionHandler -> {
+              return rabbitClient.bindQueue(
+                  ingestionModel.getResourceIdForIngestion(), QUEUE_DATA, topic, vhostProd);
+            })
+        .compose(
+            dataBasseQueueBinding -> {
+              LOGGER.debug("Success : Data Base Queue Binding successful.");
+              return rabbitClient.bindQueue(
+                  ingestionModel.getResourceIdForIngestion(), REDIS_LATEST, topic, vhostProd);
+            })
+        .compose(
+            redisQueueBinding -> {
+              LOGGER.debug("Success : Redis Queue Binding successful.");
+              return rabbitClient.bindQueue(
+                  ingestionModel.getResourceIdForIngestion(), QUEUE_AUDITING, topic, vhostProd);
+            })
+        .onSuccess(
+            queueSubscriptionMonitoringBinding -> {
+              LOGGER.debug("Success : Queue Subscription Monitoring Binding successful.");
+              IngestionResponseModel ingestionResponseModel =
+                  new IngestionResponseModel(
+                      ingestionModel.getUserId(),
+                      apiKey.get(),
+                      ingestionModel.getResourceIdForIngestion(),
+                      amqpUrl,
+                      amqpPort,
+                      vhostProd);
+              LOGGER.debug(ingestionResponseModel.toJson());
+              promise.complete(ingestionResponseModel);
+            })
+        .onFailure(
+            failure -> {
+              LOGGER.error("Adaptor creation Failed");
+              LOGGER.error("fail:: " + failure.getMessage());
+              if (isExchangeCreated.get()) {
+                Future.future(
+                    fu ->
+                        rabbitClient.deleteExchange(
+                            ingestionModel.getResourceIdForIngestion(), vhostProd));
+              }
+              promise.fail(failure);
+            });
+
     return promise.future();
   }
 
   @Override
-  public Future<JsonObject> updateStreamingSubscription(JsonObject request) {
-    return null;
+  public Future<Void> deleteAdaptor(String exchangeId, String userId) {
+    Promise<Void> promise = Promise.promise();
+    rabbitClient
+        .getExchange(exchangeId, vhostProd)
+        .compose(
+            getExchangeHandler -> {
+              LOGGER.debug("exchange found to delete");
+              return rabbitClient.deleteExchange(exchangeId, vhostProd);
+            })
+        .compose(
+            deleteExchange -> {
+              LOGGER.debug("Info : " + exchangeId + " adaptor deleted successfully");
+              return rabbitClient.updateUserPermissions(
+                  vhostProd, userId, PermissionOpType.DELETE_WRITE, exchangeId);
+            })
+        .onSuccess(
+            updateUserPermissionsHandler -> {
+              LOGGER.info("permissions updated successfully");
+              promise.complete();
+            })
+        .onFailure(
+            failure -> {
+              LOGGER.error("deleteAdaptor failed : " + failure);
+              promise.fail(failure);
+            });
+    return promise.future();
+  }
+
+  @Override
+  public Future<ExchangeSubscribersResponse> listAdaptor(String adaptorId) {
+    Promise<ExchangeSubscribersResponse> promise = Promise.promise();
+    Future<ExchangeSubscribersResponse> result =
+        rabbitClient.listExchangeSubscribers(adaptorId, vhostProd);
+    result.onComplete(
+        resultHandler -> {
+          if (resultHandler.succeeded()) {
+            promise.complete(resultHandler.result());
+          }
+          if (resultHandler.failed()) {
+            LOGGER.error("deleteAdaptor - resultHandler failed : " + resultHandler.cause());
+            promise.fail(resultHandler.cause());
+          }
+        });
+    return promise.future();
   }
 
   @Override
@@ -270,17 +313,17 @@ public class DataBrokerServiceImpl implements DataBrokerService {
               LOGGER.debug("Info : " + resultHandlerQueue);
               String routingKey = entities;
               LOGGER.debug("Info : routingKey is " + routingKey);
-              JsonArray entitiesArray = new JsonArray();
+              String topic;
               String exchangeName;
               if (isGroupResource(
                   new JsonObject().put("type", subscriptionImplModel.getResourceGroup()))) {
                 exchangeName = routingKey;
-                entitiesArray.add(exchangeName + DATA_WILDCARD_ROUTINGKEY);
+                topic = exchangeName + DATA_WILDCARD_ROUTINGKEY;
               } else {
                 exchangeName = subscriptionImplModel.getResourceGroup();
-                entitiesArray.add(exchangeName + "/." + routingKey);
+                topic = exchangeName + "/." + routingKey;
               }
-              return rabbitClient.bindQueue(exchangeName, queueName, entitiesArray, vhostProd);
+              return rabbitClient.bindQueue(exchangeName, queueName, topic, vhostProd);
             })
         .compose(
             bindQueueSuccess -> {
@@ -297,7 +340,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
                 promise.complete(listEntities);
               } else {
                 LOGGER.error("failed ::" + permissionHandler.cause());
-                promise.fail(permissionHandler.cause().getMessage());
+                promise.fail(permissionHandler.cause());
               }
             });
 
@@ -319,84 +362,32 @@ public class DataBrokerServiceImpl implements DataBrokerService {
                   promise.complete(resultHandler.result());
                 } else {
                   LOGGER.error("failed ::" + resultHandler.cause());
-                  promise.fail(
-                      getResponseJson(
-                              HttpStatusCode.BAD_REQUEST.getUrn(),
-                              BAD_REQUEST_CODE,
-                              ERROR,
-                              QUEUE_LIST_ERROR)
-                          .toString());
+                  promise.fail(new ServiceException(8, QUEUE_LIST_ERROR));
                 }
               });
     } else {
-      promise.fail(
-          getResponseJson(
-                  HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
-                  INTERNAL_ERROR_CODE,
-                  ERROR,
-                  QUEUE_LIST_ERROR)
-              .toString());
+      promise.fail(new ServiceException(0, QUEUE_LIST_ERROR));
     }
     return promise.future();
   }
 
   @Override
-  public Future<JsonObject> publishFromAdaptor(JsonArray request, String vhost) {
-    Promise<JsonObject> promise = Promise.promise();
-    JsonObject finalResponse = new JsonObject();
-    LOGGER.debug("request JsonArray " + request);
-
-    if (request != null && !request.isEmpty()) {
-
-      JsonObject cacheRequestJson = new JsonObject();
-      cacheRequestJson.put("type", CATALOGUE_CACHE);
-      cacheRequestJson.put("key", request.getJsonObject(0).getJsonArray("entities").getValue(0));
-      cacheService
-          .get(cacheRequestJson)
-          .onComplete(
-              cacheHandler -> {
-                if (cacheHandler.succeeded()) {
-                  JsonObject cacheResult = cacheHandler.result();
-                  String resourceGroupId =
-                      cacheResult.containsKey(RESOURCE_GROUP)
-                          ? cacheResult.getString(RESOURCE_GROUP)
-                          : cacheResult.getString(ID);
-                  LOGGER.debug("Info : resourceGroupId  " + resourceGroupId);
-                  String id =
-                      request.getJsonObject(0).getJsonArray("entities").getValue(0).toString();
-                  String routingKey = resourceGroupId + "/." + id;
-                  request.remove("entities");
-
-                  for (int i = 0; i < request.size(); i++) {
-                    JsonObject jsonObject = request.getJsonObject(i);
-                    jsonObject.remove("entities");
-                    jsonObject.put("id", id);
-                  }
-                  LOGGER.trace(request);
-                  if (resourceGroupId != null && !resourceGroupId.isBlank()) {
-                    LOGGER.debug("Info : routingKey  " + routingKey);
-                    Buffer buffer = Buffer.buffer(request.encode());
-                    iudxRabbitMqClient.basicPublish(
-                        resourceGroupId,
-                        routingKey,
-                        buffer,
-                        resultHandler -> {
-                          if (resultHandler.succeeded()) {
-                            finalResponse.put(STATUS, HttpStatus.SC_OK);
-                            LOGGER.info("Success : Message published to queue");
-                            promise.complete(finalResponse);
-                          } else {
-                            finalResponse.put(TYPE, HttpStatus.SC_BAD_REQUEST);
-                            LOGGER.error("Fail : " + resultHandler.cause().toString());
-                            promise.fail(resultHandler.cause().getMessage());
-                          }
-                        });
-                  }
-                } else {
-                  LOGGER.error("Item not found");
-                }
-              });
-    }
+  public Future<String> publishFromAdaptor(
+      String resourceGroupId, String routingKey, JsonArray request) {
+    Promise<String> promise = Promise.promise();
+    Buffer buffer = Buffer.buffer(request.encode());
+    iudxRabbitMqClient
+        .basicPublish(resourceGroupId, routingKey, buffer)
+        .onSuccess(
+            resultHandler -> {
+              LOGGER.info("Success : Message published to queue");
+              promise.complete("success");
+            })
+        .onFailure(
+            failure -> {
+              LOGGER.error("Fail : " + failure.getMessage());
+              promise.fail(failure);
+            });
     return promise.future();
   }
 
@@ -445,29 +436,12 @@ public class DataBrokerServiceImpl implements DataBrokerService {
         .onFailure(
             publishFailure -> {
               LOGGER.debug("publishMessage failure");
-              promise.fail(
-                  getResponseJson(
-                          HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
-                          INTERNAL_ERROR_CODE,
-                          ResponseUrn.QUEUE_ERROR_URN.getMessage(),
-                          HttpStatusCode.INTERNAL_SERVER_ERROR.getDescription())
-                      .toString());
+              promise.fail(new ServiceException(0, INTERNAL_SERVER_ERROR.getDescription()));
             });
     return promise.future();
   }
 
   private boolean isGroupResource(JsonObject jsonObject) {
     return jsonObject.getString("type").equalsIgnoreCase("resourceGroup");
-  }
-
-  private String getVhost(String vhost) {
-    String vhostKey = Vhosts.valueOf(vhost).value;
-    return this.config.getString(vhostKey);
-  }
-
-  public class ResultContainer {
-    public String apiKey;
-    public String userId;
-    public boolean isQueueCreated = false;
   }
 }
