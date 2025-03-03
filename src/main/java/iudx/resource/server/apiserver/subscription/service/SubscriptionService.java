@@ -14,7 +14,7 @@ public interface SubscriptionService {
 
   Future<SubscriptionData> createSubscription(PostModelSubscription postModelSubscription);
 
-  Future<GetResultModel> updateSubscription(String entities, String subId, String expiry);
+  Future<GetResultModel> updateSubscription(String entities, String queueName, String expiry);
 
   Future<GetResultModel> appendSubscription(
       PostModelSubscription postModelSubscription, String subId);
