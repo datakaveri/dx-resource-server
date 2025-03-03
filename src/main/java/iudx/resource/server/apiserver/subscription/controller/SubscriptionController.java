@@ -210,7 +210,7 @@ public class SubscriptionController {
               /*routingContext.next();*/
             } else {
               LOGGER.error("Fail: Bad request");
-              routingContext.fail(new DxRuntimeException(subsRequestHandler.cause().getMessage()));
+              routingContext.fail(subsRequestHandler.cause());
             }
           });
     } else {
@@ -253,7 +253,7 @@ public class SubscriptionController {
               /*routingContext.next();*/
             } else {
               LOGGER.error("Fail: Bad request");
-              routingContext.fail(new DxRuntimeException(subsRequestHandler.cause().getMessage()));
+              routingContext.fail(subsRequestHandler.cause());
             }
           });
     } else {
@@ -290,7 +290,7 @@ public class SubscriptionController {
                 .end(subHandler.result().constructSuccessResponse().toString());
             /*routingContext.next();*/
           } else {
-            routingContext.fail(new DxRuntimeException(subHandler.cause().getMessage()));
+            routingContext.fail(subHandler.cause());
           }
         });
   }
@@ -310,7 +310,7 @@ public class SubscriptionController {
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .end(subHandler.result().toJson().toString());
           } else {
-            routingContext.fail(new DxRuntimeException(subHandler.cause().getMessage()));
+            routingContext.fail(subHandler.cause());
           }
         });
   }
@@ -336,7 +336,7 @@ public class SubscriptionController {
                 .end(subHandler.result().toJson().toString());
             /*routingContext.next();*/
           } else {
-            routingContext.fail(new DxRuntimeException(subHandler.cause().getMessage()));
+            routingContext.fail(subHandler.cause());
           }
         });
   }
@@ -384,7 +384,7 @@ public class SubscriptionController {
             })
         .onFailure(
             failure -> {
-              routingContext.fail(new DxRuntimeException(failure.getMessage()));
+              routingContext.fail(failure);
             });
   }
 

@@ -312,12 +312,12 @@ public class Deployer {
     CountDownLatch latchVerticles = new CountDownLatch(deployIdSet.size());
     CountDownLatch latchCluster = new CountDownLatch(1);
     CountDownLatch latchVertx = new CountDownLatch(1);
-    LOGGER.debug("number of verticles being undeployed are:" + deployIdSet.size());
+    /*LOGGER.debug("number of verticles being undeployed are:" + deployIdSet.size());*/
     // shutdown verticles
     for (String deploymentId : deployIdSet) {
       vertxInstance.undeploy(deploymentId, handler -> {
         if (handler.succeeded()) {
-          LOGGER.debug(deploymentId + " verticle  successfully Undeployed");
+          /*LOGGER.debug(deploymentId + " verticle  successfully Undeployed");*/
           latchVerticles.countDown();
         } else {
           LOGGER.warn(deploymentId + "Undeploy failed!");

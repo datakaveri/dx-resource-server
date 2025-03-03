@@ -1,0 +1,11 @@
+# Error Code Mapping:
+- 0 : Internal Server Error
+- 1 : 
+- 2 : 
+- 3 : 
+- 4 : Not Found
+- 5 : 
+- 6 : 
+- 7 : 
+- 8 : Bad Request
+- 9 : Conflict

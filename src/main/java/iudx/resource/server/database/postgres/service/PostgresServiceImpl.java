@@ -76,11 +76,6 @@ public final class PostgresServiceImpl implements PostgresService {
         .onSuccess(
             successHandler -> {
               JsonArray result = new JsonArray(successHandler);
-              JsonObject responseJson =
-                  new JsonObject()
-                      .put("type", ResponseUrn.SUCCESS_URN.getUrn())
-                      .put("title", ResponseUrn.SUCCESS_URN.getMessage())
-                      .put("result", result);
               PostgresResultModel postgresResultModel =
                   new PostgresResultModel(
                       ResponseUrn.SUCCESS_URN.getUrn(),

@@ -4,6 +4,8 @@ import static iudx.resource.server.apiserver.subscription.util.Constants.*;
 import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.apiserver.util.Constants.RESOURCE_GROUP;
 import static iudx.resource.server.cache.util.CacheType.CATALOGUE_CACHE;
+import static iudx.resource.server.common.HttpStatusCode.INTERNAL_SERVER_ERROR;
+import static iudx.resource.server.common.HttpStatusCode.NOT_FOUND;
 import static iudx.resource.server.databroker.util.Constants.SUCCESS;
 import static iudx.resource.server.databroker.util.Util.getResponseJson;
 
@@ -11,10 +13,10 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.serviceproxy.ServiceException;
 import iudx.resource.server.apiserver.subscription.model.*;
 import iudx.resource.server.apiserver.subscription.util.SubsType;
 import iudx.resource.server.cache.service.CacheService;
-import iudx.resource.server.common.HttpStatusCode;
 import iudx.resource.server.common.ResponseUrn;
 import iudx.resource.server.database.postgres.model.PostgresResultModel;
 import iudx.resource.server.database.postgres.service.PostgresService;
@@ -97,25 +99,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     LOGGER.info("getSubscription() method started");
     Promise<GetResultModel> promise = Promise.promise();
     LOGGER.info("sub id :: " + subscriptionId);
-    if (subType != null) {
-      getEntityName(subscriptionId)
-          .compose(
-              postgresSuccess -> {
-                return dataBrokerService
-                    .listStreamingSubscription(subscriptionId)
-                    .map(GetResultModel::new);
-              })
-          .onComplete(
-              getDataBroker -> {
-                if (getDataBroker.succeeded()) {
-                  promise.complete(getDataBroker.result());
-                } else {
-                  promise.fail(getDataBroker.cause().getMessage());
-                }
-              });
-    } else {
-      // TODO: Can be removed
-    }
+    getEntityName(subscriptionId)
+        .compose(
+            postgresSuccess -> {
+              return dataBrokerService
+                  .listStreamingSubscription(subscriptionId)
+                  .map(GetResultModel::new);
+            })
+        .onComplete(
+            getDataBroker -> {
+              if (getDataBroker.succeeded()) {
+                promise.complete(getDataBroker.result());
+              } else {
+                promise.fail(getDataBroker.cause());
+              }
+            });
     return promise.future();
   }
 
@@ -126,7 +124,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     SubsType subType = SubsType.valueOf(postModelSubscription.getSubscriptionType());
     String entities = postModelSubscription.getEntities();
     JsonObject cacheJson = new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
-    CreateResultContainer createResultContainer = new CreateResultContainer();
     cacheService
         .get(cacheJson)
         .compose(
@@ -142,8 +139,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
               } else {
                 resourceGroup = cacheResult.getString("resourceGroup");
               }
-              createResultContainer.queueName =
-                  postModelSubscription.getUserId() + "/" + postModelSubscription.getName();
               SubscriptionImplModel subscriptionImplModel =
                   new SubscriptionImplModel(
                       postModelSubscription, itemTypeSet.iterator().next(), resourceGroup);
@@ -151,9 +146,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             })
         .compose(
             registerStreaming -> {
-              createResultContainer.isQueueCreated = true;
               JsonObject brokerResponse = registerStreaming.toJson();
-
               LOGGER.trace("registerStreaming: " + registerStreaming);
               JsonObject cacheJson1 =
                   new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
@@ -182,46 +175,24 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             })
         .onSuccess(
             subscriptionDataResultSuccess -> {
-              LOGGER.debug(subscriptionDataResultSuccess.toString());
               promise.complete(subscriptionDataResultSuccess);
             })
         .onFailure(
             failure -> {
-              if (createResultContainer.isQueueCreated) {
-                LOGGER.trace("subsId: to delete " + postModelSubscription.getEntities());
-                LOGGER.trace("UserId: " + postModelSubscription.getUserId());
-
-                dataBrokerService
-                    .deleteStreamingSubscription(
-                        createResultContainer.queueName, postModelSubscription.getUserId())
-                    .onComplete(
-                        handlers -> {
-                          if (handlers.succeeded()) {
-                            LOGGER.info("subscription rolled back successfully");
-                          } else {
-                            LOGGER.error("Failure occurred, rolling back subscription:", failure);
-                          }
-                          promise.fail(failure.toString());
-                        });
-              } else {
-                LOGGER.debug(failure.getMessage());
-                promise.fail(failure.getMessage());
-              }
+              LOGGER.debug(failure);
+              promise.fail(failure);
             });
     return promise.future();
   }
 
   @Override
-  public Future<GetResultModel> updateSubscription(String entities, String subId, String expiry) {
+  public Future<GetResultModel> updateSubscription(
+      String entities, String queueName, String expiry) {
     LOGGER.info("updateSubscription() method started");
     Promise<GetResultModel> promise = Promise.promise();
 
-    String queueName = subId;
-    String entity = entities;
-
     StringBuilder selectQuery =
-        new StringBuilder(SELECT_SUB_SQL.replace("$1", queueName).replace("$2", entity));
-
+        new StringBuilder(SELECT_SUB_SQL.replace("$1", queueName).replace("$2", entities));
     LOGGER.debug(selectQuery);
 
     postgresService
@@ -233,9 +204,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
               if (resultArray.isEmpty()) {
                 JsonObject failJson =
                     getResponseJson(
-                        HttpStatusCode.NOT_FOUND.getUrn(),
-                        HttpStatusCode.NOT_FOUND.getValue(),
-                        HttpStatusCode.NOT_FOUND.getDescription(),
+                        NOT_FOUND.getUrn(),
+                        NOT_FOUND.getValue(),
+                        NOT_FOUND.getDescription(),
                         "Subscription not found for [queue,entity]");
                 return Future.failedFuture(failJson.toString());
               }
@@ -244,7 +215,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                       UPDATE_SUB_SQL
                           .replace("$1", expiry)
                           .replace("$2", queueName)
-                          .replace("$3", entity));
+                          .replace("$3", entities));
               LOGGER.trace("updateQuery : " + updateQuery);
               return postgresService.executeQuery1(updateQuery.toString());
             })
@@ -256,8 +227,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             })
         .onFailure(
             failure -> {
-              LOGGER.error(failure.getMessage());
-              promise.fail(failure.getMessage());
+              LOGGER.error(failure);
+              promise.fail(failure);
             });
 
     return promise.future();
@@ -336,8 +307,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             })
         .onFailure(
             failed -> {
-              LOGGER.error("Failed :: " + failed.getMessage());
-              promise.fail(failed.getMessage());
+              LOGGER.error("Failed :: " + failed);
+              promise.fail(failed);
             });
     return promise.future();
   }
@@ -348,35 +319,30 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     LOGGER.info("deleteSubscription() method started");
     LOGGER.info("queueName to delete :: " + subsId);
     Promise<DeleteSubsResultModel> promise = Promise.promise();
-    if (subscriptionType != null) {
-      getEntityName(subsId)
-          .compose(
-              foundId -> {
-                return deleteSubscriptionFromPg(subsId);
-              })
-          .compose(
-              postgresSuccess -> {
-                return dataBrokerService.deleteStreamingSubscription(subsId, userid);
-              })
-          .onComplete(
-              deleteDataBroker -> {
-                if (deleteDataBroker.succeeded()) {
-                  DeleteSubsResultModel deleteSubsResultModel =
-                      new DeleteSubsResultModel(
-                          getResponseJson(
-                              ResponseUrn.SUCCESS_URN.getUrn(),
-                              HttpStatus.SC_OK,
-                              SUCCESS,
-                              "Subscription deleted Successfully"));
-                  promise.complete(deleteSubsResultModel);
-                } else {
-                  promise.fail(deleteDataBroker.cause().getMessage());
-                }
-              });
-
-    } else {
-      // TODO: Can be removed
-    }
+    getEntityName(subsId)
+        .compose(
+            foundId -> {
+              return deleteSubscriptionFromPg(subsId);
+            })
+        .compose(
+            postgresSuccess -> {
+              return dataBrokerService.deleteStreamingSubscription(subsId, userid);
+            })
+        .onComplete(
+            deleteDataBroker -> {
+              if (deleteDataBroker.succeeded()) {
+                DeleteSubsResultModel deleteSubsResultModel =
+                    new DeleteSubsResultModel(
+                        getResponseJson(
+                            ResponseUrn.SUCCESS_URN.getUrn(),
+                            HttpStatus.SC_OK,
+                            SUCCESS,
+                            "Subscription deleted Successfully"));
+                promise.complete(deleteSubsResultModel);
+              } else {
+                promise.fail(deleteDataBroker.cause());
+              }
+            });
     return promise.future();
   }
 
@@ -393,13 +359,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 promise.complete();
               } else {
                 LOGGER.error("fail here");
-                JsonObject failJson =
-                    getResponseJson(
-                        HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
-                        HttpStatusCode.INTERNAL_SERVER_ERROR.getValue(),
-                        HttpStatusCode.INTERNAL_SERVER_ERROR.getDescription(),
-                        HttpStatusCode.INTERNAL_SERVER_ERROR.getDescription());
-                promise.fail(failJson.toString());
+                promise.fail(new ServiceException(0, INTERNAL_SERVER_ERROR.getDescription()));
               }
             });
     return promise.future();
@@ -416,17 +376,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         .executeQuery1(query.toString())
         .onComplete(
             pgHandler -> {
-              LOGGER.debug(pgHandler);
               if (pgHandler.succeeded()) {
                 promise.complete(pgHandler.result());
               } else {
-                JsonObject failJson =
-                    getResponseJson(
-                        HttpStatusCode.INTERNAL_SERVER_ERROR.getUrn(),
-                        HttpStatusCode.INTERNAL_SERVER_ERROR.getValue(),
-                        HttpStatusCode.INTERNAL_SERVER_ERROR.getDescription(),
-                        HttpStatusCode.INTERNAL_SERVER_ERROR.getDescription());
-                promise.fail(failJson.toString());
+                promise.fail(new ServiceException(0, INTERNAL_SERVER_ERROR.getDescription()));
               }
             });
     return promise.future();
@@ -447,20 +400,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 promise.complete(entities);
               } else {
                 LOGGER.info("Empty response from database. Entities not found");
-                JsonObject failJson =
-                    getResponseJson(
-                        HttpStatusCode.NOT_FOUND.getUrn(),
-                        HttpStatusCode.NOT_FOUND.getValue(),
-                        HttpStatusCode.NOT_FOUND.getDescription(),
-                        HttpStatusCode.NOT_FOUND.getDescription());
-                promise.fail(failJson.toString());
+                promise.fail(new ServiceException(4, NOT_FOUND.getDescription()));
               }
             });
     return promise.future();
-  }
-
-  public class CreateResultContainer {
-    public String queueName;
-    public boolean isQueueCreated = false;
   }
 }
