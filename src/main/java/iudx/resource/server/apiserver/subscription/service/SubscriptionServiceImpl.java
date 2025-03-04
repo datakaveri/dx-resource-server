@@ -47,7 +47,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   }
 
   private static StringBuilder createSubQuery(
-      PostModelSubscription postModelSubscription,
+      PostSubscriptionModel postSubscriptionModel,
       SubscriptionData subscriptionDataResult,
       SubsType subsType,
       String type) {
@@ -57,14 +57,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .replace("$1", subscriptionDataResult.dataBrokerResult().getString("id"))
                 .replace("$2", subsType.type)
                 .replace("$3", subscriptionDataResult.dataBrokerResult().getString("id"))
-                .replace("$4", postModelSubscription.getEntities())
-                .replace("$5", postModelSubscription.getExpiry())
+                .replace("$4", postSubscriptionModel.getEntities())
+                .replace("$5", postSubscriptionModel.getExpiry())
                 .replace("$6", subscriptionDataResult.cacheResult().getString("name"))
                 .replace("$7", subscriptionDataResult.cacheResult().toString())
-                .replace("$8", postModelSubscription.getUserId())
+                .replace("$8", postSubscriptionModel.getUserId())
                 .replace("$9", subscriptionDataResult.cacheResult().getString(RESOURCE_GROUP))
                 .replace("$a", subscriptionDataResult.cacheResult().getString("provider"))
-                .replace("$b", postModelSubscription.getDelegatorId())
+                .replace("$b", postSubscriptionModel.getDelegatorId())
                 .replace("$c", type));
     return query;
   }
@@ -75,7 +75,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       SubscriptionData appendSubscriptionResult,
       SubsType subType,
       String type,
-      PostModelSubscription postModelSubscription) {
+      PostSubscriptionModel postSubscriptionModel) {
     StringBuilder appendQuery =
         new StringBuilder(
             APPEND_SUB_SQL
@@ -83,13 +83,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .replace("$2", subType.type)
                 .replace("$3", subId)
                 .replace("$4", entities)
-                .replace("$5", postModelSubscription.getExpiry())
+                .replace("$5", postSubscriptionModel.getExpiry())
                 .replace("$6", appendSubscriptionResult.cacheResult().getString("name"))
                 .replace("$7", appendSubscriptionResult.cacheResult().toString())
-                .replace("$8", postModelSubscription.getUserId())
+                .replace("$8", postSubscriptionModel.getUserId())
                 .replace("$9", appendSubscriptionResult.cacheResult().getString(RESOURCE_GROUP))
                 .replace("$a", appendSubscriptionResult.cacheResult().getString("provider"))
-                .replace("$b", postModelSubscription.getDelegatorId())
+                .replace("$b", postSubscriptionModel.getDelegatorId())
                 .replace("$c", type));
     return appendQuery;
   }
@@ -118,11 +118,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   }
 
   @Override
-  public Future<SubscriptionData> createSubscription(PostModelSubscription postModelSubscription) {
+  public Future<SubscriptionData> createSubscription(PostSubscriptionModel postSubscriptionModel) {
     LOGGER.info("createSubscription() method started");
     Promise<SubscriptionData> promise = Promise.promise();
-    SubsType subType = SubsType.valueOf(postModelSubscription.getSubscriptionType());
-    String entities = postModelSubscription.getEntities();
+    SubsType subType = SubsType.valueOf(postSubscriptionModel.getSubscriptionType());
+    String entities = postSubscriptionModel.getEntities();
     JsonObject cacheJson = new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
     cacheService
         .get(cacheJson)
@@ -141,7 +141,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
               }
               SubscriptionImplModel subscriptionImplModel =
                   new SubscriptionImplModel(
-                      postModelSubscription, itemTypeSet.iterator().next(), resourceGroup);
+                          postSubscriptionModel, itemTypeSet.iterator().next(), resourceGroup);
               return dataBrokerService.registerStreamingSubscription(subscriptionImplModel);
             })
         .compose(
@@ -166,7 +166,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                       : "RESOURCE_GROUP";
 
               StringBuilder query =
-                  createSubQuery(postModelSubscription, subscriptionDataResult, subType, type);
+                  createSubQuery(postSubscriptionModel, subscriptionDataResult, subType, type);
               LOGGER.debug("query: " + query);
 
               return postgresService
@@ -236,11 +236,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
   @Override
   public Future<GetResultModel> appendSubscription(
-      PostModelSubscription postModelSubscription, String subsId) {
+          PostSubscriptionModel postSubscriptionModel, String subsId) {
     LOGGER.info("appendSubscription() method started");
-    String entities = postModelSubscription.getEntities();
+    String entities = postSubscriptionModel.getEntities();
     JsonObject cacheJson = new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
-    SubsType subType = SubsType.valueOf(postModelSubscription.getSubscriptionType());
+    SubsType subType = SubsType.valueOf(postSubscriptionModel.getSubscriptionType());
     Promise<GetResultModel> promise = Promise.promise();
     cacheService
         .get(cacheJson)
@@ -260,7 +260,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
               SubscriptionImplModel subscriptionImplModel =
                   new SubscriptionImplModel(
-                      postModelSubscription, itemTypeSet.iterator().next(), resourceGroup);
+                          postSubscriptionModel, itemTypeSet.iterator().next(), resourceGroup);
 
               return dataBrokerService.appendStreamingSubscription(subscriptionImplModel, subsId);
             })
@@ -292,7 +292,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                       appendSubscriptionResult,
                       subType,
                       type,
-                      postModelSubscription);
+                          postSubscriptionModel);
               LOGGER.debug("appendQuery = " + appendQuery);
 
               return postgresService

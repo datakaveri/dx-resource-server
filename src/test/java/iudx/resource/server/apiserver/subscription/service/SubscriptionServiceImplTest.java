@@ -33,8 +33,8 @@ class SubscriptionServiceImplTest {
 
   @Test
   void testCreateSubscription() {
-    PostModelSubscription postModelSubscription =
-        new PostModelSubscription(
+    PostSubscriptionModel postSubscriptionModel =
+        new PostSubscriptionModel(
             "user123",
             "STREAMING",
             "instance1",
@@ -75,7 +75,7 @@ class SubscriptionServiceImplTest {
         .when(dataBrokerService.deleteStreamingSubscription(any(), any()))
         .thenReturn(Future.succeededFuture());
 
-    Future<SubscriptionData> result = subscriptionService.createSubscription(postModelSubscription);
+    Future<SubscriptionData> result = subscriptionService.createSubscription(postSubscriptionModel);
 
     result.onComplete(
         ar -> {
@@ -97,8 +97,8 @@ class SubscriptionServiceImplTest {
 
   @Test
   void testCreateSubscription2() {
-    PostModelSubscription postModelSubscription =
-        new PostModelSubscription(
+    PostSubscriptionModel postSubscriptionModel =
+        new PostSubscriptionModel(
             "user123",
             "STREAMING",
             "instance1",
@@ -139,7 +139,7 @@ class SubscriptionServiceImplTest {
         .when(dataBrokerService.deleteStreamingSubscription(any(), any()))
         .thenReturn(Future.succeededFuture());
 
-    Future<SubscriptionData> result = subscriptionService.createSubscription(postModelSubscription);
+    Future<SubscriptionData> result = subscriptionService.createSubscription(postSubscriptionModel);
 
     result.onComplete(
         ar -> {
@@ -225,8 +225,8 @@ class SubscriptionServiceImplTest {
   @Test
   void testAppendSubscription() {
     String subscriptionID = "sub123";
-    PostModelSubscription postModelSubscription =
-        new PostModelSubscription(
+    PostSubscriptionModel postSubscriptionModel =
+        new PostSubscriptionModel(
             "user123",
             "STREAMING",
             "instance1",
@@ -251,7 +251,7 @@ class SubscriptionServiceImplTest {
         .thenReturn(Future.succeededFuture(List.of(subscriptionID)));
 
     Future<GetResultModel> result =
-        subscriptionService.appendSubscription(postModelSubscription, subscriptionID);
+        subscriptionService.appendSubscription(postSubscriptionModel, subscriptionID);
 
     assertTrue(result.succeeded());
     assertNotNull(result.result());
@@ -260,8 +260,8 @@ class SubscriptionServiceImplTest {
   @Test
   void testAppendSubscription2() {
     String subscriptionID = "sub123";
-    PostModelSubscription postModelSubscription =
-        new PostModelSubscription(
+    PostSubscriptionModel postSubscriptionModel =
+        new PostSubscriptionModel(
             "user123",
             "STREAMING",
             "instance1",
@@ -286,7 +286,7 @@ class SubscriptionServiceImplTest {
         .thenReturn(Future.succeededFuture(List.of(subscriptionID)));
 
     Future<GetResultModel> result =
-        subscriptionService.appendSubscription(postModelSubscription, subscriptionID);
+        subscriptionService.appendSubscription(postSubscriptionModel, subscriptionID);
 
     assertTrue(result.succeeded());
     assertNotNull(result.result());
@@ -334,8 +334,8 @@ class SubscriptionServiceImplTest {
 
   @Test
   void testCreateSubscriptionCacheFailure() {
-    PostModelSubscription postModelSubscription =
-        new PostModelSubscription(
+    PostSubscriptionModel postSubscriptionModel =
+        new PostSubscriptionModel(
             "user123",
             "STREAMING",
             "instance1",
@@ -346,7 +346,7 @@ class SubscriptionServiceImplTest {
 
     when(cacheService.get(any())).thenReturn(Future.failedFuture("Cache fetch failed"));
 
-    Future<SubscriptionData> result = subscriptionService.createSubscription(postModelSubscription);
+    Future<SubscriptionData> result = subscriptionService.createSubscription(postSubscriptionModel);
 
     assertTrue(result.failed(), "Future should fail");
     assertEquals("Cache fetch failed", result.cause().getMessage());
@@ -354,8 +354,8 @@ class SubscriptionServiceImplTest {
 
   @Test
   void testCreateSubscriptionDataBrokerFailure() {
-    PostModelSubscription postModelSubscription =
-        new PostModelSubscription(
+    PostSubscriptionModel postSubscriptionModel =
+        new PostSubscriptionModel(
             "user123",
             "STREAMING",
             "instance1",
@@ -376,7 +376,7 @@ class SubscriptionServiceImplTest {
     when(dataBrokerService.registerStreamingSubscription(any()))
         .thenReturn(Future.failedFuture("DataBroker failure"));
 
-    Future<SubscriptionData> result = subscriptionService.createSubscription(postModelSubscription);
+    Future<SubscriptionData> result = subscriptionService.createSubscription(postSubscriptionModel);
 
     assertTrue(result.failed(), "Future should fail");
     assertEquals("DataBroker failure", result.cause().getMessage());
@@ -384,8 +384,8 @@ class SubscriptionServiceImplTest {
 
   @Test
   void testCreateSubscriptionPostgresFailure() {
-    PostModelSubscription postModelSubscription =
-        new PostModelSubscription(
+    PostSubscriptionModel postSubscriptionModel =
+        new PostSubscriptionModel(
             "user123",
             "STREAMING",
             "instance1",
@@ -411,7 +411,7 @@ class SubscriptionServiceImplTest {
 
     when(postgresService.executeQuery1(any()))
         .thenReturn(Future.failedFuture("Postgres insert failed"));
-    Future<SubscriptionData> result = subscriptionService.createSubscription(postModelSubscription);
+    Future<SubscriptionData> result = subscriptionService.createSubscription(postSubscriptionModel);
 
     assertTrue(result.failed(), "Future should fail");
     assertEquals(
@@ -473,8 +473,8 @@ class SubscriptionServiceImplTest {
 
   @Test
   void testAppendSubscriptionCacheFailure() {
-    PostModelSubscription postModelSubscription =
-        new PostModelSubscription(
+    PostSubscriptionModel postSubscriptionModel =
+        new PostSubscriptionModel(
             "user123",
             "STREAMING",
             "instance1",
@@ -486,7 +486,7 @@ class SubscriptionServiceImplTest {
     when(cacheService.get(any())).thenReturn(Future.failedFuture("Cache error"));
 
     Future<GetResultModel> result =
-        subscriptionService.appendSubscription(postModelSubscription, "sub123");
+        subscriptionService.appendSubscription(postSubscriptionModel, "sub123");
 
     assertTrue(result.failed());
     assertEquals("Cache error", result.cause().getMessage());
@@ -494,8 +494,8 @@ class SubscriptionServiceImplTest {
 
   @Test
   void testAppendSubscriptionDataBrokerFailure() {
-    PostModelSubscription postModelSubscription =
-        new PostModelSubscription(
+    PostSubscriptionModel postSubscriptionModel =
+        new PostSubscriptionModel(
             "user123",
             "STREAMING",
             "instance1",
@@ -517,7 +517,7 @@ class SubscriptionServiceImplTest {
         .thenReturn(Future.failedFuture("DataBroker append failed"));
 
     Future<GetResultModel> result =
-        subscriptionService.appendSubscription(postModelSubscription, "sub123");
+        subscriptionService.appendSubscription(postSubscriptionModel, "sub123");
 
     assertTrue(result.failed());
     assertEquals("DataBroker append failed", result.cause().getMessage());

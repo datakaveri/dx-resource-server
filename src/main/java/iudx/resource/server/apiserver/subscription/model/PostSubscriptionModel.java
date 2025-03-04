@@ -4,7 +4,7 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
 @DataObject
-public class PostModelSubscription {
+public class PostSubscriptionModel {
   private String userId;
   private String subscriptionType;
   private String instanceId;
@@ -13,10 +13,10 @@ public class PostModelSubscription {
   private String expiry;
   private String delegatorId;
 
-  public PostModelSubscription() {}
+  public PostSubscriptionModel() {}
 
   // Existing Constructor
-  public PostModelSubscription(
+  public PostSubscriptionModel(
       String userId,
       String subscriptionType,
       String instanceId,
@@ -34,7 +34,7 @@ public class PostModelSubscription {
   }
 
   // JSON Constructor
-  public PostModelSubscription(JsonObject json) {
+  public PostSubscriptionModel(JsonObject json) {
     this.userId = json.getString("userId");
     this.subscriptionType = json.getString("subscriptionType");
     this.instanceId = json.getString("instanceId");
