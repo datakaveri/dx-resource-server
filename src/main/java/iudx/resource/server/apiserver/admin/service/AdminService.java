@@ -1,13 +1,14 @@
 package iudx.resource.server.apiserver.admin.service;
 
-import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.Future;
+import iudx.resource.server.apiserver.admin.model.ResultModel;
 
 public interface AdminService {
-  public void revokedTokenRequest(String userid, HttpServerResponse response);
+  Future<ResultModel> revokedTokenRequest(String userid);
 
-  void createUniqueAttribute(String id, String attribute, HttpServerResponse response);
+  Future<ResultModel> createUniqueAttribute(String id, String attribute);
 
-  void updateUniqueAttribute(String id, String attribute, HttpServerResponse response);
+  Future<ResultModel> updateUniqueAttribute(String id, String attribute);
 
-  void deleteUniqueAttribute(String id, HttpServerResponse response);
+  Future<ResultModel> deleteUniqueAttribute(String id);
 }

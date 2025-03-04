@@ -1,8 +1,12 @@
 package iudx.resource.server.apiserver.admin.controller;
 
 import static iudx.resource.server.apiserver.admin.util.Constants.*;
+import static iudx.resource.server.apiserver.util.Constants.APPLICATION_JSON;
+import static iudx.resource.server.apiserver.util.Constants.CONTENT_TYPE;
 import static iudx.resource.server.common.Constants.*;
+import static iudx.resource.server.common.HttpStatusCode.BAD_REQUEST;
 import static iudx.resource.server.databroker.util.Constants.DATA_BROKER_SERVICE_ADDRESS;
+import static iudx.resource.server.databroker.util.Util.getResponseJson;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -27,8 +31,8 @@ import org.apache.logging.log4j.Logger;
 public class AdminController {
   private static final Logger LOGGER = LogManager.getLogger(AdminController.class);
   private final Router router;
-  private Vertx vertx;
-  private Api api;
+  private final Vertx vertx;
+  private final Api api;
   private AuthenticationService authenticator;
   private PostgresService postgresService;
   private DataBrokerService dataBrokerService;
@@ -89,7 +93,33 @@ public class AdminController {
     JsonObject requestBody = routingContext.body().asJsonObject();
     String id = requestBody.getString("id");
     String attribute = requestBody.getString("attribute");
-    adminService.createUniqueAttribute(id, attribute, response);
+    if (id == null || attribute == null) {
+      LOGGER.error("Fail: Bad request");
+      response
+          .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+          .setStatusCode(400)
+          .end(
+              getResponseJson(
+                      BAD_REQUEST.getUrn(),
+                      BAD_REQUEST.getDescription(),
+                      BAD_REQUEST.getDescription())
+                  .toString());
+    } else {
+      adminService
+          .createUniqueAttribute(id, attribute)
+          .onSuccess(
+              success -> {
+                response
+                    .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                    .setStatusCode(200)
+                    .end(success.constructSuccessResponse().toString());
+              })
+          .onFailure(
+              failure -> {
+                LOGGER.error("Failed");
+                routingContext.fail(failure);
+              });
+    }
   }
 
   private void updateUniqueAttribute(RoutingContext routingContext) {
@@ -98,21 +128,73 @@ public class AdminController {
 
     String id = requestBody.getString("id");
     String attribute = requestBody.getString("attribute");
-    adminService.updateUniqueAttribute(id, attribute, response);
+    if (id == null || attribute == null) {
+      LOGGER.error("Fail: Bad request");
+      response
+          .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+          .setStatusCode(400)
+          .end(
+              getResponseJson(
+                      BAD_REQUEST.getUrn(),
+                      BAD_REQUEST.getDescription(),
+                      BAD_REQUEST.getDescription())
+                  .toString());
+    } else {
+      adminService
+          .updateUniqueAttribute(id, attribute)
+          .onSuccess(
+              success -> {
+                response
+                    .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                    .setStatusCode(200)
+                    .end(success.constructSuccessResponse().toString());
+              })
+          .onFailure(
+              failure -> {
+                LOGGER.error("Failed to update");
+                routingContext.fail(failure);
+              });
+    }
   }
 
   private void deleteUniqueAttribute(RoutingContext routingContext) {
     HttpServerRequest request = routingContext.request();
     String id = request.params().get("id");
     HttpServerResponse response = routingContext.response();
-    adminService.deleteUniqueAttribute(id, response);
+    adminService
+        .deleteUniqueAttribute(id)
+        .onSuccess(
+            success -> {
+              response
+                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                  .setStatusCode(200)
+                  .end(success.constructSuccessResponse().toString());
+            })
+        .onFailure(
+            failure -> {
+              LOGGER.error("Failed");
+              routingContext.fail(failure);
+            });
   }
 
   private void handleRevokeTokenRequest(RoutingContext routingContext) {
     JsonObject requestBody = routingContext.body().asJsonObject();
     String userid = requestBody.getString("sub");
     HttpServerResponse response = routingContext.response();
-    adminService.revokedTokenRequest(userid, response);
+    adminService
+        .revokedTokenRequest(userid)
+        .onSuccess(
+            success -> {
+              response
+                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
+                  .setStatusCode(200)
+                  .end(success.constructSuccessResponse().toString());
+            })
+        .onFailure(
+            failure -> {
+              LOGGER.error("Failed to revoke token");
+              routingContext.fail(failure);
+            });
   }
 
   void createProxy() {
