@@ -9,10 +9,10 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import iudx.resource.server.apiserver.ingestion.model.IngestionModel;
 import iudx.resource.server.apiserver.subscription.model.SubscriptionImplModel;
+import iudx.resource.server.apiserver.usermanagement.model.ResetPasswordModel;
+import iudx.resource.server.databroker.model.ExchangeSubscribersResponse;
 import iudx.resource.server.databroker.model.IngestionResponseModel;
 import iudx.resource.server.databroker.model.SubscriptionResponseModel;
-import iudx.resource.server.databroker.model.ExchangeSubscribersResponse;
-
 import java.util.List;
 
 @VertxGen
@@ -37,7 +37,7 @@ public interface DataBrokerService {
 
   Future<List<String>> listStreamingSubscription(String subscriptionID);
 
-  Future<JsonObject> resetPassword(String userId);
+  Future<ResetPasswordModel> resetPassword(String userId);
 
   Future<Void> publishMessage(JsonObject body, String toExchange, String routingKey);
 

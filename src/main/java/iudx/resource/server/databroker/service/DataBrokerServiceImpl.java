@@ -12,7 +12,7 @@ import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.serviceproxy.ServiceException;
 import iudx.resource.server.apiserver.ingestion.model.IngestionModel;
 import iudx.resource.server.apiserver.subscription.model.SubscriptionImplModel;
-import iudx.resource.server.common.ResponseUrn;
+import iudx.resource.server.apiserver.usermanagement.model.ResetPasswordModel;
 import iudx.resource.server.databroker.model.ExchangeSubscribersResponse;
 import iudx.resource.server.databroker.model.IngestionResponseModel;
 import iudx.resource.server.databroker.model.SubscriptionResponseModel;
@@ -392,32 +392,20 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<JsonObject> resetPassword(String userid) {
-    Promise<JsonObject> promise = Promise.promise();
-    JsonObject response = new JsonObject();
+  public Future<ResetPasswordModel> resetPassword(String userid) {
+    Promise<ResetPasswordModel> promise = Promise.promise();
     String password = Util.randomPassword.get();
 
     rabbitClient
         .resetPasswordInRmq(userid, password)
         .onSuccess(
             successHandler -> {
-              response.put("type", ResponseUrn.SUCCESS_URN.getUrn());
-              response.put(TITLE, "successful");
-              response.put(DETAIL, "Successfully changed the password");
-              JsonArray result =
-                  new JsonArray()
-                      .add(new JsonObject().put("username", userid).put("apiKey", password));
-              response.put("result", result);
-              promise.complete(response);
+              promise.complete(new ResetPasswordModel(userid, password));
             })
         .onFailure(
             failurehandler -> {
-              JsonObject failureResponse = new JsonObject();
-              failureResponse
-                  .put("type", 401)
-                  .put("title", "not authorized")
-                  .put("detail", "not authorized");
-              promise.fail(failureResponse.toString());
+              LOGGER.error("failed ::" + failurehandler.getMessage());
+              promise.fail(failurehandler);
             });
     return promise.future();
   }
