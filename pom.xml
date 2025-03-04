@@ -331,14 +331,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.12</version>
-            <scope>provided</scope>
-        </dependency>
-
     </dependencies>
     <build>
         <plugins>
@@ -390,9 +382,8 @@
                         <exclude>**/Constants.class</exclude>
                         <exclude>**/*VertxProxyHandler.class</exclude>
                         <exclude>**/*Verticle.class</exclude>
-                        <exclude>iudx/resource/server/database/postgres/PostgresService.class</exclude>
-                        <exclude>iudx/resource/server/database/elastic/AbstractEsSearchResponseFormatter.class</exclude>
-                        <exclude>iudx/resource/server/callback/CallbackService.class</exclude>
+                        <exclude>**/*Controller.class</exclude>
+                        <exclude>**/*Model.class</exclude>
                         <!--  class present in generated-sources  -->
                         <exclude>**/JwtDataConverter.class</exclude>
                         <!--  classes to be tested using Postman.  -->

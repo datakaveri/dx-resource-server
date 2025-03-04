@@ -5,7 +5,7 @@ import io.vertx.core.json.JsonObject;
 
 @DataObject
 public class SubscriptionImplModel {
-  private PostModelSubscription postModelSubscription;
+  private PostSubscriptionModel postSubscriptionModel;
   private String type;
   private String resourceGroup;
 
@@ -14,15 +14,15 @@ public class SubscriptionImplModel {
 
   // Existing Constructor
   public SubscriptionImplModel(
-      PostModelSubscription postModelSubscription, String type, String resourceGroup) {
-    this.postModelSubscription = postModelSubscription;
+          PostSubscriptionModel postSubscriptionModel, String type, String resourceGroup) {
+    this.postSubscriptionModel = postSubscriptionModel;
     this.type = type;
     this.resourceGroup = resourceGroup;
   }
 
   // JSON Constructor (IMPORTANT)
   public SubscriptionImplModel(JsonObject json) {
-    this.postModelSubscription = new PostModelSubscription(json.getJsonObject("controllerModel"));
+    this.postSubscriptionModel = new PostSubscriptionModel(json.getJsonObject("controllerModel"));
     this.type = json.getString("type");
     this.resourceGroup = json.getString("resourceGroup");
   }
@@ -30,19 +30,19 @@ public class SubscriptionImplModel {
   // toJson() Method (Needed for Serialization)
   public JsonObject toJson() {
     JsonObject json = new JsonObject();
-    json.put("controllerModel", postModelSubscription.toJson());
+    json.put("controllerModel", postSubscriptionModel.toJson());
     json.put("type", type);
     json.put("resourceGroup", resourceGroup);
     return json;
   }
 
   // Getters and Setters
-  public PostModelSubscription getControllerModel() {
-    return postModelSubscription;
+  public PostSubscriptionModel getControllerModel() {
+    return postSubscriptionModel;
   }
 
-  public void setControllerModel(PostModelSubscription postModelSubscription) {
-    this.postModelSubscription = postModelSubscription;
+  public void setControllerModel(PostSubscriptionModel postSubscriptionModel) {
+    this.postSubscriptionModel = postSubscriptionModel;
   }
 
   public String getType() {

@@ -17,12 +17,11 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import iudx.resource.server.apiserver.exception.DxRuntimeException;
 import iudx.resource.server.apiserver.exception.FailureHandler;
 import iudx.resource.server.apiserver.metering.service.MeteringService;
 import iudx.resource.server.apiserver.subscription.model.DeleteSubsResultModel;
 import iudx.resource.server.apiserver.subscription.model.GetResultModel;
-import iudx.resource.server.apiserver.subscription.model.PostModelSubscription;
+import iudx.resource.server.apiserver.subscription.model.PostSubscriptionModel;
 import iudx.resource.server.apiserver.subscription.service.SubscriptionService;
 import iudx.resource.server.apiserver.subscription.service.SubscriptionServiceImpl;
 import iudx.resource.server.apiserver.subscription.util.SubsType;
@@ -186,8 +185,8 @@ public class SubscriptionController {
     } else {
       delegatorId = userId;
     }
-    PostModelSubscription postModelSubscription =
-        new PostModelSubscription(
+    PostSubscriptionModel postSubscriptionModel =
+        new PostSubscriptionModel(
             userId,
             subscriptionType,
             instanceId,
@@ -197,7 +196,7 @@ public class SubscriptionController {
             delegatorId);
     if (requestJson.getString(JSON_NAME).equalsIgnoreCase(alias)) {
       Future<GetResultModel> subsReq =
-          subscriptionService.appendSubscription(postModelSubscription, subsId);
+          subscriptionService.appendSubscription(postSubscriptionModel, subsId);
       subsReq.onComplete(
           subsRequestHandler -> {
             if (subsRequestHandler.succeeded()) {
@@ -360,8 +359,8 @@ public class SubscriptionController {
     } else {
       delegatorId = userId;
     }
-    PostModelSubscription postModelSubscription =
-        new PostModelSubscription(
+    PostSubscriptionModel postSubscriptionModel =
+        new PostSubscriptionModel(
             userId,
             subscriptionType,
             instanceId,
@@ -371,7 +370,7 @@ public class SubscriptionController {
             delegatorId);
 
     subscriptionService
-        .createSubscription(postModelSubscription)
+        .createSubscription(postSubscriptionModel)
         .onSuccess(
             subHandler -> {
               LOGGER.info("Success: Handle Subscription request;");
