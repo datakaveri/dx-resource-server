@@ -7,11 +7,9 @@ import static iudx.resource.server.databroker.util.Constants.DATA_BROKER_SERVICE
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import iudx.resource.server.apiserver.exception.DxRuntimeException;
 import iudx.resource.server.apiserver.exception.FailureHandler;
 import iudx.resource.server.apiserver.usermanagement.service.UserManagementServiceImpl;
 import iudx.resource.server.authenticator.AuthenticationService;
@@ -76,7 +74,6 @@ public class UserManagementController {
   }
 
   private void resetPassword(RoutingContext routingContext) {
-    HttpServerResponse response = routingContext.response();
     String userId = RoutingContextHelper.getJwtData(routingContext).getSub();
     userManagementService
         .resetPassword(userId)
@@ -86,11 +83,11 @@ public class UserManagementController {
                     .response()
                     .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                     .setStatusCode(200)
-                    .end(successResponse.toString()))
+                    .end(successResponse.toJson().toString()))
         .onFailure(
             failureHandler -> {
               LOGGER.error("Error while resetting password for user");
-              routingContext.fail(new DxRuntimeException(failureHandler.getMessage()));
+              routingContext.fail(failureHandler);
             });
   }
 

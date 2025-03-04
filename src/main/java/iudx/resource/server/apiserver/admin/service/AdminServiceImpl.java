@@ -1,19 +1,13 @@
 package iudx.resource.server.apiserver.admin.service;
 
 import static iudx.resource.server.apiserver.admin.util.Constants.*;
-import static iudx.resource.server.apiserver.util.Constants.APPLICATION_JSON;
-import static iudx.resource.server.apiserver.util.Constants.CONTENT_TYPE;
 import static iudx.resource.server.common.HttpStatusCode.*;
-import static iudx.resource.server.common.ResponseUrn.*;
-import static iudx.resource.server.common.ResponseUrn.fromCode;
-import static iudx.resource.server.common.ResponseUtil.generateResponse;
-import com.fasterxml.jackson.core.JsonProcessingException;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.common.HttpStatusCode;
-import iudx.resource.server.common.Response;
-import iudx.resource.server.common.ResponseUrn;
+import iudx.resource.server.apiserver.admin.model.ResultModel;
 import iudx.resource.server.database.postgres.service.PostgresService;
 import iudx.resource.server.databroker.service.DataBrokerService;
 import iudx.resource.server.databroker.util.BroadcastEventType;
@@ -34,7 +28,8 @@ public class AdminServiceImpl implements AdminService {
   }
 
   @Override
-  public void revokedTokenRequest(String userid, HttpServerResponse response) {
+  public Future<ResultModel> revokedTokenRequest(String userid) {
+    Promise<ResultModel> promise = Promise.promise();
     StringBuilder query =
         new StringBuilder(
             INSERT_REVOKE_TOKEN_SQL
@@ -56,37 +51,21 @@ public class AdminServiceImpl implements AdminService {
             })
         .onSuccess(
             dataBrokerHandler -> {
-              /*result =
-              getResponseJson(
-                  SUCCESS.getUrn(),
-                  SUCCESS.getValue(),
-                  SUCCESS.getDescription(),
-                  SUCCESS.getDescription());*/
+              LOGGER.info("Successfully revoked");
               /*Future.future(fu -> updateAuditTable(context));*/
-              handleResponse(response, SUCCESS, SUCCESS_URN);
+              promise.complete(new ResultModel());
             })
         .onFailure(
             failure -> {
-              LOGGER.error(failure.getMessage());
-              try {
-                Response resp = objectMapper.readValue(failure.getMessage(), Response.class);
-                /*result = getResponseJson(BAD_REQUEST.getUrn(), BAD_REQUEST.getValue(),BAD_REQUEST.getDescription(),resp.toString());*/
-                handleResponse(response, resp);
-              } catch (JsonProcessingException e) {
-                LOGGER.error("Failure message not in format [type,title,detail]");
-                handleResponse(response, BAD_REQUEST, BAD_REQUEST_URN);
-                /*result = getResponseJson(BAD_REQUEST.getUrn(), BAD_REQUEST.getValue(),BAD_REQUEST.getDescription(),BAD_REQUEST.getDescription());*/
-              }
+              LOGGER.error(failure);
+              promise.fail(failure);
             });
+    return promise.future();
   }
 
   @Override
-  public void createUniqueAttribute(String id, String attribute, HttpServerResponse response) {
-    if (id == null || attribute == null) {
-      handleResponse(response, BAD_REQUEST, BAD_REQUEST_URN);
-      return;
-    }
-
+  public Future<ResultModel> createUniqueAttribute(String id, String attribute) {
+    Promise<ResultModel> promise = Promise.promise();
     JsonObject rmqMessage = new JsonObject();
     rmqMessage.put("id", id);
     rmqMessage.put("unique-attribute", attribute);
@@ -94,7 +73,6 @@ public class AdminServiceImpl implements AdminService {
 
     StringBuilder query =
         new StringBuilder(INSERT_UNIQUE_ATTR_SQL.replace("$1", id).replace("$2", attribute));
-
     LOGGER.debug("query : " + query);
 
     postgresService
@@ -107,27 +85,19 @@ public class AdminServiceImpl implements AdminService {
         .onSuccess(
             dataBrokerHandler -> {
               /*Future.future(fu -> updateAuditTable(context));*/
-              handleResponse(response, SUCCESS, SUCCESS_URN);
+              promise.complete(new ResultModel());
             })
         .onFailure(
             failure -> {
-              LOGGER.error(failure.getMessage());
-              try {
-                Response resp = objectMapper.readValue(failure.getMessage(), Response.class);
-                handleResponse(response, resp);
-              } catch (JsonProcessingException e) {
-                LOGGER.error("Failure message not in format [type,title,detail]");
-                handleResponse(response, BAD_REQUEST, BAD_REQUEST_URN);
-              }
+              LOGGER.error(failure);
+              promise.fail(failure);
             });
+    return promise.future();
   }
 
   @Override
-  public void updateUniqueAttribute(String id, String attribute, HttpServerResponse response) {
-    if (id == null || attribute == null) {
-      handleResponse(response, BAD_REQUEST, BAD_REQUEST_URN);
-      return;
-    }
+  public Future<ResultModel> updateUniqueAttribute(String id, String attribute) {
+    Promise<ResultModel> promise = Promise.promise();
     JsonObject rmqMessage = new JsonObject();
     rmqMessage.put("id", id);
     rmqMessage.put("unique-attribute", attribute);
@@ -136,7 +106,7 @@ public class AdminServiceImpl implements AdminService {
     LOGGER.debug("query : " + query);
 
     postgresService
-        .executeQuery(query.toString())
+        .executeQuery(query)
         .compose(
             pgHandler -> {
               return dataBrokerService.publishMessage(
@@ -145,23 +115,19 @@ public class AdminServiceImpl implements AdminService {
         .onSuccess(
             dataBrokerHandler -> {
               /*Future.future(fu -> updateAuditTable(context));*/
-              handleResponse(response, SUCCESS, SUCCESS_URN);
+              promise.complete(new ResultModel());
             })
         .onFailure(
             failure -> {
-              LOGGER.error(failure.getMessage());
-              try {
-                Response resp = objectMapper.readValue(failure.getMessage(), Response.class);
-                handleResponse(response, resp);
-              } catch (JsonProcessingException e) {
-                LOGGER.error("Failure message not in format [type,title,detail]");
-                handleResponse(response, BAD_REQUEST, BAD_REQUEST_URN);
-              }
+              LOGGER.error(failure);
+              promise.fail(failure);
             });
+    return promise.future();
   }
 
   @Override
-  public void deleteUniqueAttribute(String id, HttpServerResponse response) {
+  public Future<ResultModel> deleteUniqueAttribute(String id) {
+    Promise<ResultModel> promise = Promise.promise();
     JsonObject rmqMessage = new JsonObject();
     rmqMessage.put("id", id);
     rmqMessage.put("unique-attribute", "dummy_attribute");
@@ -181,41 +147,13 @@ public class AdminServiceImpl implements AdminService {
         .onSuccess(
             dataBrokerHandler -> {
               /*Future.future(fu -> updateAuditTable(context));*/
-              handleResponse(response, SUCCESS, SUCCESS_URN);
+              promise.complete(new ResultModel());
             })
         .onFailure(
             failure -> {
-              LOGGER.error(failure.getMessage());
-              try {
-                Response resp = objectMapper.readValue(failure.getMessage(), Response.class);
-                handleResponse(response, resp);
-              } catch (JsonProcessingException e) {
-                LOGGER.error("Failure message not in format [type,title,detail]");
-                handleResponse(response, BAD_REQUEST, BAD_REQUEST_URN);
-              }
+              LOGGER.error(failure);
+              promise.fail(failure);
             });
-  }
-
-  private void handleResponse(HttpServerResponse response, Response respObject) {
-    ResponseUrn urn = fromCode(respObject.getType());
-    handleResponse(response, respObject, urn.getMessage());
-  }
-
-  private void handleResponse(HttpServerResponse response, Response respObject, String message) {
-    HttpStatusCode httpCode = getByValue(respObject.getStatus());
-    ResponseUrn urn = fromCode(respObject.getType());
-    handleResponse(response, httpCode, urn, message);
-  }
-
-  private void handleResponse(HttpServerResponse response, HttpStatusCode code, ResponseUrn urn) {
-    handleResponse(response, code, urn, code.getDescription());
-  }
-
-  private void handleResponse(
-      HttpServerResponse response, HttpStatusCode statusCode, ResponseUrn urn, String message) {
-    response
-        .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-        .setStatusCode(statusCode.getValue())
-        .end(generateResponse(statusCode, urn, message).toString());
+    return promise.future();
   }
 }

@@ -26,14 +26,10 @@ import org.apache.logging.log4j.Logger;
 
 public class RabbitClient {
   private static final Logger LOGGER = LogManager.getLogger(RabbitClient.class);
-  private final String amqpUrl;
-  private final int amqpPort;
   private final RabbitWebClient rabbitWebClient;
 
-  public RabbitClient(RabbitWebClient rabbitWebClient, String amqpUrl, int amqpPort) {
+  public RabbitClient(RabbitWebClient rabbitWebClient) {
     this.rabbitWebClient = rabbitWebClient;
-    this.amqpUrl = amqpUrl;
-    this.amqpPort = amqpPort;
   }
 
   public Future<Void> deleteQueue(String queueName, String vhost) {
@@ -575,10 +571,9 @@ public class RabbitClient {
     return promise.future();
   }
 
-  public Future<JsonObject> resetPasswordInRmq(String userid, String password) {
+  public Future<Void> resetPasswordInRmq(String userid, String password) {
     LOGGER.trace("Info : RabbitClient#resetPassword() started");
-    Promise<JsonObject> promise = Promise.promise();
-    JsonObject response = new JsonObject();
+    Promise<Void> promise = Promise.promise();
     JsonObject arg = new JsonObject();
     arg.put(PASSWORD, password);
     arg.put(TAGS, NONE);
@@ -590,19 +585,15 @@ public class RabbitClient {
             ar -> {
               if (ar.succeeded()) {
                 if (ar.result().statusCode() == HttpStatus.SC_NO_CONTENT) {
-                  response.put(userid, userid);
-                  response.put(PASSWORD, password);
                   LOGGER.debug("user password changed");
-                  promise.complete(response);
+                  promise.complete();
                 } else {
-                  LOGGER.error("Error :reset pwd method failed", ar.cause());
-                  response.put(FAILURE, NETWORK_ISSUE);
-                  promise.fail(response.toString());
+                  LOGGER.error("Error :reset pwd method failed");
+                  promise.fail(new ServiceException(0, NETWORK_ISSUE));
                 }
               } else {
-                LOGGER.error("User creation failed using mgmt API :", ar.cause());
-                response.put(FAILURE, CHECK_CREDENTIALS);
-                promise.fail(response.toString());
+                LOGGER.error("User creation failed using mgmt API :");
+                promise.fail(new ServiceException(0, CHECK_CREDENTIALS));
               }
             });
     return promise.future();

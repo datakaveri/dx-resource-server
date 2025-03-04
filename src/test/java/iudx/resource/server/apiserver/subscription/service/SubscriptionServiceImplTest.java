@@ -15,7 +15,6 @@ import iudx.resource.server.database.postgres.model.PostgresResultModel;
 import iudx.resource.server.database.postgres.service.PostgresService;
 import iudx.resource.server.databroker.model.SubscriptionResponseModel;
 import iudx.resource.server.databroker.service.DataBrokerService;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -164,7 +163,7 @@ class SubscriptionServiceImplTest {
   void testGetSubscription() {
     String subscriptionID = "sub123";
     String subType = "STREAMING";
-    List<String> mockList = Arrays.asList(subscriptionID);
+    List<String> mockList = List.of(subscriptionID);
     GetResultModel mockResult = new GetResultModel(mockList);
 
     when(postgresService.executeQuery1(any()))
@@ -412,15 +411,11 @@ class SubscriptionServiceImplTest {
 
     when(postgresService.executeQuery1(any()))
         .thenReturn(Future.failedFuture("Postgres insert failed"));
-    when(dataBrokerService.deleteStreamingSubscription(any(), any()))
-        .thenReturn(Future.succeededFuture());
-
     Future<SubscriptionData> result = subscriptionService.createSubscription(postModelSubscription);
 
     assertTrue(result.failed(), "Future should fail");
     assertEquals(
-        "io.vertx.core.impl.NoStackTraceThrowable: Postgres insert failed",
-        result.cause().getMessage());
+            "Postgres insert failed", result.cause().getMessage());
   }
 
   @Test
@@ -442,9 +437,7 @@ class SubscriptionServiceImplTest {
     Future<GetResultModel> result = subscriptionService.getSubscription("", "STREAMING");
 
     assertTrue(result.failed());
-    assertEquals(
-        "{\"type\":\"urn:dx:rs:notFound\",\"status\":404,\"title\":\"Not Found\",\"detail\":\"Not Found\"}",
-        result.cause().getMessage());
+    assertEquals("Not Found", result.cause().getMessage());
   }
 
   @Test
@@ -475,9 +468,7 @@ class SubscriptionServiceImplTest {
         subscriptionService.getAllSubscriptionQueueForUser("user123");
 
     assertTrue(result.failed());
-    assertEquals(
-        "{\"type\":\"urn:dx:rs:internalServerError\",\"status\":500,\"title\":\"Internal Server Error\",\"detail\":\"Internal Server Error\"}",
-        result.cause().getMessage());
+    assertEquals("Internal Server Error", result.cause().getMessage());
   }
 
   @Test

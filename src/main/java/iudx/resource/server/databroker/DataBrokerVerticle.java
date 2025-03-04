@@ -117,7 +117,7 @@ public class DataBrokerVerticle extends AbstractVerticle {
 
     rabbitWebClient = new RabbitWebClient(vertx, webConfig, propObj);
 
-    rabbitClient = new RabbitClient(rabbitWebClient, amqpUrl, amqpPort);
+    rabbitClient = new RabbitClient(rabbitWebClient);
     cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
     binder = new ServiceBinder(vertx);
     iudxRabbitMqClient = RabbitMQClient.create(vertx, iudxConfig);
