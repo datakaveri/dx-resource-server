@@ -6,7 +6,6 @@ import static iudx.resource.server.apiserver.util.Constants.RESOURCE_GROUP;
 import static iudx.resource.server.cache.util.CacheType.CATALOGUE_CACHE;
 import static iudx.resource.server.common.HttpStatusCode.INTERNAL_SERVER_ERROR;
 import static iudx.resource.server.common.HttpStatusCode.NOT_FOUND;
-import static iudx.resource.server.databroker.util.Constants.SUCCESS;
 import static iudx.resource.server.databroker.util.Util.getResponseJson;
 
 import io.vertx.core.Future;
@@ -17,7 +16,6 @@ import io.vertx.serviceproxy.ServiceException;
 import iudx.resource.server.apiserver.subscription.model.*;
 import iudx.resource.server.apiserver.subscription.util.SubsType;
 import iudx.resource.server.cache.service.CacheService;
-import iudx.resource.server.common.ResponseUrn;
 import iudx.resource.server.database.postgres.model.PostgresResultModel;
 import iudx.resource.server.database.postgres.service.PostgresService;
 import iudx.resource.server.databroker.model.SubscriptionResponseModel;
@@ -27,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -102,9 +99,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     getEntityName(subscriptionId)
         .compose(
             postgresSuccess -> {
+              LOGGER.debug("entities found {}", postgresSuccess);
               return dataBrokerService
                   .listStreamingSubscription(subscriptionId)
-                  .map(GetResultModel::new);
+                  .map(listStream -> new GetResultModel(listStream, postgresSuccess));
             })
         .onComplete(
             getDataBroker -> {
@@ -141,7 +139,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
               }
               SubscriptionImplModel subscriptionImplModel =
                   new SubscriptionImplModel(
-                          postSubscriptionModel, itemTypeSet.iterator().next(), resourceGroup);
+                      postSubscriptionModel, itemTypeSet.iterator().next(), resourceGroup);
               return dataBrokerService.registerStreamingSubscription(subscriptionImplModel);
             })
         .compose(
@@ -223,7 +221,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             pgHandler -> {
               List<String> resultEntities = new ArrayList<String>();
               resultEntities.add(entities);
-              promise.complete(new GetResultModel(resultEntities));
+              promise.complete(new GetResultModel(resultEntities, entities));
             })
         .onFailure(
             failure -> {
@@ -236,7 +234,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
   @Override
   public Future<GetResultModel> appendSubscription(
-          PostSubscriptionModel postSubscriptionModel, String subsId) {
+      PostSubscriptionModel postSubscriptionModel, String subsId) {
     LOGGER.info("appendSubscription() method started");
     String entities = postSubscriptionModel.getEntities();
     JsonObject cacheJson = new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
@@ -260,7 +258,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
               SubscriptionImplModel subscriptionImplModel =
                   new SubscriptionImplModel(
-                          postSubscriptionModel, itemTypeSet.iterator().next(), resourceGroup);
+                      postSubscriptionModel, itemTypeSet.iterator().next(), resourceGroup);
 
               return dataBrokerService.appendStreamingSubscription(subscriptionImplModel, subsId);
             })
@@ -292,7 +290,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                       appendSubscriptionResult,
                       subType,
                       type,
-                          postSubscriptionModel);
+                      postSubscriptionModel);
               LOGGER.debug("appendQuery = " + appendQuery);
 
               return postgresService
@@ -303,7 +301,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscriptionDataResultSuccess -> {
               List<String> listAppend = new ArrayList<String>();
               listAppend.add(entities);
-              promise.complete(new GetResultModel(listAppend));
+              promise.complete(new GetResultModel(listAppend, entities));
             })
         .onFailure(
             failed -> {
@@ -314,31 +312,26 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   }
 
   @Override
-  public Future<DeleteSubsResultModel> deleteSubscription(
-      String subsId, String subscriptionType, String userid) {
+  public Future<String> deleteSubscription(String subsId, String subscriptionType, String userid) {
     LOGGER.info("deleteSubscription() method started");
     LOGGER.info("queueName to delete :: " + subsId);
-    Promise<DeleteSubsResultModel> promise = Promise.promise();
+    Promise<String> promise = Promise.promise();
     getEntityName(subsId)
         .compose(
             foundId -> {
-              return deleteSubscriptionFromPg(subsId);
+              LOGGER.debug("entities found {}", foundId);
+              return deleteSubscriptionFromPg(subsId).map(result -> foundId);
             })
         .compose(
             postgresSuccess -> {
-              return dataBrokerService.deleteStreamingSubscription(subsId, userid);
+              return dataBrokerService
+                  .deleteStreamingSubscription(subsId, userid)
+                  .map(result -> postgresSuccess);
             })
         .onComplete(
             deleteDataBroker -> {
               if (deleteDataBroker.succeeded()) {
-                DeleteSubsResultModel deleteSubsResultModel =
-                    new DeleteSubsResultModel(
-                        getResponseJson(
-                            ResponseUrn.SUCCESS_URN.getUrn(),
-                            HttpStatus.SC_OK,
-                            SUCCESS,
-                            "Subscription deleted Successfully"));
-                promise.complete(deleteSubsResultModel);
+                promise.complete(deleteDataBroker.result());
               } else {
                 promise.fail(deleteDataBroker.cause());
               }

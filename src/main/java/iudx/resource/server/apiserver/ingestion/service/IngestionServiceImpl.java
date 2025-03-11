@@ -83,11 +83,11 @@ public class IngestionServiceImpl implements IngestionService {
         .compose(
             ingestionHandler -> {
               LOGGER.debug("Inserted in postgres.");
+              isAdaptorCreated.set(true);
               return dataBroker.registerAdaptor(ingestionHandler).map(IngestionData::new);
             })
         .onSuccess(
             ingestionData -> {
-              isAdaptorCreated.set(true);
               promise.complete(ingestionData);
             })
         .onFailure(

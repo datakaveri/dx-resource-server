@@ -5,6 +5,7 @@ import static iudx.resource.server.apiserver.util.Constants.APPLICATION_JSON;
 import static iudx.resource.server.apiserver.util.Constants.CONTENT_TYPE;
 import static iudx.resource.server.common.Constants.*;
 import static iudx.resource.server.common.HttpStatusCode.BAD_REQUEST;
+import static iudx.resource.server.common.ResponseUrn.SUCCESS_URN;
 import static iudx.resource.server.databroker.util.Constants.DATA_BROKER_SERVICE_ADDRESS;
 import static iudx.resource.server.databroker.util.Util.getResponseJson;
 
@@ -17,12 +18,15 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.admin.service.AdminService;
 import iudx.resource.server.apiserver.admin.service.AdminServiceImpl;
+import iudx.resource.server.apiserver.auditing.handler.AuditingHandler;
 import iudx.resource.server.apiserver.exception.FailureHandler;
+import iudx.resource.server.apiserver.response.ResultResponse;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
 import iudx.resource.server.authenticator.handler.authorization.GetIdHandler;
 import iudx.resource.server.authenticator.handler.authorization.TokenInterospectionForAdminApis;
 import iudx.resource.server.common.Api;
+import iudx.resource.server.common.RoutingContextHelper;
 import iudx.resource.server.database.postgres.service.PostgresService;
 import iudx.resource.server.databroker.service.DataBrokerService;
 import org.apache.logging.log4j.LogManager;
@@ -33,16 +37,17 @@ public class AdminController {
   private final Router router;
   private final Vertx vertx;
   private final Api api;
+  private final AuditingHandler auditingHandler;
   private AuthenticationService authenticator;
   private PostgresService postgresService;
   private DataBrokerService dataBrokerService;
   private AdminService adminService;
 
-  // TODO: Need to add auditing
   public AdminController(Vertx vertx, Router router, Api api) {
     this.vertx = vertx;
     this.router = router;
     this.api = api;
+    this.auditingHandler = new AuditingHandler(vertx);
   }
 
   public void init() {
@@ -54,6 +59,7 @@ public class AdminController {
 
     router
         .post(ADMIN + REVOKE_TOKEN)
+        .handler(auditingHandler::handleApiAudit)
         .handler(getIdHandler.withNormalisedPath(api.getAdminRevokeToken()))
         .handler(authHandler)
         .handler(validateToken)
@@ -62,6 +68,7 @@ public class AdminController {
 
     router
         .post(ADMIN + RESOURCE_ATTRIBS)
+        .handler(auditingHandler::handleApiAudit)
         .handler(getIdHandler.withNormalisedPath(api.getAdminUniqueAttributeOfResource()))
         .handler(authHandler)
         .handler(validateToken)
@@ -70,6 +77,7 @@ public class AdminController {
 
     router
         .put(ADMIN + RESOURCE_ATTRIBS)
+        .handler(auditingHandler::handleApiAudit)
         .handler(getIdHandler.withNormalisedPath(api.getAdminUniqueAttributeOfResource()))
         .handler(authHandler)
         .handler(validateToken)
@@ -78,6 +86,7 @@ public class AdminController {
 
     router
         .delete(ADMIN + RESOURCE_ATTRIBS)
+        .handler(auditingHandler::handleApiAudit)
         .handler(getIdHandler.withNormalisedPath(api.getAdminUniqueAttributeOfResource()))
         .handler(authHandler)
         .handler(validateToken)
@@ -109,10 +118,14 @@ public class AdminController {
           .createUniqueAttribute(id, attribute)
           .onSuccess(
               success -> {
+                RoutingContextHelper.setResponseSize(routingContext, 0);
+                ResultResponse resultResponse =
+                    new ResultResponse(
+                        SUCCESS_URN.getUrn(), SUCCESS_URN.getMessage(), SUCCESS_URN.getMessage());
                 response
                     .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                     .setStatusCode(200)
-                    .end(success.constructSuccessResponse().toString());
+                    .end(resultResponse.toJsonWithDetails().toString());
               })
           .onFailure(
               failure -> {
@@ -144,10 +157,14 @@ public class AdminController {
           .updateUniqueAttribute(id, attribute)
           .onSuccess(
               success -> {
+                RoutingContextHelper.setResponseSize(routingContext, 0);
+                ResultResponse resultResponse =
+                    new ResultResponse(
+                        SUCCESS_URN.getUrn(), SUCCESS_URN.getMessage(), SUCCESS_URN.getMessage());
                 response
                     .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                     .setStatusCode(200)
-                    .end(success.constructSuccessResponse().toString());
+                    .end(resultResponse.toJsonWithDetails().toString());
               })
           .onFailure(
               failure -> {
@@ -165,10 +182,14 @@ public class AdminController {
         .deleteUniqueAttribute(id)
         .onSuccess(
             success -> {
+              RoutingContextHelper.setResponseSize(routingContext, 0);
+              ResultResponse resultResponse =
+                  new ResultResponse(
+                      SUCCESS_URN.getUrn(), SUCCESS_URN.getMessage(), SUCCESS_URN.getMessage());
               response
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                   .setStatusCode(200)
-                  .end(success.constructSuccessResponse().toString());
+                  .end(resultResponse.toJsonWithDetails().toString());
             })
         .onFailure(
             failure -> {
@@ -185,10 +206,14 @@ public class AdminController {
         .revokedTokenRequest(userid)
         .onSuccess(
             success -> {
+              RoutingContextHelper.setResponseSize(routingContext, 0);
+              ResultResponse resultResponse =
+                  new ResultResponse(
+                      SUCCESS_URN.getUrn(), SUCCESS_URN.getMessage(), SUCCESS_URN.getMessage());
               response
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                   .setStatusCode(200)
-                  .end(success.constructSuccessResponse().toString());
+                  .end(resultResponse.toJsonWithDetails().toString());
             })
         .onFailure(
             failure -> {

@@ -3,11 +3,9 @@ package iudx.resource.server.apiserver.admin.service;
 import static iudx.resource.server.apiserver.admin.util.Constants.*;
 import static iudx.resource.server.common.HttpStatusCode.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.apiserver.admin.model.ResultModel;
 import iudx.resource.server.database.postgres.service.PostgresService;
 import iudx.resource.server.databroker.service.DataBrokerService;
 import iudx.resource.server.databroker.util.BroadcastEventType;
@@ -19,8 +17,6 @@ public class AdminServiceImpl implements AdminService {
   private static final Logger LOGGER = LogManager.getLogger(AdminServiceImpl.class);
   private final PostgresService postgresService;
   private final DataBrokerService dataBrokerService;
-  private final ObjectMapper objectMapper = new ObjectMapper();
-  JsonObject result = new JsonObject();
 
   public AdminServiceImpl(PostgresService postgresService, DataBrokerService dataBrokerService) {
     this.postgresService = postgresService;
@@ -28,8 +24,8 @@ public class AdminServiceImpl implements AdminService {
   }
 
   @Override
-  public Future<ResultModel> revokedTokenRequest(String userid) {
-    Promise<ResultModel> promise = Promise.promise();
+  public Future<Void> revokedTokenRequest(String userid) {
+    Promise<Void> promise = Promise.promise();
     StringBuilder query =
         new StringBuilder(
             INSERT_REVOKE_TOKEN_SQL
@@ -52,8 +48,7 @@ public class AdminServiceImpl implements AdminService {
         .onSuccess(
             dataBrokerHandler -> {
               LOGGER.info("Successfully revoked");
-              /*Future.future(fu -> updateAuditTable(context));*/
-              promise.complete(new ResultModel());
+              promise.complete();
             })
         .onFailure(
             failure -> {
@@ -64,8 +59,8 @@ public class AdminServiceImpl implements AdminService {
   }
 
   @Override
-  public Future<ResultModel> createUniqueAttribute(String id, String attribute) {
-    Promise<ResultModel> promise = Promise.promise();
+  public Future<Void> createUniqueAttribute(String id, String attribute) {
+    Promise<Void> promise = Promise.promise();
     JsonObject rmqMessage = new JsonObject();
     rmqMessage.put("id", id);
     rmqMessage.put("unique-attribute", attribute);
@@ -84,8 +79,8 @@ public class AdminServiceImpl implements AdminService {
             })
         .onSuccess(
             dataBrokerHandler -> {
-              /*Future.future(fu -> updateAuditTable(context));*/
-              promise.complete(new ResultModel());
+              LOGGER.info("Successfully created");
+              promise.complete();
             })
         .onFailure(
             failure -> {
@@ -96,8 +91,8 @@ public class AdminServiceImpl implements AdminService {
   }
 
   @Override
-  public Future<ResultModel> updateUniqueAttribute(String id, String attribute) {
-    Promise<ResultModel> promise = Promise.promise();
+  public Future<Void> updateUniqueAttribute(String id, String attribute) {
+    Promise<Void> promise = Promise.promise();
     JsonObject rmqMessage = new JsonObject();
     rmqMessage.put("id", id);
     rmqMessage.put("unique-attribute", attribute);
@@ -114,8 +109,8 @@ public class AdminServiceImpl implements AdminService {
             })
         .onSuccess(
             dataBrokerHandler -> {
-              /*Future.future(fu -> updateAuditTable(context));*/
-              promise.complete(new ResultModel());
+              LOGGER.info("Successfully updated");
+              promise.complete();
             })
         .onFailure(
             failure -> {
@@ -126,8 +121,8 @@ public class AdminServiceImpl implements AdminService {
   }
 
   @Override
-  public Future<ResultModel> deleteUniqueAttribute(String id) {
-    Promise<ResultModel> promise = Promise.promise();
+  public Future<Void> deleteUniqueAttribute(String id) {
+    Promise<Void> promise = Promise.promise();
     JsonObject rmqMessage = new JsonObject();
     rmqMessage.put("id", id);
     rmqMessage.put("unique-attribute", "dummy_attribute");
@@ -146,8 +141,8 @@ public class AdminServiceImpl implements AdminService {
             })
         .onSuccess(
             dataBrokerHandler -> {
-              /*Future.future(fu -> updateAuditTable(context));*/
-              promise.complete(new ResultModel());
+              LOGGER.info("Successfully deleted");
+              promise.complete();
             })
         .onFailure(
             failure -> {

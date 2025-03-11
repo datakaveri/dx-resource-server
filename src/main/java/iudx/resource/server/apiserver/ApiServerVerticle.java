@@ -19,8 +19,8 @@ import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.TimeoutHandler;
 import iudx.resource.server.apiserver.admin.controller.AdminController;
 import iudx.resource.server.apiserver.async.controller.AsyncController;
+import iudx.resource.server.apiserver.auditing.controller.AuditLogController;
 import iudx.resource.server.apiserver.ingestion.controller.IngestionController;
-import iudx.resource.server.apiserver.metering.controller.MeteringController;
 import iudx.resource.server.apiserver.search.controller.SearchController;
 import iudx.resource.server.apiserver.subscription.controller.SubscriptionController;
 import iudx.resource.server.apiserver.usermanagement.controller.UserManagementController;
@@ -171,7 +171,7 @@ public class ApiServerVerticle extends AbstractVerticle {
     new UserManagementController(router, vertx, api, config()).init();
     new AsyncController(vertx, router, api, config()).init();
     new IngestionController(vertx, router, api, config()).init();
-    new MeteringController(vertx, router, api, config()).init();
+    new AuditLogController(vertx, router, api, config()).init();
 
     router
         .route()

@@ -7,7 +7,7 @@ import io.vertx.core.json.JsonObject;
 import iudx.resource.server.common.ResponseUrn;
 import java.util.List;
 
-public record GetResultModel(List<String> listString) {
+public record GetResultModel(List<String> listString, String entities) {
   public JsonObject constructSuccessResponse() {
     return new JsonObject()
         .put("type", ResponseUrn.SUCCESS_URN.getUrn())

@@ -4,18 +4,18 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
 @DataObject
-public class UserResponse {
+public class UserResponseModel {
     private String userId;
     private String password;
     private String status;
     private String detail;
 
     // Default Constructor
-    public UserResponse() {
+    public UserResponseModel() {
     }
 
     // Constructor with JsonObject (Manual Conversion)
-    public UserResponse(JsonObject json) {
+    public UserResponseModel(JsonObject json) {
         this.userId = json.getString("userId");
         this.password = json.getString("password");
         this.status = json.getString("status");
