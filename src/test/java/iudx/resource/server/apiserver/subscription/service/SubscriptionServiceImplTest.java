@@ -9,6 +9,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.VertxExtension;
 import iudx.resource.server.apiserver.subscription.model.*;
 import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.database.postgres.model.PostgresResultModel;
@@ -23,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@ExtendWith(VertxExtension.class)
 class SubscriptionServiceImplTest {
 
   @Mock private PostgresService postgresService;
@@ -164,7 +166,7 @@ class SubscriptionServiceImplTest {
     String subscriptionID = "sub123";
     String subType = "STREAMING";
     List<String> mockList = List.of(subscriptionID);
-    GetResultModel mockResult = new GetResultModel(mockList);
+    GetResultModel mockResult = new GetResultModel(mockList, "postgresSuccess");
 
     when(postgresService.executeQuery1(any()))
         .thenReturn(
@@ -200,7 +202,7 @@ class SubscriptionServiceImplTest {
     when(dataBrokerService.deleteStreamingSubscription(any(), any()))
         .thenReturn(Future.succeededFuture());
 
-    Future<DeleteSubsResultModel> result =
+    Future<String> result =
         subscriptionService.deleteSubscription(subscriptionID, subType, userId);
 
     assertTrue(result.succeeded(), "Future should succeed");
@@ -453,7 +455,7 @@ class SubscriptionServiceImplTest {
     when(dataBrokerService.deleteStreamingSubscription(any(), any()))
         .thenReturn(Future.failedFuture("DataBroker delete failed"));
 
-    Future<DeleteSubsResultModel> result =
+    Future<String> result =
         subscriptionService.deleteSubscription("sub123", "STREAMING", "user123");
 
     assertTrue(result.failed());

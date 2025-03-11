@@ -5,7 +5,6 @@ import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.common.Constants.AUTH_SERVICE_ADDRESS;
 import static iudx.resource.server.common.Constants.CACHE_SERVICE_ADDRESS;
 import static iudx.resource.server.common.HttpStatusCode.*;
-import static iudx.resource.server.common.ResponseUrn.*;
 import static iudx.resource.server.database.postgres.util.Constants.PG_SERVICE_ADDRESS;
 import static iudx.resource.server.databroker.util.Constants.*;
 import static iudx.resource.server.databroker.util.Util.getResponseJson;
@@ -19,9 +18,13 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import iudx.resource.server.apiserver.auditing.handler.AuditingHandler;
 import iudx.resource.server.apiserver.exception.FailureHandler;
 import iudx.resource.server.apiserver.ingestion.service.IngestionService;
 import iudx.resource.server.apiserver.ingestion.service.IngestionServiceImpl;
+import iudx.resource.server.apiserver.validation.id.handlers.GetIdForIngestionEntityHandler;
+import iudx.resource.server.apiserver.validation.id.handlers.GetIdFromBodyHandler;
+import iudx.resource.server.apiserver.validation.id.handlers.GetIdFromPathHandler;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
 import iudx.resource.server.authenticator.handler.authorization.AuthValidationHandler;
@@ -45,6 +48,7 @@ public class IngestionController {
   private final Api api;
   private final JsonObject config;
   private final String audience;
+  private final AuditingHandler auditingHandler;
   private AuthenticationService authenticator;
   private CacheService cacheService;
   private IngestionService ingestionService;
@@ -57,6 +61,7 @@ public class IngestionController {
     this.api = api;
     this.config = config;
     this.audience = config.getString("audience");
+    this.auditingHandler = new AuditingHandler(vertx);
   }
 
   public void init() {
@@ -71,10 +76,14 @@ public class IngestionController {
         new AuthorizationHandler()
             .setUserRolesForEndpoint(DxRole.DELEGATE, DxRole.PROVIDER, DxRole.ADMIN);
     Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
-    // TODO: Need to add auditing insert
+    GetIdForIngestionEntityHandler getIdForIngestionEntityHandler = new GetIdForIngestionEntityHandler();
+    GetIdFromBodyHandler getIdFromBodyHandler = new GetIdFromBodyHandler();
+    GetIdFromPathHandler getIdFromPathHandler = new GetIdFromPathHandler();
+
     router
         .post(api.getIngestionPath())
-        .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
+        .handler(auditingHandler::handleApiAudit)
+        .handler(/*getIdHandler.withNormalisedPath(api.getIngestionPath())*/getIdFromBodyHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
@@ -83,8 +92,9 @@ public class IngestionController {
         .failureHandler(validationsFailureHandler);
 
     router
-        .delete(api.getIngestionPath() + "/*")
-        .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
+        .delete(api.getIngestionPath() + "/:UUID")
+        .handler(auditingHandler::handleApiAudit)
+        .handler(/*getIdHandler.withNormalisedPath(api.getIngestionPath())*/getIdFromPathHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
@@ -94,7 +104,8 @@ public class IngestionController {
 
     router
         .get(api.getIngestionPath() + "/:UUID")
-        .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
+        .handler(auditingHandler::handleApiAudit)
+        .handler(/*getIdHandler.withNormalisedPath(api.getIngestionPath())*/getIdFromPathHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
@@ -104,7 +115,8 @@ public class IngestionController {
 
     router
         .post(api.getIngestionPathEntities())
-        .handler(getIdHandler.withNormalisedPath(api.getIngestionPathEntities()))
+        .handler(auditingHandler::handleApiAudit)
+        .handler(/*getIdHandler.withNormalisedPath(api.getIngestionPathEntities())*/getIdForIngestionEntityHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
@@ -114,7 +126,7 @@ public class IngestionController {
 
     router
         .get(api.getIngestionPath())
-        .handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))
+        /*.handler(getIdHandler.withNormalisedPath(api.getIngestionPath()))*/
         .handler(authHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
@@ -141,12 +153,11 @@ public class IngestionController {
             handler -> {
               if (handler.succeeded()) {
                 LOGGER.info("Success: Registering adapter");
-                routingContext.data().put(RESPONSE_SIZE, 0);
+                RoutingContextHelper.setResponseSize(routingContext, 0);
                 response
                     .setStatusCode(201)
                     .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                     .end(handler.result().constructSuccessResponse().toString());
-                /*routingContext.next();*/
               } else {
                 LOGGER.error("Fail: " + handler.cause());
                 routingContext.fail(handler.cause());
@@ -166,7 +177,7 @@ public class IngestionController {
         .onSuccess(
             brokerResultHandler -> {
               LOGGER.info("Success: Deleting adapter");
-              routingContext.data().put(RESPONSE_SIZE, 0);
+              RoutingContextHelper.setResponseSize(routingContext, 0);
               JsonObject deleteResponse = new JsonObject();
               deleteResponse.put(TYPE, ResponseUrn.SUCCESS_URN.getUrn());
               deleteResponse.put(TITLE, "Success");
@@ -175,7 +186,6 @@ public class IngestionController {
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                   .setStatusCode(200)
                   .end(deleteResponse.toString());
-              /*routingContext.next();*/
             })
         .onFailure(
             failure -> {
@@ -193,12 +203,12 @@ public class IngestionController {
         .getAdapterDetails(id)
         .onSuccess(
             brokerResultHandler -> {
-              routingContext.data().put(RESPONSE_SIZE, 0);
+              RoutingContextHelper.setResponseSize(routingContext, 0);
+              RoutingContextHelper.setId(routingContext, id);
               response
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                   .setStatusCode(200)
                   .end(brokerResultHandler.constructSuccessResponse().toString());
-              /*routingContext.next();*/
             })
         .onFailure(
             failure -> {
@@ -217,12 +227,11 @@ public class IngestionController {
               brokerResultHandler -> {
                 if (brokerResultHandler.succeeded()) {
                   LOGGER.debug("Success: publishing data from adapter");
-                  routingContext.data().put(RESPONSE_SIZE, 0);
+                  RoutingContextHelper.setResponseSize(routingContext, 0);
                   response
                       .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                       .setStatusCode(200)
                       .end(brokerResultHandler.result().constructSuccessResponse().toString());
-                  /*routingContext.next();*/
                 } else {
                   LOGGER.debug("Fail: Bad request");
                   routingContext.fail(brokerResultHandler.cause());

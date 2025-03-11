@@ -13,10 +13,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.serviceproxy.ServiceException;
-import iudx.resource.server.common.Response;
-import iudx.resource.server.common.ResponseUrn;
 import iudx.resource.server.databroker.model.ExchangeSubscribersResponse;
-import iudx.resource.server.databroker.model.UserResponse;
+import iudx.resource.server.databroker.model.UserResponseModel;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -103,9 +101,9 @@ public class RabbitClient {
     return promise.future();
   }
 
-  public Future<UserResponse> createUserIfNotExist(String userid, String vhost) {
+  public Future<UserResponseModel> createUserIfNotExist(String userid, String vhost) {
     LOGGER.trace("Info : RabbitClient#createUserIfNotPresent() started");
-    Promise<UserResponse> promise = Promise.promise();
+    Promise<UserResponseModel> promise = Promise.promise();
 
     String password = randomPassword.get();
     String url = "/api/users/" + userid;
@@ -116,11 +114,11 @@ public class RabbitClient {
               if (reply.succeeded()) {
                 if (reply.result().statusCode() == HttpStatus.SC_NOT_FOUND) {
                   LOGGER.debug("Success : User not found. creating user");
-                  Future<UserResponse> userCreated = createUser(userid, password, vhost, url);
+                  Future<UserResponseModel> userCreated = createUser(userid, password, vhost, url);
                   userCreated.onComplete(
                       handler -> {
                         if (handler.succeeded()) {
-                          UserResponse result = handler.result();
+                          UserResponseModel result = handler.result();
                           promise.complete(result);
                         } else {
                           LOGGER.error(
@@ -131,7 +129,7 @@ public class RabbitClient {
 
                 } else if (reply.result().statusCode() == HttpStatus.SC_OK) {
                   LOGGER.debug("DATABASE_READ_SUCCESS");
-                  UserResponse userResponse = new UserResponse();
+                  UserResponseModel userResponse = new UserResponseModel();
                   userResponse.setUserId(userid);
                   userResponse.setPassword(API_KEY_MESSAGE);
                   promise.complete(userResponse);
@@ -147,9 +145,9 @@ public class RabbitClient {
     return promise.future();
   }
 
-  Future<UserResponse> createUser(String userid, String password, String vhost, String url) {
+  Future<UserResponseModel> createUser(String userid, String password, String vhost, String url) {
     LOGGER.trace("Info : RabbitClient#createUser() started");
-    Promise<UserResponse> promise = Promise.promise();
+    Promise<UserResponseModel> promise = Promise.promise();
     JsonObject response = new JsonObject();
     JsonObject arg = new JsonObject();
     arg.put(PASSWORD, password);
@@ -165,7 +163,7 @@ public class RabbitClient {
                   LOGGER.debug("createUserRequest success");
                   response.put(USER_ID, userid);
                   response.put(PASSWORD, password);
-                  UserResponse userResponse = new UserResponse();
+                  UserResponseModel userResponse = new UserResponseModel();
                   userResponse.setUserId(userid);
                   userResponse.setPassword(password);
                   userResponse.setStatus("success");
@@ -322,13 +320,12 @@ public class RabbitClient {
                 }
               });
     }
-
     return promise.future();
   }
 
-  public Future<JsonObject> updateUserPermissions(
+  public Future<Void> updateUserPermissions(
       String vhost, String userId, PermissionOpType type, String resourceId) {
-    Promise<JsonObject> promise = Promise.promise();
+    Promise<Void> promise = Promise.promise();
     getUserPermissions(userId)
         .onComplete(
             handler -> {
@@ -345,23 +342,11 @@ public class RabbitClient {
                           if (updatePermissionHandler.succeeded()) {
                             HttpResponse<Buffer> rmqResponse = updatePermissionHandler.result();
                             if (rmqResponse.statusCode() == HttpStatus.SC_NO_CONTENT) {
-                              Response response =
-                                  new Response.Builder()
-                                      .withStatus(HttpStatus.SC_NO_CONTENT)
-                                      .withTitle(ResponseUrn.SUCCESS_URN.getUrn())
-                                      .withDetail("Permission updated successfully.")
-                                      .withUrn(ResponseUrn.SUCCESS_URN.getUrn())
-                                      .build();
-                              promise.complete(response.toJson());
+                              LOGGER.debug("Permission updated");
+                              promise.complete();
                             } else if (rmqResponse.statusCode() == HttpStatus.SC_CREATED) {
-                              Response response =
-                                  new Response.Builder()
-                                      .withStatus(HttpStatus.SC_CREATED)
-                                      .withTitle(ResponseUrn.SUCCESS_URN.getUrn())
-                                      .withDetail("Permission updated successfully.")
-                                      .withUrn(ResponseUrn.SUCCESS_URN.getUrn())
-                                      .build();
-                              promise.complete(response.toJson());
+                              LOGGER.debug("Permission updated");
+                              promise.complete();
                             } else {
                               promise.fail(new ServiceException(8, rmqResponse.statusMessage()));
                             }
@@ -480,7 +465,6 @@ public class RabbitClient {
         .onComplete(
             requestHandler -> {
               if (requestHandler.succeeded()) {
-                /*JsonObject responseJson = new JsonObject();*/
                 HttpResponse<Buffer> response = requestHandler.result();
                 int statusCode = response.statusCode();
                 LOGGER.debug("status code in delete Exchange " + statusCode);

@@ -8,8 +8,6 @@ import iudx.resource.server.apiserver.ingestion.model.IngestionEntitiesResponseM
 import iudx.resource.server.database.postgres.model.PostgresResultModel;
 
 public interface IngestionService {
-
-  /*Future<JsonObject> registerAdapter(JsonObject json);*/
   Future<IngestionData> registerAdapter(String entities, String instanceId, String userId);
 
   Future<Void> deleteAdapter(String adapterId, String userId);

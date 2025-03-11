@@ -28,7 +28,6 @@ import org.apache.logging.log4j.Logger;
 
 public class UserManagementController {
   private static final Logger LOGGER = LogManager.getLogger(UserManagementController.class);
-
   private final Router router;
   private final JsonObject config;
   private final Api api;

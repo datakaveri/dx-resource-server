@@ -1,12 +1,13 @@
 package iudx.resource.server.apiserver.subscription.controller;
 
-import static iudx.resource.server.apiserver.metering.util.Constant.METERING_SERVICE_ADDRESS;
 import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.cache.util.Constants.CACHE_SERVICE_ADDRESS;
 import static iudx.resource.server.common.Constants.AUTH_SERVICE_ADDRESS;
 import static iudx.resource.server.common.ResponseUrn.INVALID_PARAM_URN;
+import static iudx.resource.server.common.ResponseUrn.SUCCESS_URN;
 import static iudx.resource.server.database.postgres.util.Constants.PG_SERVICE_ADDRESS;
 import static iudx.resource.server.databroker.util.Constants.DATA_BROKER_SERVICE_ADDRESS;
+import static iudx.resource.server.databroker.util.Constants.SUCCESS;
 import static iudx.resource.server.databroker.util.Util.getResponseJson;
 
 import io.vertx.core.Future;
@@ -17,14 +18,16 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import iudx.resource.server.apiserver.auditing.handler.AuditingHandler;
 import iudx.resource.server.apiserver.exception.FailureHandler;
-import iudx.resource.server.apiserver.metering.service.MeteringService;
-import iudx.resource.server.apiserver.subscription.model.DeleteSubsResultModel;
 import iudx.resource.server.apiserver.subscription.model.GetResultModel;
 import iudx.resource.server.apiserver.subscription.model.PostSubscriptionModel;
 import iudx.resource.server.apiserver.subscription.service.SubscriptionService;
 import iudx.resource.server.apiserver.subscription.service.SubscriptionServiceImpl;
 import iudx.resource.server.apiserver.subscription.util.SubsType;
+import iudx.resource.server.apiserver.validation.id.handlers.GetIdForIngestionEntityHandler;
+import iudx.resource.server.apiserver.validation.id.handlers.GetIdFromBodyHandler;
+import iudx.resource.server.apiserver.validation.id.handlers.GetIdFromPathHandler;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
 import iudx.resource.server.authenticator.handler.authorization.AuthValidationHandler;
@@ -47,16 +50,16 @@ public class SubscriptionController {
   private final Router router;
   private final Vertx vertx;
   private final Api api;
-  private ValidationHandler subsValidationHandler;
-  private FailureHandler failureHandler;
+  private final ValidationHandler subsValidationHandler;
+  private final FailureHandler failureHandler;
+  private final String audience;
+  private final JsonObject config;
+  private final AuditingHandler auditingHandler;
   private PostgresService postgresService;
   private SubscriptionService subscriptionService;
   private DataBrokerService dataBrokerService;
   private CacheService cacheService;
   private AuthenticationService authenticator;
-  private String audience;
-  private JsonObject config;
-  private MeteringService meteringService;
 
   public SubscriptionController(Vertx vertx, Router router, Api api, JsonObject config) {
     this.vertx = vertx;
@@ -67,6 +70,7 @@ public class SubscriptionController {
     this.config = config;
     this.subsValidationHandler = new ValidationHandler(vertx, RequestType.SUBSCRIPTION);
     this.failureHandler = new FailureHandler();
+    this.auditingHandler = new AuditingHandler(vertx);
   }
 
   public void init() {
@@ -85,61 +89,58 @@ public class SubscriptionController {
         new AuthorizationHandler()
             .setUserRolesForEndpoint(
                 DxRole.DELEGATE, DxRole.CONSUMER, DxRole.PROVIDER, DxRole.ADMIN);
-
-    /*MeteringHandler meteringHandler = new MeteringHandler(meteringService);*/
-
-    // TODO: Need to add auditing insert
+    GetIdFromBodyHandler getIdFromBodyHandler = new GetIdFromBodyHandler();
 
     router
         .post(api.getSubscriptionUrl())
+        .handler(auditingHandler::handleApiAudit)
         .handler(subsValidationHandler)
-        .handler(getIdHandler)
+        .handler(/*getIdHandler*/getIdFromBodyHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::postSubscriptions)
-        /*.handler(meteringHandler)*/
         .failureHandler(failureHandler);
 
     router
         .patch(api.getSubscriptionUrl() + "/:userid/:alias")
+        .handler(auditingHandler::handleApiAudit)
         .handler(subsValidationHandler)
-        .handler(getIdHandler)
+        .handler(/*getIdHandler*/getIdFromBodyHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::appendSubscription)
-        /*.handler(meteringHandler)*/
         .failureHandler(failureHandler);
 
     router
         .put(api.getSubscriptionUrl() + "/:userid/:alias")
+        .handler(auditingHandler::handleApiAudit)
         .handler(subsValidationHandler)
-        .handler(getIdHandler)
+        .handler(/*getIdHandler*/getIdFromBodyHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::updateSubscription)
-        /*.handler(meteringHandler)*/
         .failureHandler(failureHandler);
 
     router
         .get(api.getSubscriptionUrl() + "/:userid/:alias")
-        .handler(getIdHandler)
+        .handler(auditingHandler::handleApiAudit)
+        /*.handler(getIdHandler)*/
         .handler(authHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::getSubscription)
-        /*.handler(meteringHandler)*/
         .failureHandler(failureHandler);
 
     router
         .get(api.getSubscriptionUrl())
-        .handler(getIdHandler)
+        /*.handler(getIdHandler)*/
         .handler(authHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
@@ -149,13 +150,13 @@ public class SubscriptionController {
 
     router
         .delete(api.getSubscriptionUrl() + "/:userid/:alias")
-        .handler(getIdHandler)
+        .handler(auditingHandler::handleApiAudit)
+        /*.handler(getIdHandler)*/
         .handler(authHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
         .handler(isTokenRevoked)
         .handler(this::deleteSubscription)
-        /*.handler(meteringHandler)*/
         .failureHandler(failureHandler);
 
     subscriptionService =
@@ -200,13 +201,12 @@ public class SubscriptionController {
       subsReq.onComplete(
           subsRequestHandler -> {
             if (subsRequestHandler.succeeded()) {
-              LOGGER.info("result : " + subsRequestHandler.result());
-              routingContext.data().put(RESPONSE_SIZE, 0);
+              LOGGER.info("appended subscription");
+              RoutingContextHelper.setResponseSize(routingContext, 0);
               response
                   .setStatusCode(201)
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                   .end(subsRequestHandler.result().constructSuccessResponse().toString());
-              /*routingContext.next();*/
             } else {
               LOGGER.error("Fail: Bad request");
               routingContext.fail(subsRequestHandler.cause());
@@ -243,13 +243,12 @@ public class SubscriptionController {
       subsReq.onComplete(
           subsRequestHandler -> {
             if (subsRequestHandler.succeeded()) {
-              LOGGER.info("result : " + subsRequestHandler.result());
-              routingContext.data().put(RESPONSE_SIZE, 0);
+              LOGGER.info("Updated subscription");
+              RoutingContextHelper.setResponseSize(routingContext, 0);
               response
                   .setStatusCode(201)
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                   .end(subsRequestHandler.result().constructSuccessResponse().toString());
-              /*routingContext.next();*/
             } else {
               LOGGER.error("Fail: Bad request");
               routingContext.fail(subsRequestHandler.cause());
@@ -283,11 +282,11 @@ public class SubscriptionController {
         subHandler -> {
           if (subHandler.succeeded()) {
             LOGGER.info("Success: Getting subscription");
-            routingContext.data().put(RESPONSE_SIZE, 0);
+            RoutingContextHelper.setResponseSize(routingContext, 0);
+            RoutingContextHelper.setId(routingContext, subHandler.result().entities());
             response
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                 .end(subHandler.result().constructSuccessResponse().toString());
-            /*routingContext.next();*/
           } else {
             routingContext.fail(subHandler.cause());
           }
@@ -324,16 +323,21 @@ public class SubscriptionController {
     String subsId = userid + "/" + alias;
     String subscriptionType = SubsType.STREAMING.type;
     String userId = jwtData.getSub();
-    Future<DeleteSubsResultModel> subsReq =
+    Future<String> subsReq =
         subscriptionService.deleteSubscription(subsId, subscriptionType, userId);
     subsReq.onComplete(
         subHandler -> {
           if (subHandler.succeeded()) {
-            routingContext.data().put(RESPONSE_SIZE, 0);
+            LOGGER.info("Success: Deleting subscription");
+            RoutingContextHelper.setResponseSize(routingContext, 0);
+            RoutingContextHelper.setId(routingContext, subHandler.result());
             response
                 .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                .end(subHandler.result().toJson().toString());
-            /*routingContext.next();*/
+                .setStatusCode(200)
+                .end(
+                    getResponseJson(
+                            SUCCESS_URN.getUrn(), SUCCESS, "Subscription deleted Successfully")
+                        .toString());
           } else {
             routingContext.fail(subHandler.cause());
           }
@@ -374,12 +378,11 @@ public class SubscriptionController {
         .onSuccess(
             subHandler -> {
               LOGGER.info("Success: Handle Subscription request;");
-              routingContext.data().put(RESPONSE_SIZE, 0);
+              RoutingContextHelper.setResponseSize(routingContext, 0);
               response
                   .setStatusCode(201)
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                   .end(subHandler.constructSuccessResponse().toString());
-              /*routingContext.next();*/
             })
         .onFailure(
             failure -> {
@@ -392,6 +395,5 @@ public class SubscriptionController {
     dataBrokerService = DataBrokerService.createProxy(vertx, DATA_BROKER_SERVICE_ADDRESS);
     cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
     authenticator = AuthenticationService.createProxy(vertx, AUTH_SERVICE_ADDRESS);
-    meteringService = MeteringService.createProxy(vertx, METERING_SERVICE_ADDRESS);
   }
 }

@@ -1,7 +1,6 @@
 package iudx.resource.server.apiserver.subscription.service;
 
 import io.vertx.core.Future;
-import iudx.resource.server.apiserver.subscription.model.DeleteSubsResultModel;
 import iudx.resource.server.apiserver.subscription.model.GetResultModel;
 import iudx.resource.server.apiserver.subscription.model.PostSubscriptionModel;
 import iudx.resource.server.apiserver.subscription.model.SubscriptionData;
@@ -17,10 +16,9 @@ public interface SubscriptionService {
   Future<GetResultModel> updateSubscription(String entities, String queueName, String expiry);
 
   Future<GetResultModel> appendSubscription(
-          PostSubscriptionModel postSubscriptionModel, String subId);
+      PostSubscriptionModel postSubscriptionModel, String subId);
 
-  Future<DeleteSubsResultModel> deleteSubscription(
-      String subsId, String subscriptionType, String userid);
+  Future<String> deleteSubscription(String subsId, String subscriptionType, String userid);
 
   Future<PostgresResultModel> getAllSubscriptionQueueForUser(String userId);
 }
