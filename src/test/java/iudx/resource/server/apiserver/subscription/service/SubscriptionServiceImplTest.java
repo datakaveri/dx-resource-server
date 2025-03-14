@@ -14,7 +14,6 @@ import iudx.resource.server.apiserver.subscription.model.*;
 import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.database.postgres.model.PostgresResultModel;
 import iudx.resource.server.database.postgres.service.PostgresService;
-import iudx.resource.server.databroker.model.SubscriptionResponseModel;
 import iudx.resource.server.databroker.service.DataBrokerService;
 import java.util.List;
 import org.junit.jupiter.api.Test;

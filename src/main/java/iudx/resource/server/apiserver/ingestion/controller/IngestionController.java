@@ -21,7 +21,6 @@ import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.auditing.handler.AuditingHandler;
 import iudx.resource.server.apiserver.exception.FailureHandler;
 import iudx.resource.server.apiserver.ingestion.service.IngestionService;
-import iudx.resource.server.apiserver.ingestion.service.IngestionServiceImpl;
 import iudx.resource.server.apiserver.validation.id.handlers.GetIdForIngestionEntityHandler;
 import iudx.resource.server.apiserver.validation.id.handlers.GetIdFromBodyHandler;
 import iudx.resource.server.apiserver.validation.id.handlers.GetIdFromPathHandler;
@@ -134,7 +133,7 @@ public class IngestionController {
         .handler(this::getAllAdaptersForUsers)
         .failureHandler(validationsFailureHandler);
 
-    ingestionService = new IngestionServiceImpl(cacheService, dataBrokerService, postgresService);
+    /*ingestionService = new IngestionServiceImpl(cacheService, dataBrokerService, postgresService);*/
   }
 
   private void registerAdapter(RoutingContext routingContext) {
@@ -147,22 +146,22 @@ public class IngestionController {
     String userId = RoutingContextHelper.getJwtData(routingContext).getSub();
     requestJson.put(USER_ID, userId);
     String entities = requestJson.getJsonArray("entities").getString(0);
-    ingestionService
+    /*ingestionService
         .registerAdapter(entities, instanceId, userId)
         .onComplete(
             handler -> {
               if (handler.succeeded()) {
                 LOGGER.info("Success: Registering adapter");
                 RoutingContextHelper.setResponseSize(routingContext, 0);
-                response
+                *//*response
                     .setStatusCode(201)
                     .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                    .end(handler.result().constructSuccessResponse().toString());
+                    .end(handler.result().constructSuccessResponse().toString());*//*
               } else {
                 LOGGER.error("Fail: " + handler.cause());
                 routingContext.fail(handler.cause());
               }
-            });
+            });*/
   }
 
   private void deleteAdapter(RoutingContext routingContext) {

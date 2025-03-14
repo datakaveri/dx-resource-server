@@ -25,8 +25,8 @@ public class UserManagementServiceImpl {
         .onComplete(
             handler -> {
               if (handler.succeeded()) {
-                ResetResponseModel resetResponseModel = new ResetResponseModel(handler.result());
-                promise.complete(resetResponseModel);
+                /*ResetResponseModel resetResponseModel = new ResetResponseModel(handler.result());*/
+                /*promise.complete(resetResponseModel);*/
               } else {
                 promise.fail(handler.cause());
               }

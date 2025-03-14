@@ -4,8 +4,8 @@ import static iudx.resource.server.apiserver.util.Constants.USER_ID;
 import static iudx.resource.server.common.HttpStatusCode.BAD_REQUEST;
 import static iudx.resource.server.common.HttpStatusCode.INTERNAL_SERVER_ERROR;
 import static iudx.resource.server.databroker.util.Constants.*;
-import static iudx.resource.server.databroker.util.Util.*;
-
+import static iudx.resource.server.databroker.util.Util.encodeValue;
+import static iudx.resource.server.databroker.util.Util.randomPassword;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
@@ -15,7 +15,10 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.serviceproxy.ServiceException;
 import iudx.resource.server.databroker.model.ExchangeSubscribersResponse;
 import iudx.resource.server.databroker.model.UserResponseModel;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.http.HttpStatus;
@@ -128,7 +131,7 @@ public class RabbitClient {
                       });
 
                 } else if (reply.result().statusCode() == HttpStatus.SC_OK) {
-                  LOGGER.debug("DATABASE_READ_SUCCESS");
+                  LOGGER.debug("Success : User found.");
                   UserResponseModel userResponse = new UserResponseModel();
                   userResponse.setUserId(userid);
                   userResponse.setPassword(API_KEY_MESSAGE);
@@ -166,10 +169,7 @@ public class RabbitClient {
                   UserResponseModel userResponse = new UserResponseModel();
                   userResponse.setUserId(userid);
                   userResponse.setPassword(password);
-                  userResponse.setStatus("success");
-                  userResponse.setDetail("User created and vHost permission set successfully.");
                   LOGGER.debug("Info : user created successfully");
-                  // set permissions to vhost for newly created user
                   Future<Void> vhostPermission = setVhostPermissions(userid, vhost);
                   vhostPermission.onComplete(
                       handler -> {
@@ -423,9 +423,9 @@ public class RabbitClient {
     return permissionsJson;
   }
 
-  public Future<JsonObject> createExchange(String exchangeName, String vhost) {
+  public Future<Void> createExchange(String exchangeName, String vhost) {
     LOGGER.trace("Info : RabbitClient#createExchange() started");
-    Promise<JsonObject> promise = Promise.promise();
+    Promise<Void> promise = Promise.promise();
     JsonObject obj = new JsonObject();
     obj.put(TYPE, EXCHANGE_TYPE);
     obj.put(AUTO_DELETE, false);
@@ -436,13 +436,10 @@ public class RabbitClient {
         .onComplete(
             requestHandler -> {
               if (requestHandler.succeeded()) {
-                JsonObject responseJson = new JsonObject();
                 HttpResponse<Buffer> response = requestHandler.result();
                 int statusCode = response.statusCode();
                 if (statusCode == HttpStatus.SC_CREATED) {
-                  LOGGER.debug("Success : " + responseJson);
-                  responseJson.put(EXCHANGE, exchangeName);
-                  promise.complete(responseJson);
+                  promise.complete();
                 } else if (statusCode == HttpStatus.SC_NO_CONTENT) {
                   promise.fail(new ServiceException(9, EXCHANGE_EXISTS));
                 } else if (statusCode == HttpStatus.SC_BAD_REQUEST) {

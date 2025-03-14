@@ -23,7 +23,6 @@ import iudx.resource.server.apiserver.exception.FailureHandler;
 import iudx.resource.server.apiserver.subscription.model.GetResultModel;
 import iudx.resource.server.apiserver.subscription.model.PostSubscriptionModel;
 import iudx.resource.server.apiserver.subscription.service.SubscriptionService;
-import iudx.resource.server.apiserver.subscription.service.SubscriptionServiceImpl;
 import iudx.resource.server.apiserver.subscription.util.SubsType;
 import iudx.resource.server.apiserver.validation.id.handlers.GetIdForIngestionEntityHandler;
 import iudx.resource.server.apiserver.validation.id.handlers.GetIdFromBodyHandler;
@@ -159,8 +158,8 @@ public class SubscriptionController {
         .handler(this::deleteSubscription)
         .failureHandler(failureHandler);
 
-    subscriptionService =
-        new SubscriptionServiceImpl(postgresService, dataBrokerService, cacheService);
+    /*subscriptionService =
+        new SubscriptionServiceImpl(postgresService, dataBrokerService, cacheService);*/
   }
 
   private void appendSubscription(RoutingContext routingContext) {
@@ -373,21 +372,21 @@ public class SubscriptionController {
             jwtData.getExpiry(),
             delegatorId);
 
-    subscriptionService
+    /*subscriptionService
         .createSubscription(postSubscriptionModel)
         .onSuccess(
             subHandler -> {
               LOGGER.info("Success: Handle Subscription request;");
               RoutingContextHelper.setResponseSize(routingContext, 0);
-              response
+              *//*response
                   .setStatusCode(201)
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                  .end(subHandler.constructSuccessResponse().toString());
+                  .end(subHandler.constructSuccessResponse().toString());*//*
             })
         .onFailure(
             failure -> {
               routingContext.fail(failure);
-            });
+            });*/
   }
 
   private void proxyRequired() {
