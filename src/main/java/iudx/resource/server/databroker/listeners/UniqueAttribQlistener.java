@@ -1,19 +1,17 @@
 package iudx.resource.server.databroker.listeners;
 
+import static iudx.resource.server.databroker.util.Constants.UNIQUE_ATTR_Q;
+
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rabbitmq.QueueOptions;
 import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.rabbitmq.RabbitMQConsumer;
-import io.vertx.rabbitmq.RabbitMQOptions;
 import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.databroker.util.BroadcastEventType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import static iudx.resource.server.databroker.util.Constants.UNIQUE_ATTR_Q;
 
 public class UniqueAttribQlistener implements RmqListeners {
 
@@ -21,13 +19,12 @@ public class UniqueAttribQlistener implements RmqListeners {
   private final CacheService cache;
   private final QueueOptions options =
       new QueueOptions().setMaxInternalQueueSize(1000).setKeepMostRecent(true);
-  RabbitMQClient client;
+  private final RabbitMQClient client;
 
   public UniqueAttribQlistener(
-          Vertx vertx, CacheService cache, RabbitMQOptions config, String vhost) {
-    config.setVirtualHost(vhost);
-    this.client = RabbitMQClient.create(vertx, config);
-    this.cache = cache;
+      CacheService cacheService, RabbitMQClient iudxInternalRabbitMqClient) {
+    this.cache = cacheService;
+    this.client = iudxInternalRabbitMqClient;
   }
 
   @Override

@@ -1,32 +1,29 @@
 package iudx.resource.server.databroker.listeners;
 
+import static iudx.resource.server.databroker.util.Constants.TOKEN_INVALID_Q;
+
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rabbitmq.QueueOptions;
 import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.rabbitmq.RabbitMQConsumer;
-import io.vertx.rabbitmq.RabbitMQOptions;
 import iudx.resource.server.cache.service.CacheService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static iudx.resource.server.databroker.util.Constants.TOKEN_INVALID_Q;
+public class RevokeClientQlistener implements RmqListeners {
+  private static final Logger LOGGER = LogManager.getLogger(RevokeClientQlistener.class);
+  private final CacheService cache;
+  private final QueueOptions options =
+      new QueueOptions().setMaxInternalQueueSize(1000).setKeepMostRecent(true);
+  RabbitMQClient client;
 
-public class RevokeClientQlistener implements RmqListeners
-{
-    private static final Logger LOGGER = LogManager.getLogger(RevokeClientQlistener.class);
-    private final CacheService cache;
-    private final QueueOptions options =
-            new QueueOptions().setMaxInternalQueueSize(1000).setKeepMostRecent(true);
-    RabbitMQClient client;
-    public RevokeClientQlistener(
-            Vertx vertx, CacheService cache, RabbitMQOptions config, String vhost) {
-        config.setVirtualHost(vhost);
-        this.client = RabbitMQClient.create(vertx, config);
-        this.cache = cache;
-    }
+  public RevokeClientQlistener(
+      CacheService cacheService, RabbitMQClient iudxInternalRabbitMqClient) {
+    this.cache = cacheService;
+    this.client = iudxInternalRabbitMqClient;
+  }
 
   @Override
   public void start() {

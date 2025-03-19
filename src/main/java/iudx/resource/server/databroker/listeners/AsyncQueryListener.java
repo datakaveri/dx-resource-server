@@ -4,13 +4,11 @@ import static iudx.resource.server.apiserver.util.Constants.HEADER_RESPONSE_FILE
 import static iudx.resource.server.databroker.util.Constants.ASYNC_QUERY_Q;
 
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rabbitmq.QueueOptions;
 import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.rabbitmq.RabbitMQConsumer;
-import io.vertx.rabbitmq.RabbitMQOptions;
 import iudx.resource.server.apiserver.async.service.AsyncService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,10 +21,8 @@ public class AsyncQueryListener implements RmqListeners {
   private final AsyncService asyncService;
   RabbitMQClient client;
 
-  public AsyncQueryListener(
-      Vertx vertx, RabbitMQOptions config, String vhost, AsyncService asyncService) {
-    config.setVirtualHost(vhost);
-    this.client = RabbitMQClient.create(vertx, config);
+  public AsyncQueryListener(RabbitMQClient iudxInternalRabbitMqClient, AsyncService asyncService) {
+    this.client = iudxInternalRabbitMqClient;
     this.asyncService = asyncService;
   }
 

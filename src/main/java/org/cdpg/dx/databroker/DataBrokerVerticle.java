@@ -1,7 +1,5 @@
-package iudx.resource.server.databroker;
+package org.cdpg.dx.databroker;
 
-import static iudx.resource.server.apiserver.async.util.Constants.ASYNC_SERVICE_ADDRESS;
-import static iudx.resource.server.cache.util.Constants.CACHE_SERVICE_ADDRESS;
 import static iudx.resource.server.databroker.util.Constants.DATA_BROKER_SERVICE_ADDRESS;
 
 import io.vertx.core.AbstractVerticle;
@@ -12,19 +10,13 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.rabbitmq.RabbitMQOptions;
 import io.vertx.serviceproxy.ServiceBinder;
-import iudx.resource.server.apiserver.async.service.AsyncService;
-import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.common.Vhosts;
-import iudx.resource.server.databroker.listeners.AsyncQueryListener;
-import iudx.resource.server.databroker.listeners.RevokeClientQlistener;
-import iudx.resource.server.databroker.listeners.RmqListeners;
-import iudx.resource.server.databroker.listeners.UniqueAttribQlistener;
-import iudx.resource.server.databroker.service.DataBrokerService;
-import iudx.resource.server.databroker.service.DataBrokerServiceImpl;
-import iudx.resource.server.databroker.util.RabbitClient;
-import iudx.resource.server.databroker.util.RabbitWebClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.databroker.service.DataBrokerService;
+import org.cdpg.dx.databroker.service.DataBrokerServiceImpl;
+import org.cdpg.dx.databroker.client.RabbitClient;
+import org.cdpg.dx.databroker.client.RabbitWebClient;
 
 public class DataBrokerVerticle extends AbstractVerticle {
 
@@ -46,8 +38,8 @@ public class DataBrokerVerticle extends AbstractVerticle {
   private MessageConsumer<JsonObject> consumer;
   private RabbitClient rabbitClient;
   private RabbitWebClient rabbitWebClient;
-  private CacheService cacheService;
-  private AsyncService asyncService;
+  /*private CacheService cacheService;
+  private AsyncService asyncService;*/
   private RabbitMQClient iudxRabbitMqClient;
   private RabbitMQClient iudxInternalRabbitMqClient;
   private int amqpPort;
@@ -118,7 +110,7 @@ public class DataBrokerVerticle extends AbstractVerticle {
     rabbitWebClient = new RabbitWebClient(vertx, webConfig, propObj);
 
     rabbitClient = new RabbitClient(rabbitWebClient);
-    cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
+    /*cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);*/
     binder = new ServiceBinder(vertx);
     iudxRabbitMqClient = RabbitMQClient.create(vertx, iudxConfig);
     iudxInternalRabbitMqClient = RabbitMQClient.create(vertx, iudxInternalConfig);
@@ -153,19 +145,20 @@ public class DataBrokerVerticle extends AbstractVerticle {
             iudxInternalRabbitMqClient,
             iudxRabbitMqClient);
 
-    asyncService = AsyncService.createProxy(vertx, ASYNC_SERVICE_ADDRESS);
+    /*asyncService = AsyncService.createProxy(vertx, ASYNC_SERVICE_ADDRESS);*/
+
     /* Create RabbitMQ listeners for revoke client queue, unique attribute queue and async query queue. */
-    RmqListeners revokeQlistener =
-        new RevokeClientQlistener(cacheService, iudxInternalRabbitMqClient);
+   /* RmqListeners revokeQlistener =
+            new RevokeClientQlistener(cacheService, iudxInternalRabbitMqClient);
     RmqListeners uniqueAttrQlistener =
-        new UniqueAttribQlistener(cacheService, iudxInternalRabbitMqClient);
+            new UniqueAttribQlistener(cacheService, iudxInternalRabbitMqClient);
     RmqListeners asyncQueryQlistener =
-        new AsyncQueryListener(iudxInternalRabbitMqClient, asyncService);
+            new AsyncQueryListener(iudxInternalRabbitMqClient, asyncService);*/
 
     // start
-    revokeQlistener.start();
+    /*revokeQlistener.start();
     uniqueAttrQlistener.start();
-    asyncQueryQlistener.start();
+    asyncQueryQlistener.start();*/
 
     /* Publish the Data Broker service with the Event Bus against an address. */
 

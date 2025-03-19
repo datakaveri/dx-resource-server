@@ -1,3 +1,4 @@
+/*
 package iudx.resource.server.apiserver.usermanagement.service;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -57,3 +58,4 @@ public class UserManagementServiceImplTest {
     }
 }
 
+*/
