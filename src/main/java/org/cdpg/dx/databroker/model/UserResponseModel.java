@@ -1,4 +1,4 @@
-package iudx.resource.server.databroker.model;
+package org.cdpg.dx.databroker.model;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;

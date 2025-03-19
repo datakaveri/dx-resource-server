@@ -1,4 +1,4 @@
-package iudx.resource.server.databroker.service;
+package org.cdpg.dx.databroker.service;
 
 import static iudx.resource.server.common.HttpStatusCode.INTERNAL_SERVER_ERROR;
 import static iudx.resource.server.databroker.util.Constants.*;
@@ -10,14 +10,16 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.serviceproxy.ServiceException;
-import iudx.resource.server.databroker.model.*;
-import iudx.resource.server.databroker.util.PermissionOpType;
-import iudx.resource.server.databroker.util.RabbitClient;
-import iudx.resource.server.databroker.util.Util;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.databroker.model.ExchangeSubscribersResponse;
+import org.cdpg.dx.databroker.model.RegisterExchangeModel;
+import org.cdpg.dx.databroker.model.RegisterQueueModel;
+import org.cdpg.dx.databroker.util.PermissionOpType;
+import org.cdpg.dx.databroker.client.RabbitClient;
+import org.cdpg.dx.databroker.util.Util;
 
 public class DataBrokerServiceImpl implements DataBrokerService {
   private static final Logger LOGGER = LogManager.getLogger(DataBrokerServiceImpl.class);

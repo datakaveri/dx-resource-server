@@ -1,3 +1,4 @@
+/*
 package iudx.resource.server.apiserver.ingestion.service;
 
 import static iudx.resource.server.apiserver.ingestion.util.Constants.*;
@@ -63,12 +64,24 @@ public class IngestionServiceImpl implements IngestionService {
               }
               String query =
                   CREATE_INGESTION_SQL
-                      .replace("$1", resourceIdForIngestion) /* exchange name */
-                      .replace("$2", cacheServiceResult.getString("id")) /* resource */
-                      .replace("$3", cacheServiceResult.getString("name")) /* dataset name */
-                      .replace("$4", cacheServiceResult.toString()) /* dataset json */
-                      .replace("$5", userId) /* user id */
-                      .replace("$6", cacheServiceResult.getString("provider")); /*provider*/
+                      .replace("$1", resourceIdForIngestion) */
+/* exchange name *//*
+
+                      .replace("$2", cacheServiceResult.getString("id")) */
+/* resource *//*
+
+                      .replace("$3", cacheServiceResult.getString("name")) */
+/* dataset name *//*
+
+                      .replace("$4", cacheServiceResult.toString()) */
+/* dataset json *//*
+
+                      .replace("$5", userId) */
+/* user id *//*
+
+                      .replace("$6", cacheServiceResult.getString("provider")); */
+/*provider*//*
+
 
               return postgresService
                   .executeQuery(query)
@@ -223,3 +236,4 @@ public class IngestionServiceImpl implements IngestionService {
     return promise.future();
   }
 }
+*/

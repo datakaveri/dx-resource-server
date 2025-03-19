@@ -1,4 +1,4 @@
-package iudx.resource.server.databroker.util;
+package org.cdpg.dx.databroker.client;
 
 import static iudx.resource.server.apiserver.util.Constants.USER_ID;
 import static iudx.resource.server.common.HttpStatusCode.BAD_REQUEST;
@@ -6,6 +6,7 @@ import static iudx.resource.server.common.HttpStatusCode.INTERNAL_SERVER_ERROR;
 import static iudx.resource.server.databroker.util.Constants.*;
 import static iudx.resource.server.databroker.util.Util.encodeValue;
 import static iudx.resource.server.databroker.util.Util.randomPassword;
+
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
@@ -13,8 +14,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.serviceproxy.ServiceException;
-import iudx.resource.server.databroker.model.ExchangeSubscribersResponse;
-import iudx.resource.server.databroker.model.UserResponseModel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,6 +23,9 @@ import java.util.stream.Stream;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.databroker.model.ExchangeSubscribersResponse;
+import org.cdpg.dx.databroker.model.UserResponseModel;
+import org.cdpg.dx.databroker.util.PermissionOpType;
 
 public class RabbitClient {
   private static final Logger LOGGER = LogManager.getLogger(RabbitClient.class);
@@ -316,7 +318,7 @@ public class RabbitClient {
   }
 
   public Future<Void> updateUserPermissions(
-      String vhost, String userId, PermissionOpType type, String resourceId) {
+          String vhost, String userId, PermissionOpType type, String resourceId) {
     Promise<Void> promise = Promise.promise();
     getUserPermissions(userId)
         .onComplete(
@@ -381,7 +383,7 @@ public class RabbitClient {
   }
 
   private JsonObject getUpdatedPermission(
-      JsonObject permissionsJson, PermissionOpType type, String resourceId) {
+          JsonObject permissionsJson, PermissionOpType type, String resourceId) {
     StringBuilder permission;
     switch (type) {
       case ADD_READ:

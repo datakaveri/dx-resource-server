@@ -1,4 +1,4 @@
-package iudx.resource.server.databroker.util;
+package org.cdpg.dx.databroker.util;
 
 import static iudx.resource.server.databroker.util.Constants.*;
 

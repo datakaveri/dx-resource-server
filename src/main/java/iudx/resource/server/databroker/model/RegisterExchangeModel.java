@@ -6,8 +6,7 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 
 @DataObject
-public class IngestionResponseModel {
-
+public class RegisterExchangeModel {
   private String userId;
   private String apiKey;
   private String exchangeName;
@@ -15,11 +14,9 @@ public class IngestionResponseModel {
   private int port;
   private String vHost;
 
-  // Default Constructor (needed for Vert.x DataObject)
-  public IngestionResponseModel() {}
+  public RegisterExchangeModel() {}
 
-  // Parameterized Constructor
-  public IngestionResponseModel(
+  public RegisterExchangeModel(
       String userId, String apiKey, String exchangeName, String url, int port, String vHost) {
     this.userId = userId;
     this.apiKey = apiKey;
@@ -29,17 +26,15 @@ public class IngestionResponseModel {
     this.vHost = vHost;
   }
 
-  // Constructor to create from JSON
-  public IngestionResponseModel(JsonObject json) {
+  public RegisterExchangeModel(JsonObject json) {
     this.userId = json.getString(USER_NAME);
     this.apiKey = json.getString(APIKEY);
     this.exchangeName = json.getString("id");
     this.url = json.getString(URL);
-    this.port = json.getInteger(PORT); // Default value if missing
+    this.port = json.getInteger(PORT);
     this.vHost = json.getString(VHOST);
   }
 
-  // Convert to JSON
   public JsonObject toJson() {
     return new JsonObject()
         .put(USER_NAME, userId)
@@ -50,12 +45,10 @@ public class IngestionResponseModel {
         .put(VHOST, vHost);
   }
 
-  // Getters
   public String getUserId() {
     return userId;
   }
 
-  // Setters
   public void setUserId(String userId) {
     this.userId = userId;
   }
@@ -92,17 +85,17 @@ public class IngestionResponseModel {
     this.port = port;
   }
 
-  public String getVHost() {
+  public String getvHost() {
     return vHost;
   }
 
-  public void setVHost(String vHost) {
+  public void setvHost(String vHost) {
     this.vHost = vHost;
   }
 
   @Override
   public String toString() {
-    return "SubscriptionResponseModel{"
+    return "RegisterExchangeModel{"
         + "userId='"
         + userId
         + '\''

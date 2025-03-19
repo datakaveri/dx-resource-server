@@ -1,4 +1,4 @@
-package iudx.resource.server.databroker.service;
+package org.cdpg.dx.databroker.service;
 
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
@@ -7,10 +7,12 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.databroker.model.*;
-import iudx.resource.server.databroker.util.PermissionOpType;
-
+import iudx.resource.server.databroker.service.DataBrokerServiceVertxEBProxy;
 import java.util.List;
+import org.cdpg.dx.databroker.model.ExchangeSubscribersResponse;
+import org.cdpg.dx.databroker.model.RegisterExchangeModel;
+import org.cdpg.dx.databroker.model.RegisterQueueModel;
+import org.cdpg.dx.databroker.util.PermissionOpType;
 
 @VertxGen
 @ProxyGen
@@ -23,7 +25,7 @@ public interface DataBrokerService {
 
   Future<Void> queueBinding(String exchangeName, String queueName, String routingKey);
 
-  Future<RegisterExchangeModel> registerExchange(String userId,String exchangeName);
+  Future<RegisterExchangeModel> registerExchange(String userId, String exchangeName);
 
   Future<ExchangeSubscribersResponse> listExchange(String exchangeName);
 
