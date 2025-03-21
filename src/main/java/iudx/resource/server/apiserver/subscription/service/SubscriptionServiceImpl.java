@@ -1,4 +1,3 @@
-/*
 package iudx.resource.server.apiserver.subscription.service;
 
 import static iudx.resource.server.apiserver.subscription.util.Constants.*;
@@ -11,22 +10,23 @@ import static iudx.resource.server.databroker.util.Util.getResponseJson;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceException;
 import iudx.resource.server.apiserver.subscription.model.*;
 import iudx.resource.server.apiserver.subscription.util.SubsType;
 import iudx.resource.server.cache.service.CacheService;
-import iudx.resource.server.database.postgres.model.PostgresResultModel;
-import iudx.resource.server.database.postgres.service.PostgresService;
-import iudx.resource.server.databroker.service.DataBrokerService;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.database.postgres.models.*;
+import org.cdpg.dx.database.postgres.service.PostgresService;
+import org.cdpg.dx.databroker.model.RegisterQueueModel;
+import org.cdpg.dx.databroker.service.DataBrokerService;
+import org.cdpg.dx.databroker.util.PermissionOpType;
+import org.cdpg.dx.databroker.util.Vhosts;
 
 public class SubscriptionServiceImpl implements SubscriptionService {
   private static final Logger LOGGER = LogManager.getLogger(SubscriptionServiceImpl.class);
@@ -42,67 +42,98 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     this.dataBrokerService = dataBrokerService;
     this.cacheService = cacheService;
   }
-
-  private static StringBuilder createSubQuery(
+//TODO: Need to correct postgresmodel
+  private static InsertQuery createSubQuery(
       PostSubscriptionModel postSubscriptionModel,
       SubscriptionData subscriptionDataResult,
       SubsType subsType,
-      String type) {
-    StringBuilder query =
-        new StringBuilder(
-            CREATE_SUB_SQL
-                .replace("$1", subscriptionDataResult.dataBrokerResult().getString("id"))
-                .replace("$2", subsType.type)
-                .replace("$3", subscriptionDataResult.dataBrokerResult().getString("id"))
-                .replace("$4", postSubscriptionModel.getEntities())
-                .replace("$5", postSubscriptionModel.getExpiry())
-                .replace("$6", subscriptionDataResult.cacheResult().getString("name"))
-                .replace("$7", subscriptionDataResult.cacheResult().toString())
-                .replace("$8", postSubscriptionModel.getUserId())
-                .replace("$9", subscriptionDataResult.cacheResult().getString(RESOURCE_GROUP))
-                .replace("$a", subscriptionDataResult.cacheResult().getString("provider"))
-                .replace("$b", postSubscriptionModel.getDelegatorId())
-                .replace("$c", type));
-    return query;
-  }
+      String type,
+      String queueName) {
 
-  private static StringBuilder appendSubsQuery(
+    List<String> columns =
+        List.of(
+            "_id",
+            "_type",
+            "queue_name",
+            "entity",
+            "expiry",
+            "dataset_name",
+            "dataset_json",
+            "user_id",
+            "resource_group",
+            "provider_id",
+            "delegator_id",
+            "item_type");
+
+    List<Object> values =
+        List.of(
+            queueName,
+            subsType.type,
+            queueName,
+            postSubscriptionModel.getEntities(),
+            postSubscriptionModel.getExpiry(),
+            subscriptionDataResult.cacheResult().getString("name"),
+            subscriptionDataResult.cacheResult().toString(),
+            postSubscriptionModel.getUserId(),
+            subscriptionDataResult.cacheResult().getString(RESOURCE_GROUP),
+            subscriptionDataResult.cacheResult().getString("provider"),
+            postSubscriptionModel.getDelegatorId(),
+            type);
+    return new InsertQuery("subscriptions", columns, values);
+  }
+    //TODO: Need to correct postgresmodel
+  private static InsertQuery appendSubsQuery(
       String subId,
       String entities,
-      SubscriptionData appendSubscriptionResult,
+      JsonObject appendSubscriptionResult,
       SubsType subType,
       String type,
       PostSubscriptionModel postSubscriptionModel) {
-    StringBuilder appendQuery =
-        new StringBuilder(
-            APPEND_SUB_SQL
-                .replace("$1", subId)
-                .replace("$2", subType.type)
-                .replace("$3", subId)
-                .replace("$4", entities)
-                .replace("$5", postSubscriptionModel.getExpiry())
-                .replace("$6", appendSubscriptionResult.cacheResult().getString("name"))
-                .replace("$7", appendSubscriptionResult.cacheResult().toString())
-                .replace("$8", postSubscriptionModel.getUserId())
-                .replace("$9", appendSubscriptionResult.cacheResult().getString(RESOURCE_GROUP))
-                .replace("$a", appendSubscriptionResult.cacheResult().getString("provider"))
-                .replace("$b", postSubscriptionModel.getDelegatorId())
-                .replace("$c", type));
-    return appendQuery;
+
+    List<String> columns =
+        List.of(
+            "_id",
+            "_type",
+            "queue_name",
+            "entity",
+            "expiry",
+            "dataset_name",
+            "dataset_json",
+            "user_id",
+            "resource_group",
+            "provider_id",
+            "delegator_id",
+            "item_type");
+
+    List<Object> values =
+        List.of(
+            subId,
+            subType.type,
+            subId,
+            entities,
+            postSubscriptionModel.getExpiry(),
+            appendSubscriptionResult.getString("name"),
+            appendSubscriptionResult.toString(),
+            postSubscriptionModel.getUserId(),
+            appendSubscriptionResult.getString(RESOURCE_GROUP),
+            appendSubscriptionResult.getString("provider"),
+            postSubscriptionModel.getDelegatorId(),
+            type);
+    return new InsertQuery("subscriptions", columns, values);
   }
 
   @Override
-  public Future<GetResultModel> getSubscription(String subscriptionId, String subType) {
+  public Future<GetSubscriptionResult> getSubscription(String subscriptionId, String subType) {
     LOGGER.info("getSubscription() method started");
-    Promise<GetResultModel> promise = Promise.promise();
+    Promise<GetSubscriptionResult> promise = Promise.promise();
     LOGGER.info("sub id :: " + subscriptionId);
     getEntityName(subscriptionId)
         .compose(
             postgresSuccess -> {
               LOGGER.debug("entities found {}", postgresSuccess);
               return dataBrokerService
-                  .listStreamingSubscription(subscriptionId)
-                  .map(listStream -> new GetResultModel(listStream, postgresSuccess));
+                  .listQueue(subscriptionId, Vhosts.IUDX_PROD)
+                  .map(listStream -> new GetSubscriptionResult(listStream, postgresSuccess));
             })
         .onComplete(
             getDataBroker -> {
@@ -116,90 +147,102 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   }
 
   @Override
-  public Future<SubscriptionData> createSubscription(PostSubscriptionModel postSubscriptionModel) {
+  public Future<RegisterQueueModel> createSubscription(
+      PostSubscriptionModel postSubscriptionModel) {
     LOGGER.info("createSubscription() method started");
-    Promise<SubscriptionData> promise = Promise.promise();
+    Promise<RegisterQueueModel> promise = Promise.promise();
     SubsType subType = SubsType.valueOf(postSubscriptionModel.getSubscriptionType());
     String entities = postSubscriptionModel.getEntities();
     JsonObject cacheJson = new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
-    cacheService
-        .get(cacheJson)
+
+    String queueName = postSubscriptionModel.getUserId() + "/" + postSubscriptionModel.getName();
+
+    dataBrokerService
+        .registerQueue(postSubscriptionModel.getUserId(), queueName, Vhosts.IUDX_PROD)
         .compose(
-            cacheResult -> {
-              Set<String> type = new HashSet<String>(cacheResult.getJsonArray("type").getList());
+            registerQueueHandler -> {
+              LOGGER.debug("registerQueueHandler success");
+              return cacheService
+                  .get(cacheJson)
+                  .map(cacheResult -> new SubscriptionData(cacheResult, registerQueueHandler));
+            })
+        .compose(
+            subsDataResult -> {
+              LOGGER.debug("subsDataResult success");
+              Set<String> type =
+                  new HashSet<String>(subsDataResult.cacheResult().getJsonArray("type").getList());
               Set<String> itemTypeSet =
                   type.stream().map(e -> e.split(":")[1]).collect(Collectors.toSet());
               itemTypeSet.retainAll(ITEM_TYPES);
 
               String resourceGroup;
+              String routingKey;
               if (!itemTypeSet.contains("Resource")) {
-                resourceGroup = cacheResult.getString("id");
+                resourceGroup = subsDataResult.cacheResult().getString("id");
+                routingKey = resourceGroup + DATA_WILDCARD_ROUTINGKEY;
               } else {
-                resourceGroup = cacheResult.getString("resourceGroup");
+                resourceGroup = subsDataResult.cacheResult().getString("resourceGroup");
+                routingKey = resourceGroup + "/." + postSubscriptionModel.getEntities();
               }
-              SubscriptionImplModel subscriptionImplModel =
-                  new SubscriptionImplModel(
-                      postSubscriptionModel, itemTypeSet.iterator().next(), resourceGroup);
-              return dataBrokerService.registerStreamingSubscription(subscriptionImplModel);
+              return dataBrokerService
+                  .queueBinding(resourceGroup, queueName, routingKey, Vhosts.IUDX_PROD)
+                  .map(queueBinding -> subsDataResult);
             })
         .compose(
-            registerStreaming -> {
-              JsonObject brokerResponse = registerStreaming.toJson();
-              LOGGER.trace("registerStreaming: " + registerStreaming);
-              JsonObject cacheJson1 =
-                  new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
-              return cacheService
-                  .get(cacheJson1)
-                  .map(
-                      cacheResult ->
-                          new SubscriptionData(brokerResponse, cacheResult, registerStreaming));
+            queueBindingHandler -> {
+              LOGGER.debug("binding Queue successful");
+              return dataBrokerService
+                  .updatePermission(
+                      postSubscriptionModel.getUserId(),
+                      queueName,
+                      PermissionOpType.ADD_READ,
+                      Vhosts.IUDX_PROD)
+                  .map(updatePermission -> queueBindingHandler);
             })
         .compose(
-            subscriptionDataResult -> {
-              LOGGER.trace("cacheResult: " + subscriptionDataResult.cacheResult());
-
+            updateHandler -> {
+              LOGGER.debug("update permission successful");
               String type =
-                  subscriptionDataResult.cacheResult().containsKey(RESOURCE_GROUP)
+                  updateHandler.cacheResult().containsKey(RESOURCE_GROUP)
                       ? "RESOURCE"
                       : "RESOURCE_GROUP";
-
-              StringBuilder query =
-                  createSubQuery(postSubscriptionModel, subscriptionDataResult, subType, type);
-              LOGGER.debug("query: " + query);
-
+              InsertQuery insertQuery =
+                  createSubQuery(postSubscriptionModel, updateHandler, subType, type, queueName);
               return postgresService
-                  .executeQuery1(query.toString())
-                  .map(postgresSuccess -> subscriptionDataResult);
+                  .insert(insertQuery)
+                  .map(postgres -> updateHandler.registerQueueModel());
             })
         .onSuccess(
-            subscriptionDataResultSuccess -> {
-              promise.complete(subscriptionDataResultSuccess);
+            successHandler -> {
+              LOGGER.debug("update permission successful");
+              promise.complete(successHandler);
             })
         .onFailure(
-            failure -> {
-              LOGGER.debug(failure);
-              promise.fail(failure);
+            failureHandler -> {
+              LOGGER.error("failed");
+              promise.fail(failureHandler);
             });
     return promise.future();
   }
-
+  //TODO: Need to correct postgresmodel
   @Override
-  public Future<GetResultModel> updateSubscription(
-      String entities, String queueName, String expiry) {
+  public Future<String> updateSubscription(String entities, String queueName, String expiry) {
     LOGGER.info("updateSubscription() method started");
-    Promise<GetResultModel> promise = Promise.promise();
-
-    StringBuilder selectQuery =
-        new StringBuilder(SELECT_SUB_SQL.replace("$1", queueName).replace("$2", entities));
-    LOGGER.debug(selectQuery);
+    Promise<String> promise = Promise.promise();
+    List<String> columns = List.of("*");
+    List<String> conditionColumns = List.of("queue_name", "entity");
+    ConditionComponent conditionComponent = new Condition(null, null, null);
+    // ConditionComponent conditionComponent1 = new ConditionGroup(null,null);
+    SelectQuery selectQuery =
+        new SelectQuery("subscriptions", columns, null, null, null, null, null);
 
     postgresService
-        .executeQuery1(selectQuery.toString())
+        .select(selectQuery)
         .compose(
             selectQueryHandler -> {
-              JsonArray resultArray = selectQueryHandler.getResult();
-              LOGGER.debug("selectQueryHandler   " + selectQueryHandler.getResult());
-              if (resultArray.isEmpty()) {
+              List<JsonObject> resultRow = selectQueryHandler.rows();
+              LOGGER.debug("selectQueryHandler   " + selectQueryHandler.rows());
+              if (resultRow.isEmpty()) {
                 JsonObject failJson =
                     getResponseJson(
                         NOT_FOUND.getUrn(),
@@ -208,20 +251,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         "Subscription not found for [queue,entity]");
                 return Future.failedFuture(failJson.toString());
               }
-              StringBuilder updateQuery =
-                  new StringBuilder(
-                      UPDATE_SUB_SQL
-                          .replace("$1", expiry)
-                          .replace("$2", queueName)
-                          .replace("$3", entities));
-              LOGGER.trace("updateQuery : " + updateQuery);
-              return postgresService.executeQuery1(updateQuery.toString());
+
+              UpdateQuery updateQuery =
+                  new UpdateQuery("subscriptions", null, null, null, null, null);
+              return postgresService.update(updateQuery);
             })
         .onSuccess(
             pgHandler -> {
-              List<String> resultEntities = new ArrayList<String>();
-              resultEntities.add(entities);
-              promise.complete(new GetResultModel(resultEntities, entities));
+              /*List<String> resultEntities = new ArrayList<String>();
+              resultEntities.add(entities);*/
+              promise.complete(entities);
             })
         .onFailure(
             failure -> {
@@ -231,15 +270,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     return promise.future();
   }
-
+    //TODO: Need to correct postgresmodel
   @Override
-  public Future<GetResultModel> appendSubscription(
+  public Future<String> appendSubscription(
       PostSubscriptionModel postSubscriptionModel, String subsId) {
     LOGGER.info("appendSubscription() method started");
     String entities = postSubscriptionModel.getEntities();
     JsonObject cacheJson = new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
     SubsType subType = SubsType.valueOf(postSubscriptionModel.getSubscriptionType());
-    Promise<GetResultModel> promise = Promise.promise();
+    Promise<String> promise = Promise.promise();
+
     cacheService
         .get(cacheJson)
         .compose(
@@ -250,40 +290,40 @@ public class SubscriptionServiceImpl implements SubscriptionService {
               itemTypeSet.retainAll(ITEM_TYPES);
 
               String resourceGroup;
+              String routingKey;
               if (!itemTypeSet.contains("Resource")) {
                 resourceGroup = cacheResult.getString("id");
+                routingKey = resourceGroup + DATA_WILDCARD_ROUTINGKEY;
               } else {
                 resourceGroup = cacheResult.getString("resourceGroup");
+                routingKey = resourceGroup + "/." + postSubscriptionModel.getEntities();
               }
-
-              SubscriptionImplModel subscriptionImplModel =
-                  new SubscriptionImplModel(
-                      postSubscriptionModel, itemTypeSet.iterator().next(), resourceGroup);
-
-              return dataBrokerService.appendStreamingSubscription(subscriptionImplModel, subsId);
+              return dataBrokerService
+                  .queueBinding(resourceGroup, subsId, routingKey, Vhosts.IUDX_PROD)
+                  .map(queueBind -> cacheResult);
             })
         .compose(
-            appendStreaming -> {
-              LOGGER.trace("appendStreaming: " + appendStreaming);
-
-              JsonObject cacheJson1 =
-                  new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
-              return cacheService
-                  .get(cacheJson1)
-                  .map(
-                      cacheResult ->
-                          new SubscriptionData(
-                              new JsonObject(), cacheResult, new SubscriptionResponseModel()));
+            queueBindingHandler -> {
+              LOGGER.debug("binding Queue successful");
+              return dataBrokerService
+                  .updatePermission(
+                      postSubscriptionModel.getUserId(),
+                      subsId,
+                      PermissionOpType.ADD_READ,
+                      Vhosts.IUDX_PROD)
+                  .map(updatePermission -> queueBindingHandler);
             })
         .compose(
             appendSubscriptionResult -> {
-              LOGGER.trace("cacheResult: " + appendSubscriptionResult.cacheResult());
+              LOGGER.trace("appendStreaming successful ");
+
+              LOGGER.trace("cacheResult: " + appendSubscriptionResult.toString());
               String type =
-                  appendSubscriptionResult.cacheResult().containsKey(RESOURCE_GROUP)
+                  appendSubscriptionResult.containsKey(RESOURCE_GROUP)
                       ? "RESOURCE"
                       : "RESOURCE_GROUP";
 
-              StringBuilder appendQuery =
+              InsertQuery insertQuery =
                   appendSubsQuery(
                       subsId,
                       entities,
@@ -291,17 +331,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                       subType,
                       type,
                       postSubscriptionModel);
-              LOGGER.debug("appendQuery = " + appendQuery);
-
-              return postgresService
-                  .executeQuery1(appendQuery.toString())
-                  .map(postgresSuccess -> appendSubscriptionResult);
+              return postgresService.insert(insertQuery);
             })
         .onSuccess(
             subscriptionDataResultSuccess -> {
-              List<String> listAppend = new ArrayList<String>();
-              listAppend.add(entities);
-              promise.complete(new GetResultModel(listAppend, entities));
+              promise.complete(postSubscriptionModel.getEntities());
             })
         .onFailure(
             failed -> {
@@ -325,7 +359,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         .compose(
             postgresSuccess -> {
               return dataBrokerService
-                  .deleteStreamingSubscription(subsId, userid)
+                  .deleteQueue(subsId, userid, Vhosts.IUDX_PROD)
                   .map(result -> postgresSuccess);
             })
         .onComplete(
@@ -338,13 +372,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             });
     return promise.future();
   }
-
+    //TODO: Need to correct postgresmodel
   private Future<Void> deleteSubscriptionFromPg(String subscriptionId) {
     Promise<Void> promise = Promise.promise();
-    String deleteQueueQuery = DELETE_SUB_SQL.replace("$1", subscriptionId);
-    LOGGER.trace("delete query- " + deleteQueueQuery);
+    /*String deleteQueueQuery = DELETE_SUB_SQL.replace("$1", subscriptionId);
+    LOGGER.trace("delete query- " + deleteQueueQuery);*/
+
+    ConditionComponent conditionComponent =
+        new Condition("queue_name", Condition.Operator.EQUALS, null);
+    DeleteQuery deleteQuery = new DeleteQuery("subscriptions", conditionComponent, null, null);
+
     postgresService
-        .executeQuery1(deleteQueueQuery)
+        .delete(deleteQuery)
         .onComplete(
             pgHandler -> {
               if (pgHandler.succeeded()) {
@@ -357,38 +396,50 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             });
     return promise.future();
   }
-
+    //TODO: Need to correct postgresmodel
   @Override
-  public Future<PostgresResultModel> getAllSubscriptionQueueForUser(String userId) {
+  public Future<List<SubscriberDetails>> getAllSubscriptionQueueForUser(String userId) {
     LOGGER.info("getAllSubscriptionQueueForUser() method started");
-    Promise<PostgresResultModel> promise = Promise.promise();
-    StringBuilder query = new StringBuilder(GET_ALL_QUEUE.replace("$1", userId));
-
-    LOGGER.debug("query: " + query);
+    Promise<List<SubscriberDetails>> promise = Promise.promise();
+    /*String query = GET_ALL_QUEUE.replace("$1", userId);*/
+    List<String> columns = List.of();
+    SelectQuery selectQuery = new SelectQuery("subscriptions", null, null, null, null, null, null);
+    /*LOGGER.debug("query: " + query);*/
     postgresService
-        .executeQuery1(query.toString())
+        .select(selectQuery)
         .onComplete(
             pgHandler -> {
               if (pgHandler.succeeded()) {
-                promise.complete(pgHandler.result());
+                List<JsonObject> result = pgHandler.result().rows();
+                List<SubscriberDetails> subscriberDetails =
+                    result.stream()
+                        .map(obj -> new SubscriberDetails(obj))
+                        .collect(Collectors.toList());
+                promise.complete(subscriberDetails);
               } else {
                 promise.fail(new ServiceException(0, INTERNAL_SERVER_ERROR.getDescription()));
               }
             });
     return promise.future();
   }
-
+    //TODO: Need to correct postgresmodel
   private Future<String> getEntityName(String subscriptionID) {
     Promise<String> promise = Promise.promise();
     String getEntityNameQuery = ENTITY_QUERY.replace("$0", subscriptionID);
     LOGGER.trace("query- " + getEntityNameQuery);
+
+    ConditionComponent conditionComponent =
+        new Condition("queue_name", Condition.Operator.EQUALS, null);
+    SelectQuery selectQuery =
+        new SelectQuery(
+            "subscriptions", List.of("entity"), conditionComponent, null, null, null, null);
+
     postgresService
-        .executeQuery1(getEntityNameQuery)
+        .select(selectQuery)
         .onComplete(
             pgHandler -> {
-              if (pgHandler.succeeded() && !pgHandler.result().getResult().isEmpty()) {
-                String entities =
-                    pgHandler.result().getResult().getJsonObject(0).getString("entity");
+              if (pgHandler.succeeded() && !pgHandler.result().rows().isEmpty()) {
+                String entities = pgHandler.result().rows().get(0).getString("entity");
                 LOGGER.debug("Entities: " + entities);
                 promise.complete(entities);
               } else {
@@ -399,4 +450,3 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     return promise.future();
   }
 }
-*/
