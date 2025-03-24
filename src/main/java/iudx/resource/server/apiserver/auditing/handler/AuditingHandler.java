@@ -6,7 +6,6 @@ import static iudx.resource.server.databroker.util.Constants.DATA_BROKER_SERVICE
 
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
-import iudx.resource.server.apiserver.auditing.model.AuditLogData;
 import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.common.RoutingContextHelper;
 import iudx.resource.server.databroker.service.DataBrokerService;
@@ -17,6 +16,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.auditing.service.RsAuditLogData;
 
 public class AuditingHandler {
   private static final Logger LOGGER = LogManager.getLogger(AuditingHandler.class);
@@ -56,9 +56,12 @@ public class AuditingHandler {
       return;
     }
     JwtData jwtData = RoutingContextHelper.getJwtData(context);
-    AuditLogData auditLogData = createAuditLogData(jwtData, context);
+    RsAuditLogData auditLogData = createAuditLogData(jwtData, context);
     String api = RoutingContextHelper.getEndPoint(context);
     LOGGER.debug("auditLogData : " + auditLogData.toJson());
+
+    // this is expected but i am not sure how it will work in the actual code??
+    org.cdpg.dx.util.RoutingContextHelper.setAuditingLog(context, auditLogData.toJson());
 
     databrokerService
         .publishMessage(auditLogData.toJson(), AUDITING_EXCHANGE, ROUTING_KEY)
@@ -72,9 +75,10 @@ public class AuditingHandler {
             failure -> LOGGER.error("Failed to publish auditing log: {}", failure.getMessage()));
   }
 
-  private AuditLogData createAuditLogData(JwtData jwtData, RoutingContext context)
+  private RsAuditLogData createAuditLogData(JwtData jwtData, RoutingContext context)
       throws Exception {
-    AuditLogData auditLogData = new AuditLogData();
+
+    RsAuditLogData auditLogData = new RsAuditLogData();
     auditLogData.setOrigin(SERVER_ORIGIN);
     auditLogData.setPrimaryKey(primaryKeySupplier.get());
     auditLogData.setEpochTime(epochSupplier.get());
