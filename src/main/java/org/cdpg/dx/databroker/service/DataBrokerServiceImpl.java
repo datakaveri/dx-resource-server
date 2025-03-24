@@ -2,6 +2,8 @@ package org.cdpg.dx.databroker.service;
 
 import static iudx.resource.server.common.HttpStatusCode.INTERNAL_SERVER_ERROR;
 import static iudx.resource.server.databroker.util.Constants.*;
+import static org.cdpg.dx.common.ErrorCode.ERROR_BAD_REQUEST;
+import static org.cdpg.dx.common.ErrorCode.ERROR_INTERNAL_SERVER;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -14,12 +16,13 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.databroker.client.RabbitClient;
 import org.cdpg.dx.databroker.model.ExchangeSubscribersResponse;
 import org.cdpg.dx.databroker.model.RegisterExchangeModel;
 import org.cdpg.dx.databroker.model.RegisterQueueModel;
 import org.cdpg.dx.databroker.util.PermissionOpType;
-import org.cdpg.dx.databroker.client.RabbitClient;
 import org.cdpg.dx.databroker.util.Util;
+import org.cdpg.dx.databroker.util.Vhosts;
 
 public class DataBrokerServiceImpl implements DataBrokerService {
   private static final Logger LOGGER = LogManager.getLogger(DataBrokerServiceImpl.class);
@@ -53,12 +56,12 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<Void> deleteQueue(String queueName, String userid) {
-    LOGGER.trace("Info : SubscriptionService#deleteStreamingSubscription() started");
+  public Future<Void> deleteQueue(String queueName, String userid, Vhosts vhosts) {
+    LOGGER.trace("Info : deleteQueue() started");
     Promise<Void> promise = Promise.promise();
 
     rabbitClient
-        .deleteQueue(queueName, vhostProd)
+        .deleteQueue(queueName, getVhost(vhosts))
         .onSuccess(
             deleteQueue -> {
               LOGGER.debug("success :: deleteQueue");
@@ -74,26 +77,26 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<RegisterQueueModel> registerQueue(String userId, String queueName) {
+  public Future<RegisterQueueModel> registerQueue(String userId, String queueName, Vhosts vhosts) {
     LOGGER.trace("Info : registerQueue() started");
     Promise<RegisterQueueModel> promise = Promise.promise();
     AtomicReference<String> apiKey = new AtomicReference<>(null);
 
     LOGGER.debug("queue name {}", queueName);
     rabbitClient
-        .createUserIfNotExist(userId, vhostProd)
+        .createUserIfNotExist(userId, getVhost(vhosts))
         .compose(
             checkUserExist -> {
               LOGGER.debug("success :: createUserIfNotExist ");
               apiKey.set(checkUserExist.getPassword());
-              return rabbitClient.createQueue(queueName, vhostProd);
+              return rabbitClient.createQueue(queueName, getVhost(vhosts));
             })
         .onSuccess(
             createQueue -> {
               LOGGER.debug("success :: createQueue");
               RegisterQueueModel registerQueueModel =
                   new RegisterQueueModel(
-                      userId, apiKey.get(), queueName, amqpUrl, amqpPort, vhostProd);
+                      userId, apiKey.get(), queueName, amqpUrl, amqpPort, getVhost(vhosts));
               LOGGER.debug(registerQueueModel.toJson());
               promise.complete(registerQueueModel);
             })
@@ -107,11 +110,12 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<Void> queueBinding(String exchangeName, String queueName, String routingKey) {
+  public Future<Void> queueBinding(
+      String exchangeName, String queueName, String routingKey, Vhosts vhosts) {
     LOGGER.trace("Info : queueBinding() started");
     Promise<Void> promise = Promise.promise();
     rabbitClient
-        .bindQueue(exchangeName, queueName, routingKey, vhostProd)
+        .bindQueue(exchangeName, queueName, routingKey, getVhost(vhosts))
         .onSuccess(
             bindQueueSuccess -> {
               LOGGER.debug("binding Queue successful");
@@ -126,23 +130,26 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<RegisterExchangeModel> registerExchange(String userId, String exchangeName) {
+  public Future<RegisterExchangeModel> registerExchange(
+      String userId, String exchangeName, Vhosts vhosts) {
+    LOGGER.trace("Info : registerExchange() started");
     Promise<RegisterExchangeModel> promise = Promise.promise();
     AtomicReference<String> apiKey = new AtomicReference<>(null);
+    String vhost = getVhost(vhosts);
     rabbitClient
-        .createUserIfNotExist(userId, vhostProd)
+        .createUserIfNotExist(userId, vhost)
         .compose(
             userCreation -> {
               LOGGER.debug("success :: userCreation");
               apiKey.set(userCreation.getPassword());
-              return rabbitClient.createExchange(exchangeName, vhostProd);
+              return rabbitClient.createExchange(exchangeName, vhost);
             })
         .onSuccess(
             createExchangeResult -> {
               LOGGER.debug("Success : Exchange created successfully.");
               RegisterExchangeModel registerExchangeModel =
                   new RegisterExchangeModel(
-                      userId, apiKey.get(), exchangeName, amqpUrl, amqpPort, vhostProd);
+                      userId, apiKey.get(), exchangeName, amqpUrl, amqpPort, vhost);
               LOGGER.debug(registerExchangeModel.toJson());
               promise.complete(registerExchangeModel);
             })
@@ -156,14 +163,15 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<Void> deleteExchange(String exchangeId, String userId) {
+  public Future<Void> deleteExchange(String exchangeId, String userId, Vhosts vhosts) {
+    LOGGER.trace("Info : deleteExchange() started");
     Promise<Void> promise = Promise.promise();
     rabbitClient
-        .getExchange(exchangeId, vhostProd)
+        .getExchange(exchangeId, getVhost(vhosts))
         .compose(
             getExchangeHandler -> {
               LOGGER.debug("exchange found to delete");
-              return rabbitClient.deleteExchange(exchangeId, vhostProd);
+              return rabbitClient.deleteExchange(exchangeId, getVhost(vhosts));
             })
         .onSuccess(
             deleteExchange -> {
@@ -179,10 +187,10 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<ExchangeSubscribersResponse> listExchange(String exchangeName) {
+  public Future<ExchangeSubscribersResponse> listExchange(String exchangeName, Vhosts vhosts) {
     Promise<ExchangeSubscribersResponse> promise = Promise.promise();
     Future<ExchangeSubscribersResponse> result =
-        rabbitClient.listExchangeSubscribers(exchangeName, vhostProd);
+        rabbitClient.listExchangeSubscribers(exchangeName, getVhost(vhosts));
     result.onComplete(
         resultHandler -> {
           if (resultHandler.succeeded()) {
@@ -198,11 +206,11 @@ public class DataBrokerServiceImpl implements DataBrokerService {
 
   @Override
   public Future<Void> updatePermission(
-      String userId, String queueOrExchangeName, PermissionOpType permissionType) {
+      String userId, String queueOrExchangeName, PermissionOpType permissionType, Vhosts vhosts) {
     Promise<Void> promise = Promise.promise();
     LOGGER.trace("Info : updatePermission() started");
     rabbitClient
-        .updateUserPermissions(vhostProd, userId, permissionType, queueOrExchangeName)
+        .updateUserPermissions(getVhost(vhosts), userId, permissionType, queueOrExchangeName)
         .onSuccess(
             updateUserPermissionsHandler -> {
               LOGGER.info("permissions updated successfully");
@@ -218,11 +226,11 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<List<String>> listQueue(String queueName) {
+  public Future<List<String>> listQueue(String queueName, Vhosts vhosts) {
     LOGGER.trace("Info : listQueue() started");
     Promise<List<String>> promise = Promise.promise();
     rabbitClient
-        .listQueueSubscribers(queueName, vhostProd)
+        .listQueueSubscribers(queueName, getVhost(vhosts))
         .onComplete(
             resultHandler -> {
               if (resultHandler.succeeded()) {
@@ -230,7 +238,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
                 promise.complete(resultHandler.result());
               } else {
                 LOGGER.error("failed ::" + resultHandler.cause());
-                promise.fail(new ServiceException(8, QUEUE_LIST_ERROR));
+                promise.fail(new ServiceException(ERROR_BAD_REQUEST, QUEUE_LIST_ERROR));
               }
             });
     return promise.future();
@@ -289,8 +297,19 @@ public class DataBrokerServiceImpl implements DataBrokerService {
         .onFailure(
             publishFailure -> {
               LOGGER.debug("publishMessage failure");
-              promise.fail(new ServiceException(0, INTERNAL_SERVER_ERROR.getDescription()));
+              promise.fail(
+                  new ServiceException(
+                      ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR.getDescription()));
             });
     return promise.future();
+  }
+
+  private String getVhost(Vhosts vhosts) {
+    return switch (vhosts.value) {
+      case "prodVhost" -> vhostProd;
+      case "internalVhost" -> iudxInternalVhost;
+      case "externalVhost" -> externalVhost;
+      default -> throw new IllegalArgumentException("Invalid vhost");
+    };
   }
 }
