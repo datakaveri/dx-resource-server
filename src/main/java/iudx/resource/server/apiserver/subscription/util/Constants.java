@@ -20,6 +20,7 @@ public class Constants {
           "UPDATE subscriptions SET expiry='$1' where queue_name='$2' and entity='$3'";
   public static final String DELETE_SUB_SQL = "DELETE FROM subscriptions where queue_name='$1'";
   public static final String RESULTS = "results";
+  public static final String DATA_WILDCARD_ROUTINGKEY = "/.*";
 
   public static final String ITEM_TYPE_RESOURCE = "Resource";
   public static final String ITEM_TYPE_RESOURCE_GROUP = "ResourceGroup";
@@ -33,4 +34,6 @@ public class Constants {
               ITEM_TYPE_RESOURCE_GROUP,
               ITEM_TYPE_RESOURCE_SERVER,
               ITEM_TYPE_PROVIDER));
+
+  public static final String ENTITIES = "entities";
 }

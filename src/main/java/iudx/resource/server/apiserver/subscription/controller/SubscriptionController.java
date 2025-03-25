@@ -1,5 +1,6 @@
 package iudx.resource.server.apiserver.subscription.controller;
 
+import static iudx.resource.server.apiserver.subscription.util.Constants.ENTITIES;
 import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.cache.util.Constants.CACHE_SERVICE_ADDRESS;
 import static iudx.resource.server.common.Constants.AUTH_SERVICE_ADDRESS;
@@ -15,18 +16,19 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.auditing.handler.AuditingHandler;
 import iudx.resource.server.apiserver.exception.FailureHandler;
-import iudx.resource.server.apiserver.subscription.model.GetResultModel;
+import iudx.resource.server.apiserver.subscription.model.GetSubscriptionResult;
 import iudx.resource.server.apiserver.subscription.model.PostSubscriptionModel;
+import iudx.resource.server.apiserver.subscription.model.SubscriberDetails;
 import iudx.resource.server.apiserver.subscription.service.SubscriptionService;
+import iudx.resource.server.apiserver.subscription.service.SubscriptionServiceImpl;
 import iudx.resource.server.apiserver.subscription.util.SubsType;
-import iudx.resource.server.apiserver.validation.id.handlers.GetIdForIngestionEntityHandler;
 import iudx.resource.server.apiserver.validation.id.handlers.GetIdFromBodyHandler;
-import iudx.resource.server.apiserver.validation.id.handlers.GetIdFromPathHandler;
 import iudx.resource.server.authenticator.AuthenticationService;
 import iudx.resource.server.authenticator.handler.authentication.AuthHandler;
 import iudx.resource.server.authenticator.handler.authorization.AuthValidationHandler;
@@ -38,11 +40,12 @@ import iudx.resource.server.authenticator.model.JwtData;
 import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.common.*;
 import iudx.resource.server.common.validation.handler.ValidationHandler;
-import iudx.resource.server.database.postgres.model.PostgresResultModel;
-import iudx.resource.server.database.postgres.service.PostgresService;
-import iudx.resource.server.databroker.service.DataBrokerService;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.database.postgres.service.PostgresService;
+import org.cdpg.dx.databroker.service.DataBrokerService;
 
 public class SubscriptionController {
   private static final Logger LOGGER = LogManager.getLogger(SubscriptionController.class);
@@ -94,7 +97,7 @@ public class SubscriptionController {
         .post(api.getSubscriptionUrl())
         .handler(auditingHandler::handleApiAudit)
         .handler(subsValidationHandler)
-        .handler(/*getIdHandler*/getIdFromBodyHandler)
+        .handler(/*getIdHandler*/ getIdFromBodyHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
@@ -106,7 +109,7 @@ public class SubscriptionController {
         .patch(api.getSubscriptionUrl() + "/:userid/:alias")
         .handler(auditingHandler::handleApiAudit)
         .handler(subsValidationHandler)
-        .handler(/*getIdHandler*/getIdFromBodyHandler)
+        .handler(/*getIdHandler*/ getIdFromBodyHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
@@ -118,7 +121,7 @@ public class SubscriptionController {
         .put(api.getSubscriptionUrl() + "/:userid/:alias")
         .handler(auditingHandler::handleApiAudit)
         .handler(subsValidationHandler)
-        .handler(/*getIdHandler*/getIdFromBodyHandler)
+        .handler(/*getIdHandler*/ getIdFromBodyHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(userAndAdminAccessHandler)
@@ -158,8 +161,8 @@ public class SubscriptionController {
         .handler(this::deleteSubscription)
         .failureHandler(failureHandler);
 
-    /*subscriptionService =
-        new SubscriptionServiceImpl(postgresService, dataBrokerService, cacheService);*/
+    subscriptionService =
+        new SubscriptionServiceImpl(postgresService, dataBrokerService, cacheService);
   }
 
   private void appendSubscription(RoutingContext routingContext) {
@@ -195,17 +198,27 @@ public class SubscriptionController {
             jwtData.getExpiry(),
             delegatorId);
     if (requestJson.getString(JSON_NAME).equalsIgnoreCase(alias)) {
-      Future<GetResultModel> subsReq =
+      Future<String> subsReq =
           subscriptionService.appendSubscription(postSubscriptionModel, subsId);
       subsReq.onComplete(
           subsRequestHandler -> {
             if (subsRequestHandler.succeeded()) {
               LOGGER.info("appended subscription");
               RoutingContextHelper.setResponseSize(routingContext, 0);
+              List<String> resultEntities = new ArrayList<String>();
+              resultEntities.add(entities);
+              JsonObject resultJson =
+                  new JsonObject()
+                      .put("type", ResponseUrn.SUCCESS_URN.getUrn())
+                      .put("title", ResponseUrn.SUCCESS_URN.getMessage().toLowerCase())
+                      .put(
+                          "results",
+                          new JsonArray()
+                              .add(new JsonObject().put(ENTITIES, new JsonArray(resultEntities))));
               response
                   .setStatusCode(201)
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                  .end(subsRequestHandler.result().constructSuccessResponse().toString());
+                  .end(resultJson.toString());
             } else {
               LOGGER.error("Fail: Bad request");
               routingContext.fail(subsRequestHandler.cause());
@@ -237,17 +250,27 @@ public class SubscriptionController {
 
     if (requestJson.getString(JSON_NAME).equalsIgnoreCase(alias)) {
       String entities = requestJson.getJsonArray("entities").getString(0);
-      Future<GetResultModel> subsReq =
+      Future<String> subsReq =
           subscriptionService.updateSubscription(entities, subsId, jwtData.getExpiry());
       subsReq.onComplete(
           subsRequestHandler -> {
             if (subsRequestHandler.succeeded()) {
               LOGGER.info("Updated subscription");
               RoutingContextHelper.setResponseSize(routingContext, 0);
+              List<String> resultEntities = new ArrayList<String>();
+              resultEntities.add(entities);
+              JsonObject resultJson =
+                  new JsonObject()
+                      .put("type", ResponseUrn.SUCCESS_URN.getUrn())
+                      .put("title", ResponseUrn.SUCCESS_URN.getMessage().toLowerCase())
+                      .put(
+                          "results",
+                          new JsonArray()
+                              .add(new JsonObject().put(ENTITIES, new JsonArray(resultEntities))));
               response
                   .setStatusCode(201)
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                  .end(subsRequestHandler.result().constructSuccessResponse().toString());
+                  .end(resultJson.toString());
             } else {
               LOGGER.error("Fail: Bad request");
               routingContext.fail(subsRequestHandler.cause());
@@ -276,16 +299,15 @@ public class SubscriptionController {
     String subsId = domain + "/" + alias;
     String subscriptionType = SubsType.STREAMING.type;
 
-    Future<GetResultModel> subsReq = subscriptionService.getSubscription(subsId, subscriptionType);
+    Future<GetSubscriptionResult> subsReq =
+        subscriptionService.getSubscription(subsId, subscriptionType);
     subsReq.onComplete(
         subHandler -> {
           if (subHandler.succeeded()) {
             LOGGER.info("Success: Getting subscription");
             RoutingContextHelper.setResponseSize(routingContext, 0);
             RoutingContextHelper.setId(routingContext, subHandler.result().entities());
-            response
-                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                .end(subHandler.result().constructSuccessResponse().toString());
+            response.putHeader(CONTENT_TYPE, APPLICATION_JSON).end(subHandler.result().toString());
           } else {
             routingContext.fail(subHandler.cause());
           }
@@ -297,15 +319,13 @@ public class SubscriptionController {
     JwtData jwtData = RoutingContextHelper.getJwtData(routingContext);
     HttpServerResponse response = routingContext.response();
 
-    Future<PostgresResultModel> subsReq =
+    Future<List<SubscriberDetails>> subsReq =
         subscriptionService.getAllSubscriptionQueueForUser(jwtData.getSub());
     subsReq.onComplete(
         subHandler -> {
           if (subHandler.succeeded()) {
             LOGGER.info("Success: Getting subscription queue" + subHandler.result());
-            response
-                .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                .end(subHandler.result().toJson().toString());
+            response.putHeader(CONTENT_TYPE, APPLICATION_JSON).end(subHandler.result().toString());
           } else {
             routingContext.fail(subHandler.cause());
           }
@@ -372,21 +392,21 @@ public class SubscriptionController {
             jwtData.getExpiry(),
             delegatorId);
 
-    /*subscriptionService
+    subscriptionService
         .createSubscription(postSubscriptionModel)
         .onSuccess(
             subHandler -> {
               LOGGER.info("Success: Handle Subscription request;");
               RoutingContextHelper.setResponseSize(routingContext, 0);
-              *//*response
+              response
                   .setStatusCode(201)
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                  .end(subHandler.constructSuccessResponse().toString());*//*
+                  .end(subHandler.toJson().toString());
             })
         .onFailure(
             failure -> {
               routingContext.fail(failure);
-            });*/
+            });
   }
 
   private void proxyRequired() {
