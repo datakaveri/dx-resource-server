@@ -1,4 +1,3 @@
-/*
 package iudx.resource.server.apiserver.ingestion.model;
 
 import io.vertx.core.json.JsonArray;
@@ -13,4 +12,3 @@ public record IngestionData(IngestionResponseModel ingestionResponseModel) {
         .put("results", new JsonArray().add(ingestionResponseModel.toJson()));
   }
 }
-*/

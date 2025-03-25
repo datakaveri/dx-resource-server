@@ -5,9 +5,10 @@ import io.vertx.core.json.JsonArray;
 import iudx.resource.server.apiserver.ingestion.model.GetResultModel;
 import iudx.resource.server.apiserver.ingestion.model.IngestionEntitiesResponseModel;
 import iudx.resource.server.database.postgres.model.PostgresResultModel;
+import org.cdpg.dx.databroker.model.RegisterExchangeModel;
 
 public interface IngestionService {
-  /*Future<IngestionData> registerAdapter(String entities, String instanceId, String userId);*/
+  Future<RegisterExchangeModel> registerAdapter(String entities, String instanceId, String userId);
 
   Future<Void> deleteAdapter(String adapterId, String userId);
 

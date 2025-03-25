@@ -1,4 +1,3 @@
-/*
 package iudx.resource.server.apiserver.ingestion.service;
 
 import static iudx.resource.server.apiserver.ingestion.util.Constants.*;
@@ -7,26 +6,33 @@ import static iudx.resource.server.apiserver.subscription.util.Constants.ITEM_TY
 import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.cache.util.CacheType.CATALOGUE_CACHE;
 import static iudx.resource.server.common.HttpStatusCode.INTERNAL_SERVER_ERROR;
+import static org.cdpg.dx.databroker.util.Constants.*;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceException;
-import iudx.resource.server.apiserver.ingestion.model.GetResultModel;
-import iudx.resource.server.apiserver.ingestion.model.IngestionData;
-import iudx.resource.server.apiserver.ingestion.model.IngestionEntitiesResponseModel;
-import iudx.resource.server.apiserver.ingestion.model.IngestionModel;
+import iudx.resource.server.apiserver.ingestion.model.*;
 import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.database.postgres.model.PostgresResultModel;
-import iudx.resource.server.database.postgres.service.PostgresService;
-import iudx.resource.server.databroker.service.DataBrokerService;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.database.postgres.models.Condition;
+import org.cdpg.dx.database.postgres.models.ConditionComponent;
+import org.cdpg.dx.database.postgres.models.DeleteQuery;
+import org.cdpg.dx.database.postgres.models.InsertQuery;
+import org.cdpg.dx.database.postgres.service.PostgresService;
+import org.cdpg.dx.databroker.model.RegisterExchangeModel;
+import org.cdpg.dx.databroker.service.DataBrokerService;
+import org.cdpg.dx.databroker.util.PermissionOpType;
+import org.cdpg.dx.databroker.util.Vhosts;
 
 public class IngestionServiceImpl implements IngestionService {
   private static final Logger LOGGER = LogManager.getLogger(IngestionServiceImpl.class);
@@ -42,10 +48,12 @@ public class IngestionServiceImpl implements IngestionService {
   }
 
   @Override
-  public Future<IngestionData> registerAdapter(String entities, String instanceId, String userId) {
-    Promise<IngestionData> promise = Promise.promise();
+  public Future<RegisterExchangeModel> registerAdapter(
+      String entities, String instanceId, String userId) {
+    Promise<RegisterExchangeModel> promise = Promise.promise();
     JsonObject cacheJson = new JsonObject().put("key", entities).put("type", CATALOGUE_CACHE);
-    AtomicBoolean isAdaptorCreated = new AtomicBoolean(false);
+    AtomicBoolean isPostgresUpdated = new AtomicBoolean(false);
+    AtomicReference<String> routingKey = new AtomicReference<>(null);
     cacheService
         .get(cacheJson)
         .compose(
@@ -59,56 +67,110 @@ public class IngestionServiceImpl implements IngestionService {
               String resourceIdForIngestion;
               if (!itemTypeSet.contains("Resource")) {
                 resourceIdForIngestion = cacheServiceResult.getString("id");
+                routingKey.set(resourceIdForIngestion + DATA_WILDCARD_ROUTINGKEY);
               } else {
                 resourceIdForIngestion = cacheServiceResult.getString("resourceGroup");
+                routingKey.set(resourceIdForIngestion + "/." + entities);
               }
               String query =
                   CREATE_INGESTION_SQL
-                      .replace("$1", resourceIdForIngestion) */
-/* exchange name *//*
+                      .replace("$1", resourceIdForIngestion)
+                      .replace("$2", cacheServiceResult.getString("id"))
+                      .replace("$3", cacheServiceResult.getString("name"))
+                      .replace("$4", cacheServiceResult.toString())
+                      .replace("$5", userId)
+                      .replace("$6", cacheServiceResult.getString("provider"));
 
-                      .replace("$2", cacheServiceResult.getString("id")) */
-/* resource *//*
-
-                      .replace("$3", cacheServiceResult.getString("name")) */
-/* dataset name *//*
-
-                      .replace("$4", cacheServiceResult.toString()) */
-/* dataset json *//*
-
-                      .replace("$5", userId) */
-/* user id *//*
-
-                      .replace("$6", cacheServiceResult.getString("provider")); */
-/*provider*//*
-
+              List<String> columns =
+                  List.of(
+                      "exchange_name",
+                      "resource_id",
+                      "dataset_name",
+                      "dataset_details_json",
+                      "user_id",
+                      "providerid");
+              List<Object> values =
+                  List.of(
+                      resourceIdForIngestion,
+                      cacheServiceResult.getString("id"),
+                      cacheServiceResult.getString("name"),
+                      cacheServiceResult.toString(),
+                      userId,
+                      cacheServiceResult.getString("provider"));
+              InsertQuery insertQuery = new InsertQuery("adaptors_details", columns, values);
 
               return postgresService
-                  .executeQuery(query)
+                  .insert(insertQuery)
                   .map(
                       pgHandler ->
-                          new IngestionModel(
-                              entities,
-                              userId,
-                              itemTypeSet.iterator().next(),
-                              resourceIdForIngestion));
+                          new RequestRegisterExchangeModel(userId, resourceIdForIngestion));
             })
         .compose(
             ingestionHandler -> {
               LOGGER.debug("Inserted in postgres.");
-              isAdaptorCreated.set(true);
-              return dataBroker.registerAdaptor(ingestionHandler).map(IngestionData::new);
+              isPostgresUpdated.set(true);
+              return dataBroker.registerExchange(
+                  ingestionHandler.userId(), ingestionHandler.exchangeName(), Vhosts.IUDX_PROD);
+            })
+        .compose(
+            registerExchangeHandler -> {
+              LOGGER.debug("Exchanges created in databroker.");
+              return dataBroker
+                  .updatePermission(
+                      userId,
+                      registerExchangeHandler.getExchangeName(),
+                      PermissionOpType.ADD_WRITE,
+                      Vhosts.IUDX_PROD)
+                  .map(updatePermission -> registerExchangeHandler);
+            })
+        .compose(
+            updatePermissionHandler -> {
+              LOGGER.debug("Permission updated.");
+              return dataBroker
+                  .queueBinding(
+                      updatePermissionHandler.getExchangeName(),
+                      QUEUE_DATA,
+                      routingKey.get(),
+                      Vhosts.IUDX_PROD)
+                  .map(bindQueueHandler -> updatePermissionHandler);
+            })
+        .compose(
+            queueDatabaseHandler -> {
+              LOGGER.debug("Success : Data Base Queue Binding successful.");
+              return dataBroker
+                  .queueBinding(
+                      queueDatabaseHandler.getExchangeName(),
+                      REDIS_LATEST,
+                      routingKey.get(),
+                      Vhosts.IUDX_PROD)
+                  .map(bindQueueHandler -> queueDatabaseHandler);
+            })
+        .compose(
+            redisLatestHandler -> {
+              LOGGER.debug("Success : Redis Queue Binding successful.");
+              return dataBroker
+                  .queueBinding(
+                      redisLatestHandler.getExchangeName(),
+                      QUEUE_AUDITING,
+                      routingKey.get(),
+                      Vhosts.IUDX_PROD)
+                  .map(bindQueueHandler -> redisLatestHandler);
             })
         .onSuccess(
             ingestionData -> {
+              LOGGER.debug("Success : Subscription-Monitoring Queue Binding");
               promise.complete(ingestionData);
             })
         .onFailure(
             failure -> {
-              if (isAdaptorCreated.get()) {
-                String deleteQuery = DELETE_INGESTION_SQL.replace("$0", entities);
+              if (isPostgresUpdated.get()) {
+                /*String deleteQuery = DELETE_INGESTION_SQL.replace("$0", entities);*/
+                ConditionComponent conditionComponent =
+                    new Condition("exchange_name", Condition.Operator.EQUALS, List.of(entities));
+                DeleteQuery deleteQuery =
+                    new DeleteQuery("adaptors_details", conditionComponent, null, null);
                 postgresService
-                    .executeQuery(deleteQuery)
+                    .delete(deleteQuery)
                     .onComplete(
                         deletePgHandler -> {
                           if (deletePgHandler.succeeded()) {
@@ -128,12 +190,18 @@ public class IngestionServiceImpl implements IngestionService {
   @Override
   public Future<Void> deleteAdapter(String adapterId, String userId) {
     Promise<Void> promise = Promise.promise();
-    dataBroker
-        .deleteAdaptor(adapterId, userId)
+    dataBroker.deleteExchange(adapterId,userId,Vhosts.IUDX_PROD)
         .compose(
             deleteAdaptorHandler -> {
               LOGGER.info("Adapter deleted");
-              return postgresService.executeQuery(DELETE_INGESTION_SQL.replace("$0", adapterId));
+                return dataBroker.updatePermission(userId, adapterId, PermissionOpType.DELETE_WRITE, Vhosts.IUDX_PROD);
+            }).compose(updatePermissionHandler->{
+                LOGGER.info("Permission deleted for exchange successfully");
+                ConditionComponent conditionComponent =
+                        new Condition("exchange_name", Condition.Operator.EQUALS, List.of(adapterId));
+                DeleteQuery deleteQuery =
+                        new DeleteQuery("adaptors_details", conditionComponent, null, null);
+                return postgresService.delete(deleteQuery);
             })
         .onSuccess(
             pgHandler -> {
@@ -236,4 +304,3 @@ public class IngestionServiceImpl implements IngestionService {
     return promise.future();
   }
 }
-*/
