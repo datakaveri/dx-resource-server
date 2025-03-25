@@ -1,9 +1,9 @@
 package org.cdpg.dx.databroker.service;
 
-import static iudx.resource.server.common.HttpStatusCode.INTERNAL_SERVER_ERROR;
-import static iudx.resource.server.databroker.util.Constants.*;
 import static org.cdpg.dx.common.ErrorCode.ERROR_BAD_REQUEST;
 import static org.cdpg.dx.common.ErrorCode.ERROR_INTERNAL_SERVER;
+import static org.cdpg.dx.common.ErrorMessage.INTERNAL_SERVER_ERROR;
+import static org.cdpg.dx.databroker.util.Constants.QUEUE_LIST_ERROR;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -297,9 +297,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
         .onFailure(
             publishFailure -> {
               LOGGER.debug("publishMessage failure");
-              promise.fail(
-                  new ServiceException(
-                      ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR.getDescription()));
+              promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
             });
     return promise.future();
   }
