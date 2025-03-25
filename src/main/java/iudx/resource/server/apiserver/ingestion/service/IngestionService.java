@@ -2,9 +2,8 @@ package iudx.resource.server.apiserver.ingestion.service;
 
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
-import iudx.resource.server.apiserver.ingestion.model.GetResultModel;
-import iudx.resource.server.apiserver.ingestion.model.IngestionEntitiesResponseModel;
-import iudx.resource.server.database.postgres.model.PostgresResultModel;
+import org.cdpg.dx.database.postgres.models.QueryResult;
+import org.cdpg.dx.databroker.model.ExchangeSubscribersResponse;
 import org.cdpg.dx.databroker.model.RegisterExchangeModel;
 
 public interface IngestionService {
@@ -12,9 +11,9 @@ public interface IngestionService {
 
   Future<Void> deleteAdapter(String adapterId, String userId);
 
-  Future<GetResultModel> getAdapterDetails(String adapterId);
+  Future<ExchangeSubscribersResponse> getAdapterDetails(String adapterId);
 
-  Future<IngestionEntitiesResponseModel> publishDataFromAdapter(JsonArray json);
+  Future<Void> publishDataFromAdapter(JsonArray json);
 
-  Future<PostgresResultModel> getAllAdapterDetailsForUser(String iid);
+  Future<QueryResult> getAllAdapterDetailsForUser(String iid);
 }

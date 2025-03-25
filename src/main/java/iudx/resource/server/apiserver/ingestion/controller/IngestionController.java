@@ -21,6 +21,7 @@ import io.vertx.ext.web.RoutingContext;
 import iudx.resource.server.apiserver.auditing.handler.AuditingHandler;
 import iudx.resource.server.apiserver.exception.FailureHandler;
 import iudx.resource.server.apiserver.ingestion.service.IngestionService;
+import iudx.resource.server.apiserver.ingestion.service.IngestionServiceImpl;
 import iudx.resource.server.apiserver.validation.id.handlers.GetIdForIngestionEntityHandler;
 import iudx.resource.server.apiserver.validation.id.handlers.GetIdFromBodyHandler;
 import iudx.resource.server.apiserver.validation.id.handlers.GetIdFromPathHandler;
@@ -33,12 +34,12 @@ import iudx.resource.server.authenticator.handler.authorization.TokenRevokedHand
 import iudx.resource.server.authenticator.model.DxRole;
 import iudx.resource.server.cache.service.CacheService;
 import iudx.resource.server.common.*;
-import iudx.resource.server.database.postgres.model.PostgresResultModel;
-import iudx.resource.server.database.postgres.service.PostgresService;
-import iudx.resource.server.databroker.service.DataBrokerService;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.database.postgres.models.QueryResult;
+import org.cdpg.dx.database.postgres.service.PostgresService;
+import org.cdpg.dx.databroker.service.DataBrokerService;
 
 public class IngestionController {
   private static final Logger LOGGER = LogManager.getLogger(IngestionController.class);
@@ -75,14 +76,15 @@ public class IngestionController {
         new AuthorizationHandler()
             .setUserRolesForEndpoint(DxRole.DELEGATE, DxRole.PROVIDER, DxRole.ADMIN);
     Handler<RoutingContext> isTokenRevoked = new TokenRevokedHandler(cacheService).isTokenRevoked();
-    GetIdForIngestionEntityHandler getIdForIngestionEntityHandler = new GetIdForIngestionEntityHandler();
+    GetIdForIngestionEntityHandler getIdForIngestionEntityHandler =
+        new GetIdForIngestionEntityHandler();
     GetIdFromBodyHandler getIdFromBodyHandler = new GetIdFromBodyHandler();
     GetIdFromPathHandler getIdFromPathHandler = new GetIdFromPathHandler();
 
     router
         .post(api.getIngestionPath())
         .handler(auditingHandler::handleApiAudit)
-        .handler(/*getIdHandler.withNormalisedPath(api.getIngestionPath())*/getIdFromBodyHandler)
+        .handler(/*getIdHandler.withNormalisedPath(api.getIngestionPath())*/ getIdFromBodyHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
@@ -93,7 +95,7 @@ public class IngestionController {
     router
         .delete(api.getIngestionPath() + "/:UUID")
         .handler(auditingHandler::handleApiAudit)
-        .handler(/*getIdHandler.withNormalisedPath(api.getIngestionPath())*/getIdFromPathHandler)
+        .handler(/*getIdHandler.withNormalisedPath(api.getIngestionPath())*/ getIdFromPathHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
@@ -104,7 +106,7 @@ public class IngestionController {
     router
         .get(api.getIngestionPath() + "/:UUID")
         .handler(auditingHandler::handleApiAudit)
-        .handler(/*getIdHandler.withNormalisedPath(api.getIngestionPath())*/getIdFromPathHandler)
+        .handler(/*getIdHandler.withNormalisedPath(api.getIngestionPath())*/ getIdFromPathHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
@@ -115,7 +117,8 @@ public class IngestionController {
     router
         .post(api.getIngestionPathEntities())
         .handler(auditingHandler::handleApiAudit)
-        .handler(/*getIdHandler.withNormalisedPath(api.getIngestionPathEntities())*/getIdForIngestionEntityHandler)
+        .handler(
+            /*getIdHandler.withNormalisedPath(api.getIngestionPathEntities())*/ getIdForIngestionEntityHandler)
         .handler(authHandler)
         .handler(validateToken)
         .handler(providerAndAdminAccessHandler)
@@ -133,7 +136,7 @@ public class IngestionController {
         .handler(this::getAllAdaptersForUsers)
         .failureHandler(validationsFailureHandler);
 
-    /*ingestionService = new IngestionServiceImpl(cacheService, dataBrokerService, postgresService);*/
+    ingestionService = new IngestionServiceImpl(cacheService, dataBrokerService, postgresService);
   }
 
   private void registerAdapter(RoutingContext routingContext) {
@@ -146,28 +149,28 @@ public class IngestionController {
     String userId = RoutingContextHelper.getJwtData(routingContext).getSub();
     requestJson.put(USER_ID, userId);
     String entities = requestJson.getJsonArray("entities").getString(0);
-    /*ingestionService
+    ingestionService
         .registerAdapter(entities, instanceId, userId)
         .onComplete(
             handler -> {
               if (handler.succeeded()) {
                 LOGGER.info("Success: Registering adapter");
                 RoutingContextHelper.setResponseSize(routingContext, 0);
-                *//*response
+                response
                     .setStatusCode(201)
                     .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                    .end(handler.result().constructSuccessResponse().toString());*//*
+                    .end(handler.result().toJson().toString());
               } else {
                 LOGGER.error("Fail: " + handler.cause());
                 routingContext.fail(handler.cause());
               }
-            });*/
+            });
   }
 
   private void deleteAdapter(RoutingContext routingContext) {
     LOGGER.trace("Info: deleteAdapter method starts;");
     Map<String, String> pathParams = routingContext.pathParams();
-    String adaptorId = pathParams.get("*");
+    String adaptorId = pathParams.get("UUID");
 
     String userId = RoutingContextHelper.getJwtData(routingContext).getSub();
     HttpServerResponse response = routingContext.response();
@@ -207,7 +210,7 @@ public class IngestionController {
               response
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                   .setStatusCode(200)
-                  .end(brokerResultHandler.constructSuccessResponse().toString());
+                  .end(brokerResultHandler.toJson().toString());
             })
         .onFailure(
             failure -> {
@@ -227,10 +230,15 @@ public class IngestionController {
                 if (brokerResultHandler.succeeded()) {
                   LOGGER.debug("Success: publishing data from adapter");
                   RoutingContextHelper.setResponseSize(routingContext, 0);
+                  JsonObject result =
+                      new JsonObject()
+                          .put("type", ResponseUrn.SUCCESS_URN.getUrn())
+                          .put("title", ResponseUrn.SUCCESS_URN.getMessage().toLowerCase())
+                          .put("detail", "Item Published");
                   response
                       .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                       .setStatusCode(200)
-                      .end(brokerResultHandler.result().constructSuccessResponse().toString());
+                      .end(result.toString());
                 } else {
                   LOGGER.debug("Fail: Bad request");
                   routingContext.fail(brokerResultHandler.cause());
@@ -255,20 +263,19 @@ public class IngestionController {
     String iid = RoutingContextHelper.getJwtData(routingContext).getIid().split(":")[1];
     LOGGER.debug("Getting all adapters for user : " + iid);
     if (iid != null) {
-      Future<PostgresResultModel> allAdapterForUser =
-          ingestionService.getAllAdapterDetailsForUser(iid);
+      Future<QueryResult> allAdapterForUser = ingestionService.getAllAdapterDetailsForUser(iid);
       allAdapterForUser.onComplete(
           handler -> {
             if (handler.succeeded()) {
               LOGGER.debug("Successful");
-              if (handler.result().getResult().isEmpty()) {
+              /* if (handler.result().getResult().isEmpty()) {
                 response.putHeader(CONTENT_TYPE, APPLICATION_JSON).setStatusCode(204).end();
               } else {
                 response
                     .putHeader(CONTENT_TYPE, APPLICATION_JSON)
                     .setStatusCode(200)
                     .end(handler.result().toJson().toString());
-              }
+              }*/
             } else {
               LOGGER.error("failed to complete request");
               routingContext.fail(handler.cause());

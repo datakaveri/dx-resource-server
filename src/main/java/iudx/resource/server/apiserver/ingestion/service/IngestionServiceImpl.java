@@ -15,7 +15,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceException;
 import iudx.resource.server.apiserver.ingestion.model.*;
 import iudx.resource.server.cache.service.CacheService;
-import iudx.resource.server.database.postgres.model.PostgresResultModel;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,11 +23,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cdpg.dx.database.postgres.models.Condition;
-import org.cdpg.dx.database.postgres.models.ConditionComponent;
-import org.cdpg.dx.database.postgres.models.DeleteQuery;
-import org.cdpg.dx.database.postgres.models.InsertQuery;
+import org.cdpg.dx.database.postgres.models.*;
 import org.cdpg.dx.database.postgres.service.PostgresService;
+import org.cdpg.dx.databroker.model.ExchangeSubscribersResponse;
 import org.cdpg.dx.databroker.model.RegisterExchangeModel;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.databroker.util.PermissionOpType;
@@ -47,6 +44,7 @@ public class IngestionServiceImpl implements IngestionService {
     this.postgresService = postgresService;
   }
 
+  // TODO: Need to revisit once postgresmodel
   @Override
   public Future<RegisterExchangeModel> registerAdapter(
       String entities, String instanceId, String userId) {
@@ -187,21 +185,26 @@ public class IngestionServiceImpl implements IngestionService {
     return promise.future();
   }
 
+  // TODO: Need to revisit once postgresmodel
   @Override
   public Future<Void> deleteAdapter(String adapterId, String userId) {
     Promise<Void> promise = Promise.promise();
-    dataBroker.deleteExchange(adapterId,userId,Vhosts.IUDX_PROD)
+    dataBroker
+        .deleteExchange(adapterId, userId, Vhosts.IUDX_PROD)
         .compose(
             deleteAdaptorHandler -> {
               LOGGER.info("Adapter deleted");
-                return dataBroker.updatePermission(userId, adapterId, PermissionOpType.DELETE_WRITE, Vhosts.IUDX_PROD);
-            }).compose(updatePermissionHandler->{
-                LOGGER.info("Permission deleted for exchange successfully");
-                ConditionComponent conditionComponent =
-                        new Condition("exchange_name", Condition.Operator.EQUALS, List.of(adapterId));
-                DeleteQuery deleteQuery =
-                        new DeleteQuery("adaptors_details", conditionComponent, null, null);
-                return postgresService.delete(deleteQuery);
+              return dataBroker.updatePermission(
+                  userId, adapterId, PermissionOpType.DELETE_WRITE, Vhosts.IUDX_PROD);
+            })
+        .compose(
+            updatePermissionHandler -> {
+              LOGGER.info("Permission deleted for exchange successfully");
+              ConditionComponent conditionComponent =
+                  new Condition("exchange_name", Condition.Operator.EQUALS, List.of(adapterId));
+              DeleteQuery deleteQuery =
+                  new DeleteQuery("adaptors_details", conditionComponent, null, null);
+              return postgresService.delete(deleteQuery);
             })
         .onSuccess(
             pgHandler -> {
@@ -216,16 +219,17 @@ public class IngestionServiceImpl implements IngestionService {
     return promise.future();
   }
 
+  // TODO: Need to revisit once postgresmodel
   @Override
-  public Future<GetResultModel> getAdapterDetails(String adapterId) {
-    Promise<GetResultModel> promise = Promise.promise();
+  public Future<ExchangeSubscribersResponse> getAdapterDetails(String adapterId) {
+    Promise<ExchangeSubscribersResponse> promise = Promise.promise();
     dataBroker
-        .listAdaptor(adapterId)
+        .listExchange(adapterId, Vhosts.IUDX_PROD)
         .onComplete(
             handler -> {
               if (handler.succeeded()) {
-                GetResultModel getResultModel = new GetResultModel(handler.result());
-                promise.complete(getResultModel);
+                /* GetResultModel getResultModel = new GetResultModel(handler.result());*/
+                promise.complete(handler.result());
               } else {
                 promise.fail(handler.cause());
               }
@@ -233,9 +237,10 @@ public class IngestionServiceImpl implements IngestionService {
     return promise.future();
   }
 
+  // TODO: Need to revisit once postgresmodel
   @Override
-  public Future<IngestionEntitiesResponseModel> publishDataFromAdapter(JsonArray request) {
-    Promise<IngestionEntitiesResponseModel> promise = Promise.promise();
+  public Future<Void> publishDataFromAdapter(JsonArray request) {
+    Promise<Void> promise = Promise.promise();
     String entities = request.getJsonObject(0).getJsonArray("entities").getValue(0).toString();
     JsonObject cacheRequestJson = new JsonObject();
     cacheRequestJson.put("type", CATALOGUE_CACHE);
@@ -265,7 +270,7 @@ public class IngestionServiceImpl implements IngestionService {
             resultHandler -> {
               LOGGER.info("result handler ::" + resultHandler);
               if (resultHandler.equalsIgnoreCase("success")) {
-                promise.complete(new IngestionEntitiesResponseModel("Item Published"));
+                promise.complete();
               }
             })
         .onFailure(
@@ -277,10 +282,11 @@ public class IngestionServiceImpl implements IngestionService {
     return promise.future();
   }
 
+  // TODO: Need to revisit once postgresmodel
   @Override
-  public Future<PostgresResultModel> getAllAdapterDetailsForUser(String iid) {
+  public Future<QueryResult> getAllAdapterDetailsForUser(String iid) {
     LOGGER.debug("getAllAdapterDetailsForUser() started");
-    Promise<PostgresResultModel> promise = Promise.promise();
+    Promise<QueryResult> promise = Promise.promise();
 
     JsonObject cacheRequest = new JsonObject();
     cacheRequest.put("type", CATALOGUE_CACHE);
@@ -290,7 +296,12 @@ public class IngestionServiceImpl implements IngestionService {
         .compose(
             cacheResult -> {
               String providerId = cacheResult.getString("provider");
-              return postgresService.executeQuery1(SELECT_INGESTION_SQL.replace("$0", providerId));
+              ConditionComponent conditionComponent =
+                  new Condition("providerid", Condition.Operator.EQUALS, List.of(providerId));
+              SelectQuery selectQuery =
+                  new SelectQuery(
+                      "adaptors_details", List.of("*"), conditionComponent, null, null, null, null);
+              return postgresService.select(selectQuery);
             })
         .onSuccess(
             postgresServiceHandler -> {
