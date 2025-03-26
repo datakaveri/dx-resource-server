@@ -127,7 +127,7 @@ public class IngestionServiceImpl implements IngestionService {
               return dataBroker
                   .queueBinding(
                       updatePermissionHandler.getExchangeName(),
-                      QUEUE_DATA,
+                          DATABASE_QUEUE,
                       routingKey.get(),
                       Vhosts.IUDX_PROD)
                   .map(bindQueueHandler -> updatePermissionHandler);
@@ -138,7 +138,7 @@ public class IngestionServiceImpl implements IngestionService {
               return dataBroker
                   .queueBinding(
                       queueDatabaseHandler.getExchangeName(),
-                      REDIS_LATEST,
+                          REDIS_LATEST_QUEUE,
                       routingKey.get(),
                       Vhosts.IUDX_PROD)
                   .map(bindQueueHandler -> queueDatabaseHandler);
@@ -149,7 +149,7 @@ public class IngestionServiceImpl implements IngestionService {
               return dataBroker
                   .queueBinding(
                       redisLatestHandler.getExchangeName(),
-                      QUEUE_AUDITING,
+                          QUEUE_SUBS,
                       routingKey.get(),
                       Vhosts.IUDX_PROD)
                   .map(bindQueueHandler -> redisLatestHandler);

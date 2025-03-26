@@ -74,9 +74,9 @@ public class Constants {
     public static final String EXCHANGE_FOUND = "Exchange found";
     public static final String EXCHANGE_NOT_FOUND = "Exchange not found";
     public static final String EXCHANGE_CREATE_ERROR = "Creation of Exchange failed";
-    public static final String QUEUE_DATA = "database";
-    public static final String QUEUE_AUDITING = "subscriptions-monitoring";
-    public static final String REDIS_LATEST = "redis-latest";
+    public static final String DATABASE_QUEUE = "database";
+    public static final String QUEUE_SUBS = "subscriptions-monitoring";
+    public static final String REDIS_LATEST_QUEUE = "redis-latest";
     public static final String EXCHANGE_EXISTS = "Exchange already exists";
     public static final String EXCHANGE_EXISTS_WITH_DIFFERENT_PROPERTIES =
             "Exchange already exists with different properties";
