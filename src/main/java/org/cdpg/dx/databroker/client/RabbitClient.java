@@ -1,12 +1,11 @@
 package org.cdpg.dx.databroker.client;
 
-import static iudx.resource.server.apiserver.util.Constants.USER_ID;
-import static iudx.resource.server.common.HttpStatusCode.BAD_REQUEST;
-import static iudx.resource.server.common.HttpStatusCode.INTERNAL_SERVER_ERROR;
-import static iudx.resource.server.databroker.util.Constants.*;
-import static iudx.resource.server.databroker.util.Util.encodeValue;
-import static iudx.resource.server.databroker.util.Util.randomPassword;
 import static org.cdpg.dx.common.ErrorCode.*;
+import static org.cdpg.dx.common.ErrorMessage.BAD_REQUEST_ERROR;
+import static org.cdpg.dx.common.ErrorMessage.INTERNAL_SERVER_ERROR;
+import static org.cdpg.dx.databroker.util.Constants.*;
+import static org.cdpg.dx.databroker.util.Util.encodeValue;
+import static org.cdpg.dx.databroker.util.Util.randomPassword;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -352,14 +351,11 @@ public class RabbitClient {
                             }
                           } else {
                             promise.fail(
-                                new ServiceException(
-                                    ERROR_BAD_REQUEST, BAD_REQUEST.getDescription()));
+                                new ServiceException(ERROR_BAD_REQUEST, BAD_REQUEST_ERROR));
                           }
                         });
               } else {
-                promise.fail(
-                    new ServiceException(
-                        ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR.getDescription()));
+                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
               }
             });
     return promise.future();
@@ -453,9 +449,7 @@ public class RabbitClient {
                   promise.fail(new ServiceException(ERROR_CONFLICT, EXCHANGE_EXISTS));
                 }
               } else {
-                promise.fail(
-                    new ServiceException(
-                        ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR.getDescription()));
+                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
               }
             });
 
@@ -504,14 +498,10 @@ public class RabbitClient {
                 } else if (status == HttpStatus.SC_NOT_FOUND) {
                   promise.fail(new ServiceException(ERROR_NOT_FOUND, EXCHANGE_NOT_FOUND));
                 } else {
-                  promise.fail(
-                      new ServiceException(
-                          ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR.getDescription()));
+                  promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
                 }
               } else {
-                promise.fail(
-                    new ServiceException(
-                        ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR.getDescription()));
+                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
               }
             });
     return promise.future();
@@ -558,9 +548,7 @@ public class RabbitClient {
                 }
               } else {
                 LOGGER.error("Fail : Listing of Exchange failed  ");
-                promise.fail(
-                    new ServiceException(
-                        ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR.getDescription()));
+                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
               }
             });
 

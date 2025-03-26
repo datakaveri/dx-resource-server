@@ -80,4 +80,5 @@ public class Constants {
     public static final String EXCHANGE_EXISTS = "Exchange already exists";
     public static final String EXCHANGE_EXISTS_WITH_DIFFERENT_PROPERTIES =
             "Exchange already exists with different properties";
+    public static final String USER_ID = "userid";
 }
