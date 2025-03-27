@@ -1,6 +1,6 @@
 package org.cdpg.dx.rs.ingestion.service;
 
-import static org.cdpg.dx.common.ErrorCode.ERROR_CONFLICT;
+import static org.cdpg.dx.common.ErrorCode.*;
 import static org.cdpg.dx.common.ErrorMessage.INTERNAL_SERVER_ERROR;
 import static org.cdpg.dx.databroker.util.Constants.*;
 import static org.cdpg.dx.rs.ingestion.util.Constants.ITEM_TYPES;
@@ -72,7 +72,7 @@ public class IngestionServiceImpl implements IngestionService {
         routingKey = resourceGroup + "/." + entitiesId;
       }
     } catch (Exception ex) {
-      LOGGER.error("Error while getting resourceGroup", ex);
+      LOGGER.error("Error while getting resourceGroup {}", ex.getMessage());
       return null;
     }
     return routingKey;
@@ -133,7 +133,7 @@ public class IngestionServiceImpl implements IngestionService {
                           if (resourceGroup.isEmpty() || routingKey.isEmpty()) {
                             return Future.failedFuture(
                                 new ServiceException(
-                                    8, "Resource group or routing key is missing"));
+                                    ERROR_BAD_REQUEST, "Resource group or routing key is missing"));
                           }
                           return dataBroker
                               .registerExchange(userId, resourceGroup.get(), Vhosts.IUDX_PROD)
@@ -281,7 +281,8 @@ public class IngestionServiceImpl implements IngestionService {
             catalogueResult -> {
               String resourceGroupId = getResourceGroup(catalogueResult);
               if (resourceGroupId == null) {
-                return Future.failedFuture("resourceGroupId not found");
+                return Future.failedFuture(new ServiceException(
+                        ERROR_BAD_REQUEST, "resourceGroupId not found"));
               }
 
               LOGGER.debug("Info : resourceGroupId  " + resourceGroupId);
@@ -307,7 +308,7 @@ public class IngestionServiceImpl implements IngestionService {
         .onFailure(
             failure -> {
               LOGGER.error("Error occurred while publishing data from adapter", failure);
-              promise.fail(new ServiceException(0, INTERNAL_SERVER_ERROR));
+              promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
             });
 
     return promise.future();
@@ -338,7 +339,7 @@ public class IngestionServiceImpl implements IngestionService {
         .onFailure(
             failure -> {
               LOGGER.error("failed");
-              promise.fail(new ServiceException(0, INTERNAL_SERVER_ERROR));
+              promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
             });
     return promise.future();
   }
