@@ -1,7 +1,6 @@
 package org.cdpg.dx.databroker.client;
 
-import static iudx.resource.server.databroker.util.Constants.*;
-import static iudx.resource.server.databroker.util.Constants.REQUEST_DELETE;
+import static org.cdpg.dx.databroker.util.Constants.*;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -17,7 +16,6 @@ import org.apache.logging.log4j.Logger;
 
 public class RabbitWebClient {
     private static final Logger LOGGER = LogManager.getLogger(RabbitWebClient.class);
-
     static WebClient webClient;
     private String username;
     private String password;
@@ -30,9 +28,9 @@ public class RabbitWebClient {
         }
     }
 
-    private WebClient getRabbitMqWebClient(Vertx vertx, WebClientOptions webClientOptions) {
-        return WebClient.create(vertx, webClientOptions);
-    }
+  private WebClient getRabbitMqWebClient(Vertx vertx, WebClientOptions webClientOptions) {
+    return WebClient.create(vertx, webClientOptions);
+  }
 
     public Future<HttpResponse<Buffer>> requestAsync(
             String requestType, String url, JsonObject requestJson) {
