@@ -253,14 +253,4 @@ public class Constants {
   public static final String EVENTTYPE_DELETED = "SUBS_DELETED";
   public static final String EVENTTYPE_APPEND = "SUBS_APPEND";
   public static final String EVENTTYPE_UPDATE = "SUBS_UPDATED";
-
-  // user
-  public static final String EMAIL_ID = "emailId";
-  public static final String FIRST_NAME = "firstName";
-  public static final String LAST_NAME = "lastName";
-  public static final String RS_SERVER_URL = "resourceServerUrl";
-  public static final String USERID = "userId";
-  public static final String USER_ROLE = "userRole";
-  public static final String USER = "user";
-  public static final String CONSTRAINTS = "accessConstraints";
 }
