@@ -203,7 +203,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
               // need to return if data present in database
               var result = postgresHandler.rows();
               if (!result.isEmpty()) {
-                LOGGER.error("Adapter already exists, conflict");
+                LOGGER.error("Queue already exists, conflict");
                 // TODO: change to DXException
                 promise.fail(new ServiceException(ERROR_CONFLICT, QUEUE_ALREADY_EXISTS));
               } else {
@@ -222,25 +222,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     .compose(
                         subscriptionMetaDataHandler -> {
                           LOGGER.debug("subscriptionMetaDataHandler success");
-                          Optional<String> resourceGroup =
-                              Optional.ofNullable(
-                                  getResourceGroup(subscriptionMetaDataHandler.catalogueInfo()));
-                          Optional<String> routingKey =
-                              Optional.ofNullable(
-                                  getRoutingKey(
-                                      entityId, subscriptionMetaDataHandler.catalogueInfo()));
-                          if (resourceGroup.isEmpty() || routingKey.isEmpty()) {
-                            return Future.failedFuture(
-                                new ServiceException(
-                                    ERROR_BAD_REQUEST, "Resource group or routing key is missing"));
-                          }
-                          return dataBrokerService
-                              .queueBinding(
-                                  resourceGroup.get(),
-                                  queueName,
-                                  routingKey.get(),
-                                  Vhosts.IUDX_PROD)
-                              .map(queueBinding -> subscriptionMetaDataHandler);
+                          return queueBinding(subscriptionMetaDataHandler, entityId, queueName)
+                              .map(queueBindHandler -> subscriptionMetaDataHandler);
                         })
                     .compose(
                         subscriptionMetaDataHandler -> {
@@ -282,6 +265,20 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             });
 
     return promise.future();
+  }
+
+  private Future<Void> queueBinding(
+      SubscriptionMetaData subscriptionMetaDataHandler, String entityId, String queueName) {
+    Optional<String> resourceGroup =
+        Optional.ofNullable(getResourceGroup(subscriptionMetaDataHandler.catalogueInfo()));
+    Optional<String> routingKey =
+        Optional.ofNullable(getRoutingKey(entityId, subscriptionMetaDataHandler.catalogueInfo()));
+    if (resourceGroup.isEmpty() || routingKey.isEmpty()) {
+      return Future.failedFuture(
+          new ServiceException(ERROR_BAD_REQUEST, "Resource group or routing key is missing"));
+    }
+    return dataBrokerService.queueBinding(
+        resourceGroup.get(), queueName, routingKey.get(), Vhosts.IUDX_PROD);
   }
 
   // TODO: Need to correct postgresmodel
