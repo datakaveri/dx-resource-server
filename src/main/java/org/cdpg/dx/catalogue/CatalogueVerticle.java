@@ -33,7 +33,7 @@ public class CatalogueVerticle extends AbstractVerticle {
             config().getString("dxCatalogueBasePath"),
             webClient);
     catalogueService =
-        new CatalogueServiceImpl(catalogueClient);
+        new CatalogueServiceImpl(vertx,catalogueClient);
     consumer =
         binder
             .setAddress(CATALOGUE_SERVICE_ADDRESS)
