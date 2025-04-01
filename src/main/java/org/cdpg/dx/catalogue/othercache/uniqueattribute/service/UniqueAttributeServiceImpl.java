@@ -45,7 +45,7 @@ public class UniqueAttributeServiceImpl implements UniqueAttributeService {
                 if (uniqueAttributeCache.getIfPresent(id) != null) {
                   promise.complete(uniqueAttributeCache.getIfPresent(id));
                 } else {
-                  LOGGER.info("id :{} not found in catalogue server", id);
+                  LOGGER.info("id :{} not found", id);
                   promise.fail(new ServiceException(ERROR_NOT_FOUND, BAD_REQUEST_ERROR));
                 }
               })
@@ -78,8 +78,8 @@ public class UniqueAttributeServiceImpl implements UniqueAttributeService {
             })
         .onFailure(
             failure -> {
-              LOGGER.error("Failed to refresh", failure);
-              promise.fail(new ServiceException(ERROR_BAD_REQUEST, "Failed to refresh"));
+              LOGGER.error("Failed to refresh unique attribute", failure);
+              promise.fail(new ServiceException(ERROR_BAD_REQUEST, "Failed to refresh unique attribute"));
             });
     return promise.future();
   }

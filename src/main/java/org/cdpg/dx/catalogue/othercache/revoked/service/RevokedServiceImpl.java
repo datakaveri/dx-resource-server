@@ -45,7 +45,7 @@ public class RevokedServiceImpl implements RevokedService {
                 if (revokedCache.getIfPresent(id) != null) {
                   promise.complete(revokedCache.getIfPresent(id));
                 } else {
-                  LOGGER.info("id :{} not found in catalogue server", id);
+                  LOGGER.info("id :{} not found", id);
                   promise.fail(new ServiceException(ERROR_NOT_FOUND, BAD_REQUEST_ERROR));
                 }
               })
