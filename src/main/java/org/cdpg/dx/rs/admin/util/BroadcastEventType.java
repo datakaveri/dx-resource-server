@@ -1,4 +1,4 @@
-package org.cdpg.dx.databroker.util;
+package org.cdpg.dx.rs.admin.util;
 
 import java.util.HashMap;
 import java.util.Map;
