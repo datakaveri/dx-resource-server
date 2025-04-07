@@ -245,7 +245,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<String> publishFromAdaptor(
+  public Future<String> publishMessageExternal(
       String exchangeName, String routingKey, JsonArray request) {
     Promise<String> promise = Promise.promise();
     Buffer buffer = Buffer.buffer(request.encode());
@@ -284,7 +284,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<Void> publishMessage(JsonObject body, String exchangeName, String routingKey) {
+  public Future<Void> publishMessageInternal(JsonObject body, String exchangeName, String routingKey) {
     Buffer buffer = Buffer.buffer(body.toString());
     Promise<Void> promise = Promise.promise();
     iudxInternalRabbitMqClient

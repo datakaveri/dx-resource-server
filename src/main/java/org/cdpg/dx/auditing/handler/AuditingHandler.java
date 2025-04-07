@@ -54,7 +54,7 @@ public class AuditingHandler {
         log -> {
           LOGGER.debug("auditLogData : {}", log.toJson());
           databrokerService
-              .publishMessage(log.toJson(), AUDITING_EXCHANGE, ROUTING_KEY)
+              .publishMessageInternal(log.toJson(), AUDITING_EXCHANGE, ROUTING_KEY)
               .onSuccess(success -> LOGGER.info("Auditing log published successfully"))
               .onFailure(
                   failure ->

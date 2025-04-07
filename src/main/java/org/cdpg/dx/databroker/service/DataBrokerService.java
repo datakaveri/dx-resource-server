@@ -43,7 +43,7 @@ public interface DataBrokerService {
 
   Future<String> resetPassword(String userId);
 
-  Future<Void> publishMessage(JsonObject body, String exchangeName, String routingKey);
+  Future<Void> publishMessageInternal(JsonObject body, String exchangeName, String routingKey);
 
-  Future<String> publishFromAdaptor(String exchangeName, String routingKey, JsonArray request);
+  Future<String> publishMessageExternal(String exchangeName, String routingKey, JsonArray request);
 }
