@@ -87,5 +87,8 @@ public final class RoutingContextHelper {
   public static String getId(RoutingContext event) {
     return event.get(ID);
   }
+  public static String getRequestPath(RoutingContext routingContext) {
+    return routingContext.request().path();
+  }
 
 }
