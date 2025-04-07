@@ -1,4 +1,4 @@
-package org.cdpg.dx.catalogue.othercache.revoked;
+package org.cdpg.dx.revoked;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -6,10 +6,10 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceBinder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cdpg.dx.catalogue.othercache.revoked.client.RevokedClient;
-import org.cdpg.dx.catalogue.othercache.revoked.client.RevokedClientImpl;
-import org.cdpg.dx.catalogue.othercache.revoked.service.RevokedService;
-import org.cdpg.dx.catalogue.othercache.revoked.service.RevokedServiceImpl;
+import org.cdpg.dx.revoked.client.RevokedClient;
+import org.cdpg.dx.revoked.client.RevokedClientImpl;
+import org.cdpg.dx.revoked.service.RevokedService;
+import org.cdpg.dx.revoked.service.RevokedServiceImpl;
 import org.cdpg.dx.database.postgres.service.PostgresService;
 
 public class RevokedVerticle extends AbstractVerticle {

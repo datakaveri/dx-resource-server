@@ -1,6 +1,6 @@
 # Error Code Mapping:
 - 0 : Internal Server Error
-- 1 : 
+- 1 : Invalid Token / Revoked Token
 - 2 : 
 - 3 : 
 - 4 : Not Found
