@@ -13,6 +13,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.serviceproxy.ServiceException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,9 +31,16 @@ import org.cdpg.dx.databroker.util.PermissionOpType;
 public class RabbitClient {
   private static final Logger LOGGER = LogManager.getLogger(RabbitClient.class);
   private final RabbitWebClient rabbitWebClient;
+  private final RabbitMQClient iudxInternalRabbitMqClient;
+  private final RabbitMQClient iudxRabbitMqClient;
 
-  public RabbitClient(RabbitWebClient rabbitWebClient) {
+  public RabbitClient(
+      RabbitWebClient rabbitWebClient,
+      RabbitMQClient iudxInternalRabbitMqClient,
+      RabbitMQClient iudxRabbitMqClient) {
     this.rabbitWebClient = rabbitWebClient;
+    this.iudxRabbitMqClient = iudxRabbitMqClient;
+    this.iudxInternalRabbitMqClient = iudxInternalRabbitMqClient;
   }
 
   public Future<Void> deleteQueue(String queueName, String vhost) {
@@ -579,6 +587,44 @@ public class RabbitClient {
                 LOGGER.error("User creation failed :");
                 promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, CHECK_CREDENTIALS));
               }
+            });
+    return promise.future();
+  }
+
+  public Future<Void> publishMessageInternal(
+      JsonObject body, String exchangeName, String routingKey) {
+    Buffer buffer = Buffer.buffer(body.toString());
+    Promise<Void> promise = Promise.promise();
+    iudxInternalRabbitMqClient
+        .basicPublish(exchangeName, routingKey, buffer)
+        .onSuccess(
+            publishSuccess -> {
+              LOGGER.debug("publishMessage success");
+              promise.complete();
+            })
+        .onFailure(
+            publishFailure -> {
+              LOGGER.debug("publishMessage failure");
+              promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+            });
+    return promise.future();
+  }
+
+  public Future<Void> publishMessageExternal(
+      String exchangeName, String routingKey, JsonArray request) {
+    Promise<Void> promise = Promise.promise();
+    Buffer buffer = Buffer.buffer(request.encode());
+    iudxRabbitMqClient
+        .basicPublish(exchangeName, routingKey, buffer)
+        .onSuccess(
+            resultHandler -> {
+              LOGGER.info("Success : Message published to queue");
+              promise.complete();
+            })
+        .onFailure(
+            failure -> {
+              LOGGER.error("Fail : " + failure.getMessage());
+              promise.fail(failure);
             });
     return promise.future();
   }

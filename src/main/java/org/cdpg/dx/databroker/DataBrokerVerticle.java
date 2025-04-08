@@ -13,10 +13,10 @@ import io.vertx.serviceproxy.ServiceBinder;
 import iudx.resource.server.common.Vhosts;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cdpg.dx.databroker.service.DataBrokerService;
-import org.cdpg.dx.databroker.service.DataBrokerServiceImpl;
 import org.cdpg.dx.databroker.client.RabbitClient;
 import org.cdpg.dx.databroker.client.RabbitWebClient;
+import org.cdpg.dx.databroker.service.DataBrokerService;
+import org.cdpg.dx.databroker.service.DataBrokerServiceImpl;
 
 public class DataBrokerVerticle extends AbstractVerticle {
 
@@ -109,7 +109,8 @@ public class DataBrokerVerticle extends AbstractVerticle {
 
     rabbitWebClient = new RabbitWebClient(vertx, webConfig, propObj);
 
-    rabbitClient = new RabbitClient(rabbitWebClient);
+    rabbitClient =
+        new RabbitClient(rabbitWebClient, iudxInternalRabbitMqClient, iudxRabbitMqClient);
     /*cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);*/
     binder = new ServiceBinder(vertx);
     iudxRabbitMqClient = RabbitMQClient.create(vertx, iudxConfig);
@@ -136,19 +137,12 @@ public class DataBrokerVerticle extends AbstractVerticle {
             });
     dataBrokerService =
         new DataBrokerServiceImpl(
-            rabbitClient,
-            amqpUrl,
-            amqpPort,
-            iudxInternalVhost,
-            prodVhost,
-            externalVhost,
-            iudxInternalRabbitMqClient,
-            iudxRabbitMqClient);
+            rabbitClient, amqpUrl, amqpPort, iudxInternalVhost, prodVhost, externalVhost);
 
     /*asyncService = AsyncService.createProxy(vertx, ASYNC_SERVICE_ADDRESS);*/
 
     /* Create RabbitMQ listeners for revoke client queue, unique attribute queue and async query queue. */
-   /* RmqListeners revokeQlistener =
+    /* RmqListeners revokeQlistener =
             new RevokeClientQlistener(cacheService, iudxInternalRabbitMqClient);
     RmqListeners uniqueAttrQlistener =
             new UniqueAttribQlistener(cacheService, iudxInternalRabbitMqClient);
