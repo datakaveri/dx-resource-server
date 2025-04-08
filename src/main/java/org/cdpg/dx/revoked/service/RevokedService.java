@@ -1,4 +1,4 @@
-package org.cdpg.dx.catalogue.othercache.revoked.service;
+package org.cdpg.dx.revoked.service;
 
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;

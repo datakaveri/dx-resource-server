@@ -1,4 +1,4 @@
-package org.cdpg.dx.catalogue.othercache.revoked.service;
+package org.cdpg.dx.revoked.service;
 
 import static org.cdpg.dx.common.ErrorCode.ERROR_BAD_REQUEST;
 import static org.cdpg.dx.common.ErrorCode.ERROR_NOT_FOUND;
@@ -14,7 +14,7 @@ import io.vertx.serviceproxy.ServiceException;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cdpg.dx.catalogue.othercache.revoked.client.RevokedClient;
+import org.cdpg.dx.revoked.client.RevokedClient;
 
 public class RevokedServiceImpl implements RevokedService {
   private static final Logger LOGGER = LogManager.getLogger(RevokedServiceImpl.class);
