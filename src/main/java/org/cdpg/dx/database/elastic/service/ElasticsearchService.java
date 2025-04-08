@@ -1,12 +1,12 @@
-package iudx.resource.server.database.elastic.service;
+package org.cdpg.dx.database.elastic.service;
 
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import iudx.resource.server.database.elastic.model.ElasticsearchResponse;
-import iudx.resource.server.database.elastic.model.QueryModel;
+import org.cdpg.dx.database.elastic.model.ElasticsearchResponse;
+import org.cdpg.dx.database.elastic.model.QueryModel;
 
 import java.util.List;
 

@@ -1,10 +1,8 @@
-package iudx.resource.server.database.elastic.model;
-
-import static iudx.resource.server.database.elastic.util.Constants.*;
+package org.cdpg.dx.database.elastic.model;
 
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.database.elastic.exception.EsQueryException;
-import iudx.resource.server.database.elastic.util.QueryType;
+import org.cdpg.dx.database.elastic.exception.EsQueryException;
+import org.cdpg.dx.database.elastic.util.QueryType;
 
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
@@ -12,6 +10,8 @@ import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.cdpg.dx.database.elastic.util.Constants.*;
 
 public class TemporalQueryFiltersDecorator implements ElasticsearchQueryDecorator {
     private final int defaultDateLimit;

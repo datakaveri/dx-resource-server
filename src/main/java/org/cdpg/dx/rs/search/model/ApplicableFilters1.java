@@ -1,14 +1,15 @@
 package org.cdpg.dx.rs.search.model;
 
 import io.vertx.codegen.annotations.DataObject;
+import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @DataObject(generateConverter = true)
 public class ApplicableFilters1 {
-    private List<String> groupFilters;
-    private List<String> itemFilters;
+
+    private List itemFilters;
     private String groupId;
 
     public boolean isFilterValid() {
@@ -23,25 +24,17 @@ public class ApplicableFilters1 {
 
     // Default constructor
     public ApplicableFilters1() {
-        this.groupFilters = new ArrayList<>();
+
         this.itemFilters = new ArrayList<>();
     }
 
     // Constructor with all fields
-    public ApplicableFilters1(List<String> groupFilters, List<String> itemFilters, String groupId) {
-        this.groupFilters = groupFilters != null ? groupFilters : new ArrayList<>();
-        this.itemFilters = itemFilters != null ? itemFilters : new ArrayList<>();
-        this.groupId = groupId;
+    public ApplicableFilters1(JsonObject jsonObject) {
+
+        this.itemFilters = jsonObject.getJsonArray("iudxResourceAPIs").getList();
+        this.groupId = jsonObject.getString("resourceGroup");
     }
 
-    // Getters and setters
-    public List<String> getGroupFilters() {
-        return groupFilters;
-    }
-
-    public void setGroupFilters(List<String> groupFilters) {
-        this.groupFilters = groupFilters;
-    }
 
     public List<String> getItemFilters() {
         return itemFilters;
@@ -59,11 +52,4 @@ public class ApplicableFilters1 {
         this.groupId = groupId;
     }
 
-    // Convenience method to get all filters combined
-    public List<String> getAllFilters() {
-        List<String> allFilters = new ArrayList<>();
-        allFilters.addAll(groupFilters);
-        allFilters.addAll(itemFilters);
-        return allFilters;
-    }
 }

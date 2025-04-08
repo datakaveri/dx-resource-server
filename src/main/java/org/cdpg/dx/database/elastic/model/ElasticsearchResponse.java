@@ -1,4 +1,4 @@
-package iudx.resource.server.database.elastic.model;
+package org.cdpg.dx.database.elastic.model;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;

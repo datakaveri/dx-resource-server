@@ -1,18 +1,18 @@
-package iudx.resource.server.database.elastic.model;
+package org.cdpg.dx.database.elastic.model;
 
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.elasticsearch.core.search.SourceFilter;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.database.elastic.GeoQueryFiltersDecorator;
-import iudx.resource.server.database.elastic.exception.EsQueryException;
-import iudx.resource.server.database.elastic.util.QueryType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.database.elastic.exception.EsQueryException;
+import org.cdpg.dx.database.elastic.util.QueryType;
 
 import java.util.*;
 
-import static iudx.resource.server.database.elastic.util.Constants.*;
+import static org.cdpg.dx.database.elastic.util.Constants.*;
+
 
 public class QueryDecoder {
 

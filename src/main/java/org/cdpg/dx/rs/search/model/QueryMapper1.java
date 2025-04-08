@@ -3,7 +3,7 @@ package org.cdpg.dx.rs.search.model;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
+import iudx.resource.server.apiserver.exception.DxRuntimeException;
 import iudx.resource.server.common.HttpStatusCode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +16,7 @@ import java.util.List;
 import static iudx.resource.server.apiserver.util.Constants.*;
 import static iudx.resource.server.common.HttpStatusCode.BAD_REQUEST;
 import static iudx.resource.server.common.ResponseUrn.*;
-import static iudx.resource.server.database.elastic.util.Constants.TIME_LIMIT;
+import static org.cdpg.dx.database.elastic.util.Constants.TIME_LIMIT;
 
 @DataObject
 public class QueryMapper1 {

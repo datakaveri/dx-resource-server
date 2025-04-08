@@ -1,4 +1,4 @@
-//package iudx.resource.server.database.elastic.util;
+//package org.cdpg.dx.database.elastic.util;
 //
 //import co.elastic.clients.elasticsearch._types.FieldValue;
 //import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
@@ -8,17 +8,17 @@
 //import co.elastic.clients.elasticsearch.core.search.SourceFilter;
 //import io.vertx.core.json.JsonArray;
 //import io.vertx.core.json.JsonObject;
-//import iudx.resource.server.database.elastic.model.AttributeQueryFiltersDecorator;
-//import iudx.resource.server.database.elastic.model.ElasticsearchQueryDecorator;
-//import iudx.resource.server.database.elastic.model.GeoQueryFiltersDecorator;
-//import iudx.resource.server.database.elastic.model.QueryModel;
+//
+//import iudx.resource.server.database.elastic.util.FilterType;
 //import org.apache.logging.log4j.LogManager;
 //import org.apache.logging.log4j.Logger;
+//import org.cdpg.dx.database.elastic.model.ElasticsearchQueryDecorator;
+//import org.cdpg.dx.database.elastic.model.QueryModel;
+//import org.cdpg.dx.database.elastic.model.TemporalQueryFiltersDecorator;
 //
 //import java.util.*;
 //
-//import static iudx.resource.server.apiserver.search.util.Constants.*;
-//import static iudx.resource.server.database.elastic.util.Constants.*;
+//import static org.cdpg.dx.database.elastic.util.Constants.*;
 //
 //public class QueryDecoder {
 //

@@ -5,13 +5,10 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.apiserver.exceptions.DxRuntimeException;
-import iudx.resource.server.apiserver.search.model.ApplicableFilters;
-import iudx.resource.server.common.CatalogueService;
-import iudx.resource.server.common.HttpStatusCode;
 import iudx.resource.server.common.validation.types.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.catalogue.service.CatalogueService;
 import org.locationtech.jts.geom.Coordinate;
 import org.wololo.jts2geojson.GeoJSONReader;
 
@@ -20,9 +17,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import static iudx.resource.server.apiserver.search.util.Constants.*;
-import static iudx.resource.server.common.ResponseUrn.INVALID_GEO_PARAM_URN;
-import static iudx.resource.server.common.ResponseUrn.INVALID_GEO_VALUE_URN;
+import static org.cdpg.dx.util.Constants.*;
+
 
 public class QueryValidator1 {
 
@@ -92,7 +88,7 @@ public class QueryValidator1 {
      * @param paramsMap         map of request parameters
      * @return Future future JsonObject
      */
-    public Future<Boolean> validate(ApplicableFilters applicableFilters, MultiMap paramsMap) {
+    public Future<Boolean> validate(ApplicableFilters1 applicableFilters, MultiMap paramsMap) {
         Promise<Boolean> promise = Promise.promise();
         boolean isFilterValid = getApplicableFilters(applicableFilters, paramsMap).isFilterValid();
 
@@ -119,7 +115,7 @@ public class QueryValidator1 {
      * @param applicableFilters applicable filters
      * @return Future future JsonObject
      */
-    public Future<Boolean> validate(JsonObject requestJson, ApplicableFilters applicableFilters) {
+    public Future<Boolean> validate(JsonObject requestJson, ApplicableFilters1 applicableFilters) {
         LOGGER.info("Inside VALIDATION ");
         Promise<Boolean> promise = Promise.promise();
         MultiMap paramsMap = convertJsonToMultiMap(requestJson);
@@ -152,8 +148,8 @@ public class QueryValidator1 {
         return promise.future();
     }
 
-    private ApplicableFilters getApplicableFilters(ApplicableFilters applicableFilters, MultiMap paramsMap) {
-        List<String> allFilters = applicableFilters.getAllFilters();
+    private ApplicableFilters1 getApplicableFilters(ApplicableFilters1 applicableFilters, MultiMap paramsMap) {
+        List<String> allFilters = applicableFilters.getItemFilters();
 
         if (isTemporalQuery(paramsMap) && !allFilters.contains("TEMPORAL")) {
             applicableFilters.setFilterValid(false);
@@ -208,10 +204,7 @@ public class QueryValidator1 {
         } else if (geom.equalsIgnoreCase("bbox")) {
             String[] bboxEdges = coordinates.replaceAll("\\[", "").replaceAll("\\]", "").split(",");
             if (bboxEdges.length != 4) {
-                throw new DxRuntimeException(
-                        HttpStatusCode.BAD_REQUEST.getValue(),
-                        INVALID_GEO_PARAM_URN,
-                        INVALID_GEO_PARAM_URN.getMessage());
+                return false;
             }
             json.put("type", "LineString");
             return isValidCoordinates(json.toString());
@@ -233,10 +226,7 @@ public class QueryValidator1 {
             }
             return geom.isValid() && (!isPolygon || isValidNosCoords);
         } catch (Exception ex) {
-            throw new DxRuntimeException(
-                    HttpStatusCode.BAD_REQUEST.getValue(),
-                    INVALID_GEO_PARAM_URN,
-                    INVALID_GEO_PARAM_URN.getMessage());
+            return false;
         }
     }
 
@@ -251,17 +241,13 @@ public class QueryValidator1 {
                 Validator validator = new DistanceTypeValidator(distanceValue, false);
                 return validator.isValid();
             } else {
-                throw new DxRuntimeException(
-                        HttpStatusCode.BAD_REQUEST.getValue(),
-                        INVALID_GEO_VALUE_URN,
-                        INVALID_GEO_VALUE_URN.getMessage());
+                return false;
+
             }
         } catch (Exception ex) {
             LOGGER.error(ex);
-            throw new DxRuntimeException(
-                    HttpStatusCode.BAD_REQUEST.getValue(),
-                    INVALID_GEO_VALUE_URN,
-                    INVALID_GEO_VALUE_URN.getMessage());
+            return false;
+
         }
     }
 

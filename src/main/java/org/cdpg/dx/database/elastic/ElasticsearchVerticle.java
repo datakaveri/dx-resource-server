@@ -1,13 +1,13 @@
-package iudx.resource.server.database.elastic;
+package org.cdpg.dx.database.elastic;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceBinder;
-import iudx.resource.server.database.elastic.service.ElasticsearchService;
-import iudx.resource.server.database.elastic.service.ElasticsearchServiceImpl;
+import org.cdpg.dx.database.elastic.service.ElasticsearchService;
+import org.cdpg.dx.database.elastic.service.ElasticsearchServiceImpl;
 
-import static iudx.resource.server.common.Constants.*;
+import static org.cdpg.dx.database.elastic.util.Constants.*;
 
 
 /**
@@ -52,7 +52,7 @@ public class ElasticsearchVerticle extends AbstractVerticle {
     database = new ElasticsearchServiceImpl(client);
 
     consumer =
-        binder.setAddress(ELASTIC_SERVICE_ADDRESS).register(ElasticsearchService.class, database);
+        binder.setAddress("ELASTIC_SERVICE_ADDRESS").register(ElasticsearchService.class, database);
   }
 
   @Override
