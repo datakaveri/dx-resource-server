@@ -264,7 +264,7 @@ public class IngestionServiceImpl implements IngestionService {
               }
               LOGGER.trace(request);
               LOGGER.debug("Info : routingKey  " + routingKey);
-              return dataBroker.publishFromAdaptor(resourceGroupId, routingKey, request);
+              return dataBroker.publishMessageExternal(resourceGroupId, routingKey, request);
             })
         .onSuccess(
             resultHandler -> {

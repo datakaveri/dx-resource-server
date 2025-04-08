@@ -7,10 +7,8 @@ import static org.cdpg.dx.databroker.util.Constants.QUEUE_LIST_ERROR;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.serviceproxy.ServiceException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -32,8 +30,6 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   private final String iudxInternalVhost;
   private final String externalVhost;
   private final RabbitClient rabbitClient;
-  private final RabbitMQClient iudxInternalRabbitMqClient;
-  private final RabbitMQClient iudxRabbitMqClient;
 
   public DataBrokerServiceImpl(
       RabbitClient client,
@@ -41,17 +37,13 @@ public class DataBrokerServiceImpl implements DataBrokerService {
       int amqpPort,
       String iudxInternalVhost,
       String prodVhost,
-      String externalVhost,
-      RabbitMQClient iudxInternalRabbitMqClient,
-      RabbitMQClient iudxRabbitMqClient) {
+      String externalVhost) {
     this.rabbitClient = client;
     this.amqpUrl = amqpUrl;
     this.amqpPort = amqpPort;
     this.vhostProd = prodVhost;
     this.iudxInternalVhost = iudxInternalVhost;
     this.externalVhost = externalVhost;
-    this.iudxInternalRabbitMqClient = iudxInternalRabbitMqClient;
-    this.iudxRabbitMqClient = iudxRabbitMqClient;
     LOGGER.trace("Info : DataBrokerServiceImpl#constructor() completed");
   }
 
@@ -245,12 +237,11 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<String> publishFromAdaptor(
+  public Future<String> publishMessageExternal(
       String exchangeName, String routingKey, JsonArray request) {
     Promise<String> promise = Promise.promise();
-    Buffer buffer = Buffer.buffer(request.encode());
-    iudxRabbitMqClient
-        .basicPublish(exchangeName, routingKey, buffer)
+    rabbitClient
+        .publishMessageExternal(exchangeName, routingKey, request)
         .onSuccess(
             resultHandler -> {
               LOGGER.info("Success : Message published to queue");
@@ -284,11 +275,11 @@ public class DataBrokerServiceImpl implements DataBrokerService {
   }
 
   @Override
-  public Future<Void> publishMessage(JsonObject body, String exchangeName, String routingKey) {
-    Buffer buffer = Buffer.buffer(body.toString());
+  public Future<Void> publishMessageInternal(
+      JsonObject body, String exchangeName, String routingKey) {
     Promise<Void> promise = Promise.promise();
-    iudxInternalRabbitMqClient
-        .basicPublish(exchangeName, routingKey, buffer)
+    rabbitClient
+        .publishMessageInternal(body, exchangeName, routingKey)
         .onSuccess(
             publishSuccess -> {
               LOGGER.debug("publishMessage success");

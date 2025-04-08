@@ -81,7 +81,7 @@ public class AdminServiceImpl implements AdminService {
                           LOGGER.info("updated successfully");
                         });
               }
-              return dataBrokerService.publishMessage(
+              return dataBrokerService.publishMessageInternal(
                   rmqMessage, TOKEN_INVALID_EX, TOKEN_INVALID_EX_ROUTING_KEY);
             })
         .onSuccess(
@@ -114,7 +114,7 @@ public class AdminServiceImpl implements AdminService {
               rmqMessage.put("id", id);
               rmqMessage.put("unique-attribute", attribute);
               rmqMessage.put("eventType", BroadcastEventType.CREATE);
-              return dataBrokerService.publishMessage(
+              return dataBrokerService.publishMessageInternal(
                   rmqMessage, UNIQUE_ATTR_EX, UNIQUE_ATTR_EX_ROUTING_KEY);
             })
         .onSuccess(
@@ -151,7 +151,7 @@ public class AdminServiceImpl implements AdminService {
               rmqMessage.put("id", id);
               rmqMessage.put("unique-attribute", attribute);
               rmqMessage.put("eventType", BroadcastEventType.UPDATE);
-              return dataBrokerService.publishMessage(
+              return dataBrokerService.publishMessageInternal(
                   rmqMessage, UNIQUE_ATTR_EX, UNIQUE_ATTR_EX_ROUTING_KEY);
             })
         .onSuccess(
@@ -181,7 +181,7 @@ public class AdminServiceImpl implements AdminService {
               rmqMessage.put("id", id);
               rmqMessage.put("unique-attribute", "dummy_attribute");
               rmqMessage.put("eventType", BroadcastEventType.DELETE);
-              return dataBrokerService.publishMessage(
+              return dataBrokerService.publishMessageInternal(
                   rmqMessage, UNIQUE_ATTR_EX, UNIQUE_ATTR_EX_ROUTING_KEY);
             })
         .onSuccess(
