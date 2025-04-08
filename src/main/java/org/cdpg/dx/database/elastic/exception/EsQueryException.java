@@ -1,11 +1,11 @@
-package iudx.resource.server.database.elastic.exception;
+package org.cdpg.dx.database.elastic.exception;
 
 import io.vertx.core.json.JsonObject;
 import iudx.resource.server.common.ResponseUrn;
 import org.apache.http.HttpStatus;
 
 
-import static iudx.resource.server.database.elastic.util.Constants.*;
+import static org.cdpg.dx.database.elastic.util.Constants.*;
 
 public class EsQueryException extends RuntimeException {
 

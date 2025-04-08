@@ -2,8 +2,8 @@
 package org.cdpg.dx.rs.latest.util;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.cdpg.dx.database.redis.util.RedisCommandArgsBuilder;
 import org.cdpg.dx.database.redis.util.RedisArgs;
+import org.cdpg.dx.database.redis.util.RedisCommandArgsBuilder;
 
 public class LatestRedisCommandArgsBuilder implements RedisCommandArgsBuilder {
     @Override

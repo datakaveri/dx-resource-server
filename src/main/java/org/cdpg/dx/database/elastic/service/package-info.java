@@ -1,6 +1,6 @@
-@ModuleGen(groupPackage = "iudx.resource.server.database.elastic.service",
-    name = "iudx-resource-server-database-service", useFutures = true)
-package iudx.resource.server.database.elastic.service;
+@ModuleGen(groupPackage = "org.cdpg.dx.database.elastic.service",
+    name = "org-cdpg-dx-database-elastic-service", useFutures = true)
+package org.cdpg.dx.database.elastic.service;
 
 import io.vertx.codegen.annotations.ModuleGen;
 

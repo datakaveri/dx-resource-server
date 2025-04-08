@@ -7,10 +7,13 @@ import org.apache.logging.log4j.Logger;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
 
-import static iudx.resource.server.apiserver.search.util.Constants.*;
-import static iudx.resource.server.apiserver.search.util.Util.toUriFunction;
+import static iudx.resource.server.apiserver.util.Constants.*;
+
 
 /** NGSILDQueryParams Class to parse query parameters from HTTP request. */
 public class NgsildQueryParams1 {
@@ -231,7 +234,16 @@ public class NgsildQueryParams1 {
             return null;
         }
     }
-
+    public static Function<String, URI> toUriFunction =
+            (value) -> {
+                URI uri = null;
+                try {
+                    uri = new URI(value);
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
+                return uri;
+            };
     @Override
     public String toString() {
         return "NGSILDQueryParams{" +

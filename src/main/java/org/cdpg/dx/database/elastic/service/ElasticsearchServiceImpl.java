@@ -1,9 +1,12 @@
-package iudx.resource.server.database.elastic.service;
+package org.cdpg.dx.database.elastic.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch.core.CountRequest;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.json.JsonpMapperFeatures;
@@ -11,25 +14,20 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.database.elastic.ElasticClient;
-import iudx.resource.server.database.elastic.model.ElasticsearchResponse;
-import iudx.resource.server.database.elastic.model.QueryModel;
 import jakarta.json.stream.JsonGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.database.elastic.ElasticClient;
+import org.cdpg.dx.database.elastic.model.ElasticsearchResponse;
+import org.cdpg.dx.database.elastic.model.QueryModel;
 
 import java.io.StringWriter;
-import java.util.stream.Collectors;
-
-import static iudx.resource.server.database.elastic.util.Constants.AGGREGATIONS;
-
-import co.elastic.clients.elasticsearch.core.CountRequest;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.SearchResponse;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import static org.cdpg.dx.database.elastic.util.Constants.AGGREGATIONS;
 
 
 public class ElasticsearchServiceImpl implements ElasticsearchService {

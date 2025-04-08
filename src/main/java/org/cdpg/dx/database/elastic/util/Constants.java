@@ -1,4 +1,4 @@
-package iudx.resource.server.database.elastic.util;
+package org.cdpg.dx.database.elastic.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;

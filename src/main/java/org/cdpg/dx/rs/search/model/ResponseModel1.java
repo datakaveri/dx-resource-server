@@ -1,7 +1,7 @@
 package org.cdpg.dx.rs.search.model;
 
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.database.elastic.model.ElasticsearchResponse;
+import org.cdpg.dx.database.elastic.model.ElasticsearchResponse;
 
 import java.util.ArrayList;
 import java.util.List;

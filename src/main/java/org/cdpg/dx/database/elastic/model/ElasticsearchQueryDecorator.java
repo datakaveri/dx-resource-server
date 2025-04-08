@@ -1,6 +1,7 @@
-package iudx.resource.server.database.elastic.model;
+package org.cdpg.dx.database.elastic.model;
 
-import iudx.resource.server.database.elastic.util.QueryType;
+
+import org.cdpg.dx.database.elastic.util.QueryType;
 
 import java.util.List;
 import java.util.Map;

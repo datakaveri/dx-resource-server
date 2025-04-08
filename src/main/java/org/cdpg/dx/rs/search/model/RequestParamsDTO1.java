@@ -21,6 +21,15 @@ public class RequestParamsDTO1 {
     private MultiMap queryParams;
     private String host;
 
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
+
+    private String groupId;
     public RequestParamsDTO1() {
         this.params = new HashMap<>();
         this.pathParams = new HashMap<>();

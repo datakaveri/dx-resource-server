@@ -1,13 +1,13 @@
-package iudx.resource.server.database.elastic.util;
+package org.cdpg.dx.database.elastic.util;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
-import iudx.resource.server.database.elastic.model.QueryModel;
+import org.cdpg.dx.database.elastic.model.QueryModel;
 
 import java.util.Map;
 
-import static iudx.resource.server.database.elastic.util.Constants.FIELD;
-import static iudx.resource.server.database.elastic.util.Constants.SIZE_KEY;
+import static org.cdpg.dx.database.elastic.util.Constants.FIELD;
+import static org.cdpg.dx.database.elastic.util.Constants.SIZE_KEY;
 
 
 public class AggregationFactory {
@@ -65,7 +65,7 @@ public class AggregationFactory {
                         f.term(
                                 t ->
                                         t.field((String) aggregationParameters.get(FIELD))
-                                                .value(FieldValue.of(aggregationParameters.get("value")))));
+                                                .value(FieldValue.of((Long) aggregationParameters.get("value")))));
         break;
       case GLOBAL:
         builder.global(g -> g);

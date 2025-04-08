@@ -1,7 +1,4 @@
-package iudx.resource.server.database.elastic.model;
-
-
-import static iudx.resource.server.database.elastic.util.Constants.*;
+package org.cdpg.dx.database.elastic.model;
 
 import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
@@ -11,20 +8,18 @@ import co.elastic.clients.json.JsonData;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.database.elastic.util.AggregationFactory;
+import org.cdpg.dx.database.elastic.util.AggregationType;
+import org.cdpg.dx.database.elastic.util.BoolOperator;
+import org.cdpg.dx.database.elastic.util.QueryType;
+
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import iudx.resource.server.database.elastic.util.AggregationFactory;
-import iudx.resource.server.database.elastic.util.AggregationType;
-import iudx.resource.server.database.elastic.util.BoolOperator;
-import iudx.resource.server.database.elastic.util.QueryType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static org.cdpg.dx.database.elastic.util.Constants.*;
 
 /**
  * Represents a query model for constructing Elasticsearch searches, with support for basic query

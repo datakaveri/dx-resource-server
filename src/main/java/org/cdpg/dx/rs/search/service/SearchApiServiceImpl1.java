@@ -3,40 +3,27 @@ package org.cdpg.dx.rs.search.service;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
-import iudx.resource.server.cache.service.CacheService;
-import iudx.resource.server.common.CatalogueService;
-import iudx.resource.server.common.ResponseUrn;
-import iudx.resource.server.database.elastic.exception.EsQueryException;
-import iudx.resource.server.database.elastic.model.QueryDecoder;
-import iudx.resource.server.database.elastic.model.QueryModel;
-import iudx.resource.server.database.elastic.service.ElasticsearchService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.catalogue.service.CatalogueService;
+import org.cdpg.dx.database.elastic.model.QueryDecoder;
+import org.cdpg.dx.database.elastic.model.QueryModel;
+import org.cdpg.dx.database.elastic.service.ElasticsearchService;
 import org.cdpg.dx.rs.search.model.*;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import static iudx.resource.server.apiserver.util.Constants.JSON_COUNT;
-import static iudx.resource.server.database.elastic.util.Constants.ITEM_TYPES;
-import static iudx.resource.server.database.elastic.util.Constants.MALFORMED_ID;
-
 public class SearchApiServiceImpl1 implements SearchApiService {
 
     private static final Logger LOGGER = LogManager.getLogger(SearchApiServiceImpl1.class);
     private final CatalogueService catalogueService;
     private final QueryValidator1 queryValidator;
     private final ElasticsearchService elasticsearchService;
-    private final CacheService cacheService;
 
     public SearchApiServiceImpl1(CatalogueService catalogueService,
-                                 ElasticsearchService elasticsearchService,
-                                 CacheService cacheService) {
+                                 ElasticsearchService elasticsearchService) {
         this.catalogueService = catalogueService;
         this.queryValidator = new QueryValidator1(catalogueService);
         this.elasticsearchService = elasticsearchService;
-        this.cacheService = cacheService;
     }
 
     @Override
@@ -60,8 +47,12 @@ public class SearchApiServiceImpl1 implements SearchApiService {
     private Future<ResponseModel1> processSearchQuery(RequestParamsDTO1 params, boolean isTemporal) {
         Promise<ResponseModel1> promise = Promise.promise();
 
-        catalogueService.getApplicableFilters(params.getQueryParams().get("id"))
-                .compose(filters -> queryValidator.validate(filters, params.getQueryParams()))
+        catalogueService.fetchCatalogueInfo(params.getQueryParams().get("id"))
+                .compose(filters -> {
+                    ApplicableFilters1 filters1=new ApplicableFilters1(filters);
+                    params.setGroupId(filters1.getGroupId());
+                   return queryValidator.validate(filters1, params.getQueryParams());
+                })
                 .compose(valid -> executeSearch(params, isTemporal))
                 .onSuccess(promise::complete)
                 .onFailure(promise::fail);
@@ -74,13 +65,10 @@ public class SearchApiServiceImpl1 implements SearchApiService {
         NgsildQueryParams1 ngsildQuery = new NgsildQueryParams1(params);
         QueryMapper1 queryMapper1 = new QueryMapper1(params.getTimeLimit(), params.getTenantPrefix(), params.getTimeLimitConfig());
         JsonObject queryJson = queryMapper1.toQueryMapperJson(ngsildQuery, isTemporal);
+        queryJson.put("resourceGroup",params.getGroupId());
 
-        checkQueryAndGetTenant(queryJson)
-                .onSuccess(updatedJson -> {
-                    updatedJson.put("searchIndex", getSearchIndex(updatedJson, params.getTenantPrefix()));
-                    executeDatabaseQuery(updatedJson, queryMapper1, promise);
-                })
-                .onFailure(promise::fail);
+        queryJson.put("searchIndex", getSearchIndex(queryJson, params.getTenantPrefix()));
+        executeDatabaseQuery(queryJson, queryMapper1, promise);
 
         return promise.future();
     }
@@ -107,23 +95,6 @@ public class SearchApiServiceImpl1 implements SearchApiService {
                 .onFailure(promise::fail);
     }
 
-    private Future<JsonObject> checkQueryAndGetTenant(JsonObject request) {
-        Promise<JsonObject> promise = Promise.promise();
-        cacheService.get(new JsonObject().put("type", "CATALOGUE_CACHE").put("key", request.getJsonArray("id").getString(0)))
-                .onSuccess(cacheResponse -> {
-                    Set<String> types = new HashSet<>(cacheResponse.getJsonArray("type").getList());
-                    Set<String> itemTypes = types.stream().map(e -> e.split(":")[1]).collect(Collectors.toSet());
-                    itemTypes.retainAll(ITEM_TYPES);
-                    if (!itemTypes.contains("Resource")) {
-                        promise.fail(new EsQueryException(ResponseUrn.BAD_REQUEST_URN, MALFORMED_ID));
-                    } else {
-                        request.put("resourceGroup", cacheResponse.getString("resourceGroup"));
-                        promise.complete(request);
-                    }
-                })
-                .onFailure(promise::fail);
-        return promise.future();
-    }
 
     private String getSearchIndex(JsonObject json, String tenantPrefix) {
         String resourceGroup = json.getString("resourceGroup");
