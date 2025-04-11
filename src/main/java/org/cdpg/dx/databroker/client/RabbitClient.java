@@ -329,7 +329,7 @@ public class RabbitClient {
   }
 
   public Future<Void> updateUserPermissions(
-      String vhost, String userId, PermissionOpType type, String resourceId) {
+      String vhost, String userId, PermissionOpType type, String queueOrExchangeName) {
     Promise<Void> promise = Promise.promise();
     getUserPermissions(userId)
         .onComplete(
@@ -339,7 +339,7 @@ public class RabbitClient {
                 JsonObject existingPermissions = handler.result();
 
                 JsonObject updatedPermission =
-                    getUpdatedPermission(existingPermissions, type, resourceId);
+                    getUpdatedPermission(existingPermissions, type, queueOrExchangeName);
                 rabbitWebClient
                     .requestAsync(REQUEST_PUT, url, updatedPermission)
                     .onComplete(
@@ -400,7 +400,7 @@ public class RabbitClient {
   }
 
   private JsonObject getUpdatedPermission(
-      JsonObject permissionsJson, PermissionOpType type, String resourceId) {
+      JsonObject permissionsJson, PermissionOpType type, String queueOrExchange) {
     StringBuilder permission;
     switch (type) {
       case ADD_READ:
@@ -410,9 +410,9 @@ public class RabbitClient {
           permission.deleteCharAt(0).deleteCharAt(0);
         }
         if (permission.length() != 0) {
-          permission.append("|").append(resourceId);
+          permission.append("|").append(queueOrExchange);
         } else {
-          permission.append(resourceId);
+          permission.append(queueOrExchange);
         }
 
         permissionsJson.put(type.permission, permission.toString());
@@ -424,7 +424,7 @@ public class RabbitClient {
         if (permissionsArray.length > 0) {
           Stream<String> stream = Arrays.stream(permissionsArray);
           String updatedPermission =
-              stream.filter(item -> !item.equals(resourceId)).collect(Collectors.joining("|"));
+              stream.filter(item -> !item.equals(queueOrExchange)).collect(Collectors.joining("|"));
           permissionsJson.put(type.permission, updatedPermission);
         }
         break;
