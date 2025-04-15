@@ -13,7 +13,9 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.rabbitmq.QueueOptions;
 import io.vertx.rabbitmq.RabbitMQClient;
+import io.vertx.rabbitmq.RabbitMQConsumer;
 import io.vertx.serviceproxy.ServiceException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -620,6 +622,23 @@ public class RabbitClient {
             resultHandler -> {
               LOGGER.info("Success : Message published to queue");
               promise.complete();
+            })
+        .onFailure(
+            failure -> {
+              LOGGER.error("Fail : " + failure.getMessage());
+              promise.fail(failure);
+            });
+    return promise.future();
+  }
+
+  public Future<RabbitMQConsumer> basicConsumeInternal(String queueName, QueueOptions options) {
+    Promise<RabbitMQConsumer> promise = Promise.promise();
+    iudxInternalRabbitMqClient
+        .basicConsumer(queueName, options)
+        .onSuccess(
+            resultHandler -> {
+              LOGGER.info("Success : Consumed");
+              promise.complete(resultHandler);
             })
         .onFailure(
             failure -> {

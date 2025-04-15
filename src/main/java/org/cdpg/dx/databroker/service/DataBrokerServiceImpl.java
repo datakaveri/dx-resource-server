@@ -9,6 +9,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.rabbitmq.QueueOptions;
+import io.vertx.rabbitmq.RabbitMQConsumer;
 import io.vertx.serviceproxy.ServiceException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -246,6 +248,24 @@ public class DataBrokerServiceImpl implements DataBrokerService {
             resultHandler -> {
               LOGGER.info("Success : Message published to queue");
               promise.complete("success");
+            })
+        .onFailure(
+            failure -> {
+              LOGGER.error("Fail : " + failure.getMessage());
+              promise.fail(failure);
+            });
+    return promise.future();
+  }
+
+  @Override
+  public Future<RabbitMQConsumer> basicConsumeInternal(String queueName, QueueOptions options) {
+    Promise<RabbitMQConsumer> promise = Promise.promise();
+    rabbitClient
+        .basicConsumeInternal(queueName, options)
+        .onSuccess(
+            resultHandler -> {
+              LOGGER.info("Success : Message consumed");
+              promise.complete(resultHandler);
             })
         .onFailure(
             failure -> {

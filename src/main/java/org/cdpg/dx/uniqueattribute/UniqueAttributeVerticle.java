@@ -1,4 +1,4 @@
-package org.cdpg.dx.catalogue.othercache.uniqueattribute;
+package org.cdpg.dx.uniqueattribute;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -6,10 +6,10 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceBinder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cdpg.dx.catalogue.othercache.uniqueattribute.client.UniqueAttributeClient;
-import org.cdpg.dx.catalogue.othercache.uniqueattribute.client.UniqueAttributeClientImpl;
-import org.cdpg.dx.catalogue.othercache.uniqueattribute.service.UniqueAttributeService;
-import org.cdpg.dx.catalogue.othercache.uniqueattribute.service.UniqueAttributeServiceImpl;
+import org.cdpg.dx.uniqueattribute.client.UniqueAttributeClient;
+import org.cdpg.dx.uniqueattribute.client.UniqueAttributeClientImpl;
+import org.cdpg.dx.uniqueattribute.service.UniqueAttributeService;
+import org.cdpg.dx.uniqueattribute.service.UniqueAttributeServiceImpl;
 import org.cdpg.dx.database.postgres.service.PostgresService;
 
 public class UniqueAttributeVerticle extends AbstractVerticle {

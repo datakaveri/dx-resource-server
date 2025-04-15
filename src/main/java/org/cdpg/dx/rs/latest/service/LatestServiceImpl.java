@@ -5,7 +5,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import iudx.resource.server.cache.service.CacheService;
-import org.cdpg.dx.catalogue.othercache.uniqueattribute.service.UniqueAttributeServiceImpl;
+import org.cdpg.dx.uniqueattribute.service.UniqueAttributeServiceImpl;
 import org.cdpg.dx.database.redis.service.RedisService;
 import org.cdpg.dx.database.redis.util.RedisArgs;
 import org.cdpg.dx.database.redis.util.RedisCommandArgsBuilder;

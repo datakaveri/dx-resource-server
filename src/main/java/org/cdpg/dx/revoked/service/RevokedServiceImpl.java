@@ -54,7 +54,23 @@ public class RevokedServiceImpl implements RevokedService {
     return promise.future();
   }
 
-  // TODO :: need to revisit code once postgres model will be available
+    @Override
+    public Future<Void> putRevokedInCache(String id, String value) {
+        Promise<Void> promise = Promise.promise();
+        if (id != null && value != null) {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.put("id", id);
+            jsonObject.put("expiry", value);
+            jsonObject.put("value", value);
+            revokedCache.put(id, jsonObject);
+            promise.complete();
+        } else {
+            promise.fail(new ServiceException(ERROR_BAD_REQUEST, BAD_REQUEST_ERROR));
+        }
+        return promise.future();
+    }
+
+    // TODO :: need to revisit code once postgres model will be available
   public Future<Void> refreshRevoked() {
     LOGGER.trace("refresh catalogue() called");
     Promise<Void> promise = Promise.promise();

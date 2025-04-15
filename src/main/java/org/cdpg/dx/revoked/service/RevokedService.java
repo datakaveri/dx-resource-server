@@ -16,4 +16,5 @@ public interface RevokedService {
   }
 
   Future<JsonObject> fetchRevokedInfo(String id);
+  Future<Void> putRevokedInCache(String id, String value);
 }
