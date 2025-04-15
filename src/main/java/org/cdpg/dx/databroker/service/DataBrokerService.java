@@ -7,9 +7,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rabbitmq.QueueOptions;
-import io.vertx.rabbitmq.RabbitMQConsumer;
-import iudx.resource.server.databroker.service.DataBrokerServiceVertxEBProxy;
 import java.util.List;
 import org.cdpg.dx.databroker.model.ExchangeSubscribersResponse;
 import org.cdpg.dx.databroker.model.RegisterExchangeModel;
@@ -48,6 +45,4 @@ public interface DataBrokerService {
   Future<Void> publishMessageInternal(JsonObject body, String exchangeName, String routingKey);
 
   Future<String> publishMessageExternal(String exchangeName, String routingKey, JsonArray request);
-
-  Future<RabbitMQConsumer> basicConsumeInternal(String queueName, QueueOptions options);
 }

@@ -12,9 +12,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.databroker.client.RabbitClient;
 import org.cdpg.dx.databroker.client.RabbitWebClient;
+import org.cdpg.dx.databroker.listeners.RevokeClientQlistener;
+import org.cdpg.dx.databroker.listeners.UniqueAttribQlistener;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.databroker.service.DataBrokerServiceImpl;
 import org.cdpg.dx.databroker.util.Vhosts;
+import org.cdpg.dx.revoked.service.RevokedService;
+import org.cdpg.dx.uniqueattribute.service.UniqueAttributeService;
 
 import static org.cdpg.dx.databroker.util.Constants.DATA_BROKER_SERVICE_ADDRESS;
 
@@ -38,12 +42,13 @@ public class DataBrokerVerticle extends AbstractVerticle {
   private MessageConsumer<JsonObject> consumer;
   private RabbitClient rabbitClient;
   private RabbitWebClient rabbitWebClient;
-  /*private CacheService cacheService;
-  private AsyncService asyncService;*/
+  /*private AsyncService asyncService;*/
   private RabbitMQClient iudxRabbitMqClient;
   private RabbitMQClient iudxInternalRabbitMqClient;
   private int amqpPort;
   private String amqpUrl;
+  private RevokedService revokedService;
+  private UniqueAttributeService uniqueAttributeService;
 
   @Override
   public void start() throws Exception {
@@ -134,6 +139,15 @@ public class DataBrokerVerticle extends AbstractVerticle {
             iudxRabbitClientStart -> {
               LOGGER.fatal("RMQ client startup failed");
             });
+
+    /* Create RabbitMQ listeners for revoke client queue, unique attribute queue and async query queue. */
+    revokedService = RevokedService.createProxy(vertx, "RevokedService.address");
+    uniqueAttributeService = UniqueAttributeService.createProxy(vertx, "UniqueAttributeService.address");
+    RevokeClientQlistener revokeQlistener =
+            new RevokeClientQlistener(iudxInternalRabbitMqClient, revokedService);
+    UniqueAttribQlistener uniqueAttrQlistener =
+            new UniqueAttribQlistener(iudxInternalRabbitMqClient, uniqueAttributeService);
+
     dataBrokerService =
         new DataBrokerServiceImpl(
             rabbitClient, amqpUrl, amqpPort, iudxInternalVhost, prodVhost, externalVhost);

@@ -1,30 +1,30 @@
-package org.cdpg.dx.rs.listners;
+package org.cdpg.dx.databroker.listeners;
 
 import static org.cdpg.dx.common.ErrorCode.ERROR_INTERNAL_SERVER;
 import static org.cdpg.dx.common.ErrorMessage.INTERNAL_SERVER_ERROR;
-import static org.cdpg.dx.rs.listners.util.Constans.TOKEN_INVALID_Q;
+import static org.cdpg.dx.databroker.listeners.util.Constans.TOKEN_INVALID_Q;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rabbitmq.QueueOptions;
+import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.serviceproxy.ServiceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.revoked.service.RevokedService;
 
 public class RevokeClientQlistener {
   private static final Logger LOGGER = LogManager.getLogger(RevokeClientQlistener.class);
   private final QueueOptions options =
       new QueueOptions().setMaxInternalQueueSize(1000).setKeepMostRecent(true);
-  private final DataBrokerService dataBrokerService;
+  private final RabbitMQClient iudxInternalRabbitMqClient;
   private final RevokedService revokedService;
 
-  // TODO: Start from main verticle
-  public RevokeClientQlistener(DataBrokerService dataBrokerService, RevokedService revokedService) {
-    this.dataBrokerService = dataBrokerService;
+  public RevokeClientQlistener(
+      RabbitMQClient iudxInternalRabbitMqClient, RevokedService revokedService) {
+    this.iudxInternalRabbitMqClient = iudxInternalRabbitMqClient;
     this.revokedService = revokedService;
   }
 
@@ -32,8 +32,8 @@ public class RevokeClientQlistener {
     Promise<Void> promise = Promise.promise();
     LOGGER.info("Revoked Q listener started");
 
-    dataBrokerService
-        .basicConsumeInternal(TOKEN_INVALID_Q, options)
+    iudxInternalRabbitMqClient
+        .basicConsumer(TOKEN_INVALID_Q, options)
         .onSuccess(
             revokedHandler -> {
               revokedHandler.handler(

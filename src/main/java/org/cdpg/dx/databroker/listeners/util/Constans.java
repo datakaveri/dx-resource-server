@@ -1,4 +1,4 @@
-package org.cdpg.dx.rs.listners.util;
+package org.cdpg.dx.databroker.listeners.util;
 
 public class Constans {
     public static String UNIQUE_ATTR_Q = "rs-unique-attributes";
