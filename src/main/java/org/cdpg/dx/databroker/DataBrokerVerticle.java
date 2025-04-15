@@ -148,6 +148,9 @@ public class DataBrokerVerticle extends AbstractVerticle {
     UniqueAttribQlistener uniqueAttrQlistener =
             new UniqueAttribQlistener(iudxInternalRabbitMqClient, uniqueAttributeService);
 
+    revokeQlistener.start();
+    uniqueAttrQlistener.start();
+
     dataBrokerService =
         new DataBrokerServiceImpl(
             rabbitClient, amqpUrl, amqpPort, iudxInternalVhost, prodVhost, externalVhost);
