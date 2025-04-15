@@ -22,6 +22,7 @@ public class RevokeClientQlistener {
   private final DataBrokerService dataBrokerService;
   private final RevokedService revokedService;
 
+  // TODO: Start from main verticle
   public RevokeClientQlistener(DataBrokerService dataBrokerService, RevokedService revokedService) {
     this.dataBrokerService = dataBrokerService;
     this.revokedService = revokedService;

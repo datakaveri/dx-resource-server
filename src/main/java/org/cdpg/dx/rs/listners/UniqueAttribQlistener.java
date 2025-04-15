@@ -23,6 +23,7 @@ public class UniqueAttribQlistener {
   private final DataBrokerService dataBrokerService;
   private final UniqueAttributeService uniqueAttributeService;
 
+  // TODO: Start from main verticle
   public UniqueAttribQlistener(
       DataBrokerService dataBrokerService, UniqueAttributeService uniqueAttributeService) {
     this.dataBrokerService = dataBrokerService;
