@@ -12,6 +12,9 @@ import org.cdpg.dx.uniqueattribute.client.UniqueAttributeClientImpl;
 import org.cdpg.dx.uniqueattribute.service.UniqueAttributeService;
 import org.cdpg.dx.uniqueattribute.service.UniqueAttributeServiceImpl;
 
+import static org.cdpg.dx.common.AddressConstants.PG_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.AddressConstants.UNIQUE_ATTRIBUTE_SERVICE_ADDRESS;
+
 public class UniqueAttributeVerticle extends AbstractVerticle {
   private static final Logger LOGGER = LogManager.getLogger(UniqueAttributeVerticle.class);
   private UniqueAttributeClient uniqueAttributeClient;
@@ -22,13 +25,13 @@ public class UniqueAttributeVerticle extends AbstractVerticle {
 
   @Override
   public void start() throws Exception {
-    postgresService = PostgresService.createProxy(vertx, "Postgress.address");
+    postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
     uniqueAttributeClient = new UniqueAttributeClientImpl(postgresService);
     uniqueAttributeService = new UniqueAttributeServiceImpl(vertx,uniqueAttributeClient);
 
     consumer =
         binder
-            .setAddress("UNIQUE_ATTRIBUTE_SERVICE_ADDRESS")
+            .setAddress(UNIQUE_ATTRIBUTE_SERVICE_ADDRESS)
             .register(UniqueAttributeService.class, uniqueAttributeService);
     LOGGER.info("UniqueAttribute Verticle deployed.");
   }

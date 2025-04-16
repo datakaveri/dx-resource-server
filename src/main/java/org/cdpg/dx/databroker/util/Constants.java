@@ -1,7 +1,6 @@
 package org.cdpg.dx.databroker.util;
 
 public class Constants {
-    public static final String DATA_BROKER_SERVICE_ADDRESS = "iudx.rs.broker.service";
     public static final String REQUEST_GET = "GET";
     public static final String REQUEST_POST = "POST";
     public static final String REQUEST_PUT = "PUT";
