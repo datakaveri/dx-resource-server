@@ -7,6 +7,7 @@ import io.vertx.serviceproxy.ServiceBinder;
 import org.cdpg.dx.database.elastic.service.ElasticsearchService;
 import org.cdpg.dx.database.elastic.service.ElasticsearchServiceImpl;
 
+import static org.cdpg.dx.common.Constants.ELASTIC_SERVICE_ADDRESS;
 import static org.cdpg.dx.database.elastic.util.Constants.*;
 
 
@@ -52,7 +53,7 @@ public class ElasticsearchVerticle extends AbstractVerticle {
     database = new ElasticsearchServiceImpl(client);
 
     consumer =
-        binder.setAddress("ELASTIC_SERVICE_ADDRESS").register(ElasticsearchService.class, database);
+        binder.setAddress(ELASTIC_SERVICE_ADDRESS).register(ElasticsearchService.class, database);
   }
 
   @Override
