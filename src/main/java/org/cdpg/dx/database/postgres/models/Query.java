@@ -4,5 +4,6 @@ import java.util.List;
 
 public interface Query {
     String toSQL();
+
     List<Object> getQueryParams();
 }
