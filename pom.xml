@@ -26,7 +26,7 @@
         <testcontainer.params>1.20.4</testcontainer.params>
         <testcontainer-postgres.version>1.20.4</testcontainer-postgres.version>
         <jts2geojson.version>0.18.1</jts2geojson.version>
-        <elasticsearch-rest-client.version>8.16.1</elasticsearch-rest-client.version>
+        <elasticsearch-rest-client.version>8.17.3</elasticsearch-rest-client.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <exec.mainClass>iudx.resource.server.deploy.Deployer</exec.mainClass>
         <exec.mainClassDev>iudx.resource.server.deploy.Deployer </exec.mainClassDev>
@@ -305,7 +305,7 @@
         <dependency>
             <groupId>co.elastic.clients</groupId>
             <artifactId>elasticsearch-java</artifactId>
-            <version>8.16.1</version>
+            <version>${elasticsearch-rest-client.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
