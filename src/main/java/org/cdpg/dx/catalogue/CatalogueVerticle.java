@@ -1,6 +1,6 @@
 package org.cdpg.dx.catalogue;
 
-import static org.cdpg.dx.catalogue.util.Constants.CATALOGUE_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.AddressConstants.CATALOGUE_SERVICE_ADDRESS;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -28,12 +28,13 @@ public class CatalogueVerticle extends AbstractVerticle {
     WebClientOptions options =
         new WebClientOptions().setTrustAll(true).setVerifyHost(false).setSsl(true);
     webClient = WebClient.create(vertx, options);
-    catalogueClient = new CatalogueClientImpl(config().getString("catServerHost"),
+    catalogueClient =
+        new CatalogueClientImpl(
+            config().getString("catServerHost"),
             config().getInteger("catServerPort"),
             config().getString("dxCatalogueBasePath"),
             webClient);
-    catalogueService =
-        new CatalogueServiceImpl(vertx,catalogueClient);
+    catalogueService = new CatalogueServiceImpl(vertx, catalogueClient);
     consumer =
         binder
             .setAddress(CATALOGUE_SERVICE_ADDRESS)
