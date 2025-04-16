@@ -624,7 +624,7 @@ public class RabbitClient {
         .onFailure(
             failure -> {
               LOGGER.error("Fail : " + failure.getMessage());
-              promise.fail(failure);
+              promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
             });
     return promise.future();
   }

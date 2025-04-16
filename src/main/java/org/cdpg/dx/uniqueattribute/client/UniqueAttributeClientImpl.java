@@ -1,4 +1,4 @@
-package org.cdpg.dx.catalogue.othercache.uniqueattribute.client;
+package org.cdpg.dx.uniqueattribute.client;
 
 import static org.cdpg.dx.common.ErrorCode.ERROR_INTERNAL_SERVER;
 import static org.cdpg.dx.common.ErrorMessage.INTERNAL_SERVER_ERROR;

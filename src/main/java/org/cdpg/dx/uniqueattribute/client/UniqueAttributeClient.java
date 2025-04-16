@@ -1,4 +1,4 @@
-package org.cdpg.dx.catalogue.othercache.uniqueattribute.client;
+package org.cdpg.dx.uniqueattribute.client;
 
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;

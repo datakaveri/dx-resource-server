@@ -1,4 +1,4 @@
-package org.cdpg.dx.catalogue.othercache.uniqueattribute.service;
+package org.cdpg.dx.uniqueattribute.service;
 
 import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.ProxyGen;
@@ -16,4 +16,6 @@ public interface UniqueAttributeService {
   }
 
   Future<JsonObject> fetchUniqueAttributeInfo(String id);
+
+  Future<Void> putUniqueAttributeInCache(String id, String value);
 }

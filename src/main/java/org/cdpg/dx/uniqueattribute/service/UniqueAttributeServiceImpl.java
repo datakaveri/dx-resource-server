@@ -1,4 +1,4 @@
-package org.cdpg.dx.catalogue.othercache.uniqueattribute.service;
+package org.cdpg.dx.uniqueattribute.service;
 
 import static org.cdpg.dx.common.ErrorCode.ERROR_BAD_REQUEST;
 import static org.cdpg.dx.common.ErrorCode.ERROR_NOT_FOUND;
@@ -14,7 +14,7 @@ import io.vertx.serviceproxy.ServiceException;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cdpg.dx.catalogue.othercache.uniqueattribute.client.UniqueAttributeClient;
+import org.cdpg.dx.uniqueattribute.client.UniqueAttributeClient;
 
 public class UniqueAttributeServiceImpl implements UniqueAttributeService {
   private static final Logger LOGGER = LogManager.getLogger(UniqueAttributeServiceImpl.class);
@@ -54,6 +54,23 @@ public class UniqueAttributeServiceImpl implements UniqueAttributeService {
     return promise.future();
   }
 
+  @Override
+  public Future<Void> putUniqueAttributeInCache(String id, String value) {
+    Promise<Void> promise = Promise.promise();
+    if (id != null && value != null) {
+      JsonObject jsonObject = new JsonObject();
+      jsonObject.put("resource_id", id);
+      jsonObject.put("key", id);
+      jsonObject.put("unique_attribute", value);
+      jsonObject.put("value", value);
+      uniqueAttributeCache.put(id, jsonObject);
+      promise.complete();
+    } else {
+      promise.fail(new ServiceException(ERROR_BAD_REQUEST, BAD_REQUEST_ERROR));
+    }
+    return promise.future();
+  }
+
   // TODO :: need to revisit code once postgres model will be available
   public Future<Void> refreshUniqueAttribute() {
     LOGGER.trace("refresh refreshUniqueAttribute() called");
@@ -79,7 +96,8 @@ public class UniqueAttributeServiceImpl implements UniqueAttributeService {
         .onFailure(
             failure -> {
               LOGGER.error("Failed to refresh unique attribute", failure);
-              promise.fail(new ServiceException(ERROR_BAD_REQUEST, "Failed to refresh unique attribute"));
+              promise.fail(
+                  new ServiceException(ERROR_BAD_REQUEST, "Failed to refresh unique attribute"));
             });
     return promise.future();
   }

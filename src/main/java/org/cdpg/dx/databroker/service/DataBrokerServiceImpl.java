@@ -3,12 +3,15 @@ package org.cdpg.dx.databroker.service;
 import static org.cdpg.dx.common.ErrorCode.ERROR_BAD_REQUEST;
 import static org.cdpg.dx.common.ErrorCode.ERROR_INTERNAL_SERVER;
 import static org.cdpg.dx.common.ErrorMessage.INTERNAL_SERVER_ERROR;
+import static org.cdpg.dx.databroker.util.Constants.INTERNAL_ERROR_CODE;
 import static org.cdpg.dx.databroker.util.Constants.QUEUE_LIST_ERROR;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.rabbitmq.QueueOptions;
 import io.vertx.serviceproxy.ServiceException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -254,7 +257,6 @@ public class DataBrokerServiceImpl implements DataBrokerService {
             });
     return promise.future();
   }
-
   @Override
   public Future<String> resetPassword(String userId) {
     Promise<String> promise = Promise.promise();
