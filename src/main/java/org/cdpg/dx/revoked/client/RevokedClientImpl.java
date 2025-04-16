@@ -39,7 +39,7 @@ public class RevokedClientImpl implements RevokedClient {
         .onSuccess(
             pgSuccess -> {
               LOGGER.trace("populateRevoked() success");
-              List<JsonObject> resultJson = pgSuccess.rows();
+              List<JsonObject> resultJson = pgSuccess.getRows().getList();
               promise.complete(resultJson);
             })
         .onFailure(
