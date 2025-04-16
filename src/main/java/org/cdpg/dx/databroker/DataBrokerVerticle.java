@@ -107,7 +107,7 @@ public class DataBrokerVerticle extends AbstractVerticle {
     /* Create a Json Object for properties */
     JsonObject propObj = new JsonObject();
 
-    propObj.put("userName", dataBrokerUserName);
+    propObj.put("username", dataBrokerUserName);
     propObj.put("password", dataBrokerPassword);
 
     /* Call the databroker constructor with the RabbitMQ client. */
