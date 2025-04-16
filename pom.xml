@@ -285,6 +285,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>1.19.7</version> <!-- Use the latest version -->
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
             <version>5.14.2</version>
