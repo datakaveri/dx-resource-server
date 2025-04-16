@@ -38,7 +38,7 @@ public class UniqueAttributeClientImpl implements UniqueAttributeClient {
         .onSuccess(
             pgSuccess -> {
               LOGGER.trace("populateUniqueAttribute() success");
-              List<JsonObject> resultJson = pgSuccess.rows();
+              List<JsonObject> resultJson = pgSuccess.getRows().getList();
               promise.complete(resultJson);
             })
         .onFailure(

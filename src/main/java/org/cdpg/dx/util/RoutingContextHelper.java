@@ -1,7 +1,5 @@
 package org.cdpg.dx.util;
 
-import static iudx.resource.server.apiserver.util.Constants.ID;
-
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import java.util.List;
@@ -11,6 +9,8 @@ import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.auditing.model.AuditLog;
 import org.cdpg.dx.common.models.JwtData;
 import org.cdpg.dx.common.models.User;
+
+import static org.cdpg.dx.util.Constants.ID;
 
 public final class RoutingContextHelper {
   private static final Logger LOGGER = LogManager.getLogger(RoutingContextHelper.class);
