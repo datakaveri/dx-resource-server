@@ -7,7 +7,7 @@ import io.vertx.serviceproxy.ServiceBinder;
 import org.cdpg.dx.database.elastic.service.ElasticsearchService;
 import org.cdpg.dx.database.elastic.service.ElasticsearchServiceImpl;
 
-import static org.cdpg.dx.common.Constants.ELASTIC_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.AddressConstants.ELASTIC_SERVICE_ADDRESS;
 import static org.cdpg.dx.database.elastic.util.Constants.*;
 
 
