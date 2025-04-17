@@ -25,7 +25,7 @@
 		</RollingFile> -->
     </Appenders>
     <Loggers>
-        <logger name="iudx.resource.server" level="${env:LOG_LEVEL:-INFO}"
+        <logger name="org.cdpg.dx" level="${env:LOG_LEVEL:-INFO}"
             additivity="false">
             <appender-ref ref="ConsoleAppender" />
 			<!-- <appender-ref ref="RollingFile" /> -->

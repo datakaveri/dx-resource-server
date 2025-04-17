@@ -24,6 +24,7 @@ public class RevokedVerticle extends AbstractVerticle {
     private ServiceBinder binder;
     @Override
     public void start() throws Exception {
+        binder = new ServiceBinder(vertx);
         postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
         revokedClient = new RevokedClientImpl(postgresService);
         revokedService = new RevokedServiceImpl(vertx,revokedClient);

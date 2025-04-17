@@ -31,9 +31,13 @@ public class UniqueAttribQlistener {
 
   public Future<Void> start() {
     Promise<Void> promise = Promise.promise();
-    LOGGER.info("Unique Attribute Queue listener started");
     iudxInternalRabbitMqClient
-        .basicConsumer(UNIQUE_ATTR_Q, options)
+        .start()
+        .compose(
+            success -> {
+              LOGGER.info("Unique Attribute Queue listener started");
+              return iudxInternalRabbitMqClient.basicConsumer(UNIQUE_ATTR_Q, options);
+            })
         .onSuccess(
             uniqueHandler -> {
               uniqueHandler.handler(
@@ -48,7 +52,7 @@ public class UniqueAttribQlistener {
             })
         .onFailure(
             failure -> {
-              LOGGER.error("failed ::" + failure.getMessage());
+              LOGGER.error("failed to start " + failure.getMessage());
               promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
             });
     return promise.future();

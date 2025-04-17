@@ -28,8 +28,8 @@
         <jts2geojson.version>0.18.1</jts2geojson.version>
         <elasticsearch-rest-client.version>8.17.3</elasticsearch-rest-client.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <exec.mainClass>iudx.resource.server.deploy.Deployer</exec.mainClass>
-        <exec.mainClassDev>iudx.resource.server.deploy.Deployer </exec.mainClassDev>
+        <exec.mainClass>org.cdpg.dx.deploy.Deployer</exec.mainClass>
+        <exec.mainClassDev>org.cdpg.dx.deploy.Deployer </exec.mainClassDev>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -388,7 +388,6 @@
                         <exclude>**/Constants.class</exclude>
                         <exclude>**/*VertxProxyHandler.class</exclude>
                         <exclude>**/*Verticle.class</exclude>
-                        <exclude>**/*Controller.class</exclude>
                         <exclude>**/*Model.class</exclude>
                         <!--  class present in generated-sources  -->
                         <exclude>**/JwtDataConverter.class</exclude>
@@ -402,7 +401,7 @@
                         <exclude>iudx/resource/server/encryption/EncryptionService.class</exclude>
                         <exclude>iudx/resource/server/database/elastic/EsResponseFormatter.class</exclude>
                         <!--  deployment helper classes  -->
-                        <exclude>iudx/resource/server/deploy/*.class</exclude>
+                        <exclude>org/cdpg/dx/deploy/*.class</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -533,7 +532,7 @@
                     <execution>
                         <id>resource-server</id>
                         <configuration>
-                            <mainClass>iudx.resource.server.deploy.Deployer</mainClass>
+                            <mainClass>org.cdpg.dx.deploy.Deployer</mainClass>
                             <arguments>
                                 <argument>-jar</argument>
                                 <argument>{project.build.directory}/${project.artifactId}-dev-${project.version}-fat.jar </argument>
