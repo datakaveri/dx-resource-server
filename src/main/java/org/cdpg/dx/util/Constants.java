@@ -171,6 +171,8 @@ public class Constants {
   public static final String JSON_MINDISTANCE = "mindistance";
   public static final String JSON_DURING = "during";
   public static final String JSON_BETWEEN = "between";
+  public static final String JSON_BEFORE = "before";
+  public static final String JSON_AFTER = "after";
   public static final String JSON_TIME = "time";
   public static final String JSON_ENDTIME = "endtime";
   public static final String JSON_TIMEREL = "timerel";
@@ -260,13 +262,14 @@ public class Constants {
   public static final double VALIDATION_ALLOWED_DIST_FOR_ASYNC = 10000.0;
   public static final int VALIDATION_PAGINATION_LIMIT_MAX = 5000;
   public static final int VALIDATION_PAGINATION_OFFSET_MAX = 49999;
-  public static final List<Object> VALIDATION_ALLOWED_GEOM =
+  public static final List<String> VALIDATION_ALLOWED_GEOM =
       List.of("Point", "point", "Polygon", "polygon", "LineString", "linestring", "bbox");
-  public static final List<Object> VALIDATION_ALLOWED_GEOPROPERTY = List.of("location", "Location");
+  public static final List<String> VALIDATION_ALLOWED_GEOPROPERTY = List.of("location", "Location");
   public static final List<String> VALIDATION_ALLOWED_OPERATORS =
       List.of(">", "=", "<", ">=", "<=", "==", "!=");
   public static final List<String> VALIDATION_ALLOWED_TEMPORAL_REL =
       List.of("after", "before", "during", "between");
+  public static final List<String> VALIDATION_ALLOWED_GEOREL= List.of("within", "intersects", "near");
 
   public static final List<String> VALIDATION_ALLOWED_TEMPORAL_REL_ASYNC =
       List.of("during", "between");
