@@ -4,125 +4,73 @@
     "zookeeper"
   ],
   "clusterId": "iudx-rs-cluster",
+  "host": "rs.iudx.io",
   "commonConfig": {
     "dxApiBasePath": "/ngsi-ld/v1",
     "dxCatalogueBasePath": "/iudx/cat/v1",
     "dxAuthBasePath": "/auth/v1",
     "catServerHost": "",
     "catServerPort": 443,
-    "timeLimit": "test,2020-10-22T00:00:00Z,365",
+    "timeLimit": "",
     "timeLimitForAsync": 365
   },
   "modules": [
     {
-      "id": "iudx.resource.server.database.archives.DatabaseVerticle",
+      "id": "org.cdpg.dx.database.postgres.PostgresVerticle",
       "isWorkerVerticle": false,
-      "tenantPrefix": "iudx",
-      "verticleInstances": 8,
+      "verticleInstances": 1,
       "databaseIP": "",
-      "databasePort": 24034,
-      "dbUser": "",
-      "dbPassword": ""
-    },
-    {
-      "id": "iudx.resource.server.authenticator.AuthenticationVerticle",
-      "isWorkerVerticle": false,
-      "verticleInstances": 1,
-      "audience": "rs.iudx.io",
-      "authServerHost": "",
-      "jwtIgnoreExpiry": true,
-      "enableLimits": false
-    },
-    {
-      "id": "iudx.resource.server.databroker.DataBrokerVerticle",
-      "isWorkerVerticle": false,
-      "verticleInstances": 1,
-      "dataBrokerIP": "",
-      "dataBrokerPort": 29042,
-      "prodVhost": "",
-      "internalVhost": "",
-      "externalVhost": "",
-      "dataBrokerUserName": "",
-      "dataBrokerPassword": "",
-      "dataBrokerManagementPort": 30042,
-      "connectionTimeout": 6000,
-      "requestedHeartbeat": 60,
-      "handshakeTimeout": 6000,
-      "requestedChannelMax": 5,
-      "networkRecoveryInterval": 500,
-      "automaticRecoveryEnabled": "true",
-      "postgresDatabaseIP": "",
-      "postgresDatabasePort": 5432,
-      "postgresDatabaseName": "",
-      "postgresDatabaseUserName": "",
-      "postgresDatabasePassword": "",
-      "postgrespoolSize": 25,
-      "brokerAmqpIp": "",
-      "brokerAmqpPort": 1234
-    },
-    {
-      "id": "iudx.resource.server.apiserver.ApiServerVerticle",
-      "isWorkerVerticle": false,
-      "ssl": true,
-      "keystore": "configs/keystore.jks",
-      "keystorePassword": "",
-      "httpPort": 8443,
-      "verticleInstances": 8
-    },
-    {
-      "id": "iudx.resource.server.database.latest.LatestVerticle",
-      "isWorkerVerticle": false,
-      "tenantPrefix": "iudx",
-      "verticleInstances": 2,
-      "redisMode": "",
-      "redisUsername": "",
-      "redisPassword": "",
-      "redisMaxPoolSize": 30,
-      "redisMaxPoolWaiting": 200,
-      "redisMaxWaitingHandlers": 1024,
-      "redisPoolRecycleTimeout": 1500,
-      "redisHost": "",
-      "redisPort": 1234
-    },
-    {
-      "id": "iudx.resource.server.metering.MeteringVerticle",
-      "isWorkerVerticle": false,
-      "verticleInstances": 1
-    },
-    {
-      "id": "iudx.resource.server.database.postgres.PostgresVerticle",
-      "isWorkerVerticle": false,
-      "verticleInstances": 1,
-      "databaseIp": "localhost",
-      "databasePort": 5432,
+      "databasePort": 5433,
       "databaseName": "",
       "databaseUserName": "",
       "databasePassword": "",
       "poolSize": 25
     },
     {
-      "id": "iudx.resource.server.cache.CacheVerticle",
+      "id": "org.cdpg.dx.databroker.DataBrokerVerticle",
+      "isWorkerVerticle": false,
+      "verticleInstances": 1,
+      "dataBrokerIP": "",
+      "dataBrokerPort": 24568,
+      "prodVhost": "",
+      "internalVhost": "",
+      "externalVhost": "",
+      "dataBrokerUserName": "",
+      "dataBrokerPassword": "",
+      "dataBrokerManagementPort": 28042,
+      "connectionTimeout": 6000,
+      "requestedHeartbeat": 60,
+      "handshakeTimeout": 6000,
+      "requestedChannelMax": 5,
+      "networkRecoveryInterval": 500,
+      "automaticRecoveryEnabled": "true",
+      "brokerAmqpIp": "",
+      "brokerAmqpPort": 24567
+    },
+    {
+      "id": "org.cdpg.dx.catalogue.CatalogueVerticle",
       "isWorkerVerticle": false,
       "verticleInstances": 1
     },
     {
-      "id": "iudx.resource.server.database.async.AsyncVerticle",
-      "isWorkerVerticle": true,
-      "tenantPrefix": "iudx",
-      "threadPoolName": "async-query-pool",
-      "threadPoolSize": 20,
-      "verticleInstances": 20,
+      "id": "org.cdpg.dx.revoked.RevokedVerticle",
+      "isWorkerVerticle": false,
+      "verticleInstances": 1
+    },
+    {
+      "id": "org.cdpg.dx.uniqueattribute.UniqueAttributeVerticle",
+      "isWorkerVerticle": false,
+      "verticleInstances": 1
+    },
+    {
+      "id": "org.cdpg.dx.database.elastic.ElasticsearchVerticle",
+      "isWorkerVerticle": false,
+      "verticleInstances": 2,
+      "tenantPrefix": "",
       "databaseIP": "",
-      "databasePort": 998,
-      "dbUser": "",
-      "dbPassword": "",
-      "filePath": "/home/kailash/Downloads/",
-      "bucketName": ""
-    },
-    {
-      "id": "iudx.resource.server.encryption.EncryptionVerticle",
-      "isWorkerVerticle": false,
-      "verticleInstances": 1
+      "databasePort": 24034,
+      "databaseUser": "",
+      "databasePassword": ""
     }
   ]
 }
