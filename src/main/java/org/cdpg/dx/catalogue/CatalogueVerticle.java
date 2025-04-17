@@ -25,6 +25,7 @@ public class CatalogueVerticle extends AbstractVerticle {
 
   @Override
   public void start() throws Exception {
+    binder = new ServiceBinder(vertx);
     WebClientOptions options =
         new WebClientOptions().setTrustAll(true).setVerifyHost(false).setSsl(true);
     webClient = WebClient.create(vertx, options);

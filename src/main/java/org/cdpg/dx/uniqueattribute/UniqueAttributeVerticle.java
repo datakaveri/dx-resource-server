@@ -25,6 +25,7 @@ public class UniqueAttributeVerticle extends AbstractVerticle {
 
   @Override
   public void start() throws Exception {
+    binder = new ServiceBinder(vertx);
     postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
     uniqueAttributeClient = new UniqueAttributeClientImpl(postgresService);
     uniqueAttributeService = new UniqueAttributeServiceImpl(vertx,uniqueAttributeClient);

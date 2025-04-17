@@ -30,10 +30,13 @@ public class RevokeClientQlistener {
 
   public Future<Void> start() {
     Promise<Void> promise = Promise.promise();
-    LOGGER.info("Revoked Q listener started");
-
     iudxInternalRabbitMqClient
-        .basicConsumer(TOKEN_INVALID_Q, options)
+        .start()
+        .compose(
+            connected -> {
+              LOGGER.info("Revoked Q listener started");
+              return iudxInternalRabbitMqClient.basicConsumer(TOKEN_INVALID_Q, options);
+            })
         .onSuccess(
             revokedHandler -> {
               revokedHandler.handler(
