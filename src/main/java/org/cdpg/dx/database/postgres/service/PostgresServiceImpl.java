@@ -22,15 +22,13 @@ import org.slf4j.LoggerFactory;
 
 public class PostgresServiceImpl implements PostgresService {
     private final PgPool client;
-    private static final Logger LOG = LoggerFactory.getLogger(PostgresServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresServiceImpl.class);
 
     public PostgresServiceImpl(PgPool client) {
-        System.out.println("inside the constructor : hereee");
         this.client = client;
     }
 
     private QueryResult convertToQueryResult(RowSet<Row> rowSet) {
-      System.out.println("Inside convertToQueryResult");
       JsonArray jsonArray = new JsonArray();
         Object value;
         for (Row row : rowSet) {
@@ -40,26 +38,25 @@ public class PostgresServiceImpl implements PostgresService {
               String column = row.getColumnName(i);
               value = row.getValue(i);
               if (value == null || value instanceof String || value instanceof Number || value instanceof Boolean) {
-                System.out.println("value:"+value);
                 json.put(column, value);
               } else {
                 json.put(column, value.toString());
               }
             }
           jsonArray.add(json);
+            /*LOGGER.error(jsonArray.toString());*/
         }
 
 
         boolean rowsAffected = rowSet.rowCount() > 0; // Check if any rows were affected
         if(rowsAffected)
       {
-        System.out.println("Rows affected :"+rowSet.rowCount());
+        LOGGER.info("Rows affected :"+rowSet.rowCount());
       }
       else
       {
-        System.out.println("Rows unaffected");
+        LOGGER.info("Rows unaffected");
       }
-      System.out.println("Returned rows: " + jsonArray.encodePrettily());
 
       QueryResult queryResult = new QueryResult();
       queryResult.setRows(jsonArray);
@@ -71,8 +68,8 @@ public class PostgresServiceImpl implements PostgresService {
     }
 
   private Future<QueryResult> executeQuery(String sql, List<Object> params) {
-    System.out.println("Executing SQL: " + sql);
-    System.out.println("With parameters: " + params);
+    LOGGER.info("Executing SQL: " + sql);
+    LOGGER.info("With parameters: " + params);
 
 
     try {
@@ -80,7 +77,7 @@ public class PostgresServiceImpl implements PostgresService {
 
 
       for (Object param : params) {
-        System.out.println("Param type: " + (param != null ? param.getClass().getSimpleName() : "null") + ", value: " + param);
+        LOGGER.debug("Param type: " + (param != null ? param.getClass().getSimpleName() : "null") + ", value: " + param);
 
 
         if (param instanceof String) {
@@ -96,7 +93,7 @@ public class PostgresServiceImpl implements PostgresService {
               coercedParams.add(time);
               continue;
             } catch (Exception e) {
-              System.out.println("Failed to parse timestamp, keeping as string: " + paramStr);
+             LOGGER.error("Failed to parse timestamp, keeping as string: " + paramStr);
             }
           }
         }
@@ -106,25 +103,27 @@ public class PostgresServiceImpl implements PostgresService {
         coercedParams.add(param);
       }
 
-
+LOGGER.error(coercedParams.toString());
       Tuple tuple = Tuple.from(coercedParams);
+      LOGGER.error(tuple.deepToString());
+
 
 
       return client
         .preparedQuery(sql)
         .execute(tuple)
         .map(rowSet -> {
-          System.out.println("Query executed successfully.");
+          LOGGER.info("Query executed successfully.");
           return convertToQueryResult(rowSet);
         })
         .onFailure(err -> {
-          System.err.println("SQL execution error: " + err.getMessage());
+          LOGGER.error("SQL execution error: " + err.getMessage());
           err.printStackTrace();
         });
 
 
     } catch (Exception e) {
-      System.err.println("Exception while building Tuple or executing query: " + e.getMessage());
+      LOGGER.error("Exception while building Tuple or executing query: " + e.getMessage());
       e.printStackTrace();
       return Future.failedFuture("Error in PostgresServiceImpl: " + e.getMessage());
     }
