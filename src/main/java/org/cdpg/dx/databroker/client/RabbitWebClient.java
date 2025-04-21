@@ -21,7 +21,7 @@ public class RabbitWebClient {
     private String password;
 
     public RabbitWebClient(Vertx vertx, WebClientOptions webClientOptions, JsonObject propJson) {
-        this.username = propJson.getString("userName");
+        this.username = propJson.getString("username");
         this.password = propJson.getString("password");
         if (webClient == null) {
             webClient = getRabbitMqWebClient(vertx, webClientOptions);
