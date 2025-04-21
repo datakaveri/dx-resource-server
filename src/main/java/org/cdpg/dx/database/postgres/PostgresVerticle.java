@@ -33,8 +33,6 @@ public class PostgresVerticle extends AbstractVerticle {
   @Override
   public void start(Promise<Void> startPromise) {
     try {
-      LOGGER.info("PostgresVerticle start() invoked.");
-      System.out.println(">>> Postgres verticle started.");
       // Read configuration
       databaseIp = config().getString("databaseIP");
       databasePort = config().getInteger("databasePort");
@@ -42,9 +40,6 @@ public class PostgresVerticle extends AbstractVerticle {
       databaseUserName = config().getString("databaseUserName");
       databasePassword = config().getString("databasePassword");
       poolSize = config().getInteger("poolSize");
-      System.out.println(">>> Config >>>" +  config().toString());
-
-      LOGGER.info("DATABASE CONFIG: IP={}, PORT={}, NAME={}, USER={}", databaseIp, databasePort, databaseName, databaseUserName);
 
       // Set up database connection
       PgConnectOptions connectOptions = new PgConnectOptions()
@@ -76,13 +71,13 @@ public class PostgresVerticle extends AbstractVerticle {
       startPromise.fail(e);  // Signal failure
     }
 
-    pool.query("SELECT 1").execute(ar -> {
+    /*pool.query("SELECT 1").execute(ar -> {
       if (ar.succeeded()) {
         System.out.println("Successfully connected to the database!");
       } else {
         System.out.println("Failed to connect to the database");
       }
-    });
+    });*/
   }
 
   @Override
