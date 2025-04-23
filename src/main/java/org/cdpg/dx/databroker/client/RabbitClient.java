@@ -41,6 +41,27 @@ public class RabbitClient {
     this.rabbitWebClient = rabbitWebClient;
     this.iudxRabbitMqClient = iudxRabbitMqClient;
     this.iudxInternalRabbitMqClient = iudxInternalRabbitMqClient;
+
+    iudxInternalRabbitMqClient
+        .start()
+        .onSuccess(
+            iudxRabbitClientStart -> {
+              LOGGER.info("RMQ client started for Iudx Internal Vhost");
+            })
+        .onFailure(
+            iudxRabbitClientStart -> {
+              LOGGER.fatal("RMQ client startup failed");
+            });
+    iudxRabbitMqClient
+        .start()
+        .onSuccess(
+            iudxRabbitClientStart -> {
+              LOGGER.info("RMQ client started for Prod Vhost");
+            })
+        .onFailure(
+            iudxRabbitClientStart -> {
+              LOGGER.fatal("RMQ client startup failed");
+            });
   }
 
   public Future<Void> deleteQueue(String queueName, String vhost) {
@@ -222,7 +243,7 @@ public class RabbitClient {
         .onComplete(
             handler -> {
               if (handler.succeeded()) {
-                LOGGER.debug("setVhost " + handler.result());
+                LOGGER.debug("setVhost status code " + handler.result().statusCode());
                 if (handler.result().statusCode() == HttpStatus.SC_CREATED) {
                   LOGGER.debug(
                       "Success :write permission set for user [ "
@@ -595,8 +616,18 @@ public class RabbitClient {
       JsonObject body, String exchangeName, String routingKey) {
     Buffer buffer = Buffer.buffer(body.toString());
     Promise<Void> promise = Promise.promise();
-    iudxInternalRabbitMqClient
-        .basicPublish(exchangeName, routingKey, buffer)
+    Future<Void> rabbitMqClientIudxInternalStartFuture;
+    if (!iudxInternalRabbitMqClient.isConnected()) {
+      rabbitMqClientIudxInternalStartFuture = iudxRabbitMqClient.start();
+    } else {
+      rabbitMqClientIudxInternalStartFuture = Future.succeededFuture();
+    }
+    rabbitMqClientIudxInternalStartFuture
+        .compose(
+            started -> {
+              LOGGER.trace("Rabbitmq client started in PublishMessageInternal");
+              return iudxInternalRabbitMqClient.basicPublish(exchangeName, routingKey, buffer);
+            })
         .onSuccess(
             publishSuccess -> {
               LOGGER.debug("publishMessage success");
@@ -613,9 +644,19 @@ public class RabbitClient {
   public Future<Void> publishMessageExternal(
       String exchangeName, String routingKey, JsonArray request) {
     Promise<Void> promise = Promise.promise();
+    Future<Void> rabbitMqClientIudxStartFuture;
+    if (!iudxRabbitMqClient.isConnected()) {
+      rabbitMqClientIudxStartFuture = iudxRabbitMqClient.start();
+    } else {
+      rabbitMqClientIudxStartFuture = Future.succeededFuture();
+    }
     Buffer buffer = Buffer.buffer(request.encode());
-    iudxRabbitMqClient
-        .basicPublish(exchangeName, routingKey, buffer)
+    rabbitMqClientIudxStartFuture
+        .compose(
+            started -> {
+              LOGGER.trace("Rabbitmq client started in PublishMessageExternal");
+              return iudxRabbitMqClient.basicPublish(exchangeName, routingKey, buffer);
+            })
         .onSuccess(
             resultHandler -> {
               LOGGER.info("Success : Message published to queue");
