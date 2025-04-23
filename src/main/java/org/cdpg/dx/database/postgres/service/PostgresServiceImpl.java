@@ -1,34 +1,31 @@
 package org.cdpg.dx.database.postgres.service;
 
 import io.vertx.core.Future;
-import io.vertx.pgclient.PgPool;
-import io.vertx.sqlclient.Tuple;
-import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.Row;
-import org.cdpg.dx.database.postgres.models.*;
-
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.JsonArray;
-
+import io.vertx.core.json.JsonObject;
+import io.vertx.pgclient.PgPool;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-
+import org.cdpg.dx.database.postgres.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PostgresServiceImpl implements PostgresService {
     private final PgPool client;
-    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PostgresServiceImpl.class);
 
     public PostgresServiceImpl(PgPool client) {
+        System.out.println("inside the constructor : hereee");
         this.client = client;
     }
 
     private QueryResult convertToQueryResult(RowSet<Row> rowSet) {
+      System.out.println("Inside convertToQueryResult");
       JsonArray jsonArray = new JsonArray();
         Object value;
         for (Row row : rowSet) {
@@ -38,25 +35,26 @@ public class PostgresServiceImpl implements PostgresService {
               String column = row.getColumnName(i);
               value = row.getValue(i);
               if (value == null || value instanceof String || value instanceof Number || value instanceof Boolean) {
+                System.out.println("value:"+value);
                 json.put(column, value);
               } else {
                 json.put(column, value.toString());
               }
             }
           jsonArray.add(json);
-            /*LOGGER.error(jsonArray.toString());*/
         }
 
 
         boolean rowsAffected = rowSet.rowCount() > 0; // Check if any rows were affected
         if(rowsAffected)
       {
-        LOGGER.info("Rows affected :"+rowSet.rowCount());
+        System.out.println("Rows affected :"+rowSet.rowCount());
       }
       else
       {
-        LOGGER.info("Rows unaffected");
+        System.out.println("Rows unaffected");
       }
+      System.out.println("Returned rows: " + jsonArray.encodePrettily());
 
       QueryResult queryResult = new QueryResult();
       queryResult.setRows(jsonArray);
@@ -68,8 +66,8 @@ public class PostgresServiceImpl implements PostgresService {
     }
 
   private Future<QueryResult> executeQuery(String sql, List<Object> params) {
-    LOGGER.info("Executing SQL: " + sql);
-    LOGGER.info("With parameters: " + params);
+    System.out.println("Executing SQL: " + sql);
+    System.out.println("With parameters: " + params);
 
 
     try {
@@ -77,7 +75,7 @@ public class PostgresServiceImpl implements PostgresService {
 
 
       for (Object param : params) {
-        LOGGER.debug("Param type: " + (param != null ? param.getClass().getSimpleName() : "null") + ", value: " + param);
+        System.out.println("Param type: " + (param != null ? param.getClass().getSimpleName() : "null") + ", value: " + param);
 
 
         if (param instanceof String) {
@@ -93,7 +91,7 @@ public class PostgresServiceImpl implements PostgresService {
               coercedParams.add(time);
               continue;
             } catch (Exception e) {
-             LOGGER.error("Failed to parse timestamp, keeping as string: " + paramStr);
+              System.out.println("Failed to parse timestamp, keeping as string: " + paramStr);
             }
           }
         }
@@ -103,27 +101,25 @@ public class PostgresServiceImpl implements PostgresService {
         coercedParams.add(param);
       }
 
-LOGGER.error(coercedParams.toString());
-      Tuple tuple = Tuple.from(coercedParams);
-      LOGGER.error(tuple.deepToString());
 
+      Tuple tuple = Tuple.from(coercedParams);
 
 
       return client
         .preparedQuery(sql)
         .execute(tuple)
         .map(rowSet -> {
-          LOGGER.info("Query executed successfully.");
+          System.out.println("Query executed successfully.");
           return convertToQueryResult(rowSet);
         })
         .onFailure(err -> {
-          LOGGER.error("SQL execution error: " + err.getMessage());
+          System.err.println("SQL execution error: " + err.getMessage());
           err.printStackTrace();
         });
 
 
     } catch (Exception e) {
-      LOGGER.error("Exception while building Tuple or executing query: " + e.getMessage());
+      System.err.println("Exception while building Tuple or executing query: " + e.getMessage());
       e.printStackTrace();
       return Future.failedFuture("Error in PostgresServiceImpl: " + e.getMessage());
     }

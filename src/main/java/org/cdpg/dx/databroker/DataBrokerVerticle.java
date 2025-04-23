@@ -113,32 +113,11 @@ public class DataBrokerVerticle extends AbstractVerticle {
     /* Call the databroker constructor with the RabbitMQ client. */
 
     rabbitWebClient = new RabbitWebClient(vertx, webConfig, propObj);
-
+    iudxRabbitMqClient = RabbitMQClient.create(vertx, iudxConfig);
+    iudxInternalRabbitMqClient = RabbitMQClient.create(vertx, iudxInternalConfig);
     rabbitClient =
         new RabbitClient(rabbitWebClient, iudxInternalRabbitMqClient, iudxRabbitMqClient);
     binder = new ServiceBinder(vertx);
-    iudxRabbitMqClient = RabbitMQClient.create(vertx, iudxConfig);
-    iudxInternalRabbitMqClient = RabbitMQClient.create(vertx, iudxInternalConfig);
-    iudxInternalRabbitMqClient
-        .start()
-        .onSuccess(
-            iudxRabbitClientStart -> {
-              LOGGER.info("RMQ client started for Iudx Internal Vhost");
-            })
-        .onFailure(
-            iudxRabbitClientStart -> {
-              LOGGER.fatal("RMQ client startup failed");
-            });
-    iudxRabbitMqClient
-        .start()
-        .onSuccess(
-            iudxRabbitClientStart -> {
-              LOGGER.info("RMQ client started for Prod Vhost");
-            })
-        .onFailure(
-            iudxRabbitClientStart -> {
-              LOGGER.fatal("RMQ client startup failed");
-            });
 
     /* Create RabbitMQ listeners for revoke client queue, unique attribute queue and async query queue. */
     revokedService = RevokedService.createProxy(vertx, REVOKED_SERVICE_ADDRESS);

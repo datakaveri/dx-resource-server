@@ -1,107 +1,71 @@
 package org.cdpg.dx.databroker.client;
 
+import static org.cdpg.dx.container.RMQContainer.rabbitMQContainer;
+
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.junit5.Checkpoint;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.rabbitmq.RabbitMQClient;
-import io.vertx.rabbitmq.RabbitMQOptions;
 import java.util.function.Consumer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.container.RMQContainer;
 import org.cdpg.dx.databroker.util.PermissionOpType;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.testcontainers.containers.Network;
-import org.testcontainers.containers.RabbitMQContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Testcontainers
+// @Testcontainers
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @ExtendWith(VertxExtension.class)
 public class RabbitClientTest {
-
+  private static final Logger LOGGER = LogManager.getLogger(RabbitClientTest.class);
   private static final String USERNAME = "guest";
   private static final String PASSWORD = "guest";
   private static final String VHOST = "iudx";
+  Vertx vertx;
 
-  @Container
+  /*@Container
   private static final RabbitMQContainer rabbitMQContainer =
       new RabbitMQContainer("rabbitmq:4.0-management")
           .withExposedPorts(5672, 15672)
           .withEnv("RABBITMQ_DEFAULT_USER", USERNAME)
           .withEnv("RABBITMQ_DEFAULT_PASS", PASSWORD)
           .withEnv("RABBITMQ_DEFAULT_VHOST", VHOST)
-          .withNetwork(Network.newNetwork());
+          .withNetwork(Network.newNetwork());*/
 
   private RabbitWebClient rabbitWebClient;
   private RabbitMQClient rabbitMQClient;
   private RabbitClient rabbitClient;
+  private RMQContainer rmqContainer;
 
   @BeforeAll
-  void setup(Vertx vertx) throws Exception {
-    String host = rabbitMQContainer.getHost();
-    int managementPort = rabbitMQContainer.getMappedPort(15672);
-    int amqpPort = rabbitMQContainer.getAmqpPort();
-
-    // Setup RMQ permissions
-    rabbitMQContainer.execInContainer("rabbitmqctl", "set_user_tags", USERNAME, "administrator");
-    rabbitMQContainer.execInContainer(
-        "rabbitmqctl", "set_permissions", "-p", "/", USERNAME, ".*", ".*", ".*");
-
-    WebClientOptions webClientOptions =
-        new WebClientOptions()
-            .setDefaultHost(host)
-            .setDefaultPort(managementPort)
-            .setSsl(false)
-            .setTrustAll(true)
-            .setFollowRedirects(true)
-            .setKeepAlive(true)
-            .setConnectTimeout(30000)
-            .setKeepAliveTimeout(30000);
-
-    JsonObject credentials = new JsonObject().put("username", USERNAME).put("password", PASSWORD);
-
-    rabbitWebClient = new RabbitWebClient(vertx, webClientOptions, credentials);
-
-    RabbitMQOptions options =
-        new RabbitMQOptions()
-            .setUser(USERNAME)
-            .setPassword(PASSWORD)
-            .setVirtualHost(VHOST)
-            .setPort(amqpPort)
-            .setHost(host)
-            .setConnectionTimeout(30000)
-            .setRequestedHeartbeat(30)
-            .setHandshakeTimeout(30000)
-            .setRequestedChannelMax(10)
-            .setNetworkRecoveryInterval(300)
-            .setAutomaticRecoveryEnabled(true);
-
-    rabbitMQClient = RabbitMQClient.create(vertx, options);
-    await(rabbitMQClient.start());
-
-    rabbitClient = new RabbitClient(rabbitWebClient, rabbitMQClient, rabbitMQClient);
+  void setup() throws Exception {
+    vertx = Vertx.vertx();
+    rmqContainer = new RMQContainer(vertx);
+    LOGGER.info(
+        "rabbit class  {}:{} ::::{}",
+        rmqContainer.getContainer().getHost(),
+        rmqContainer.getContainer().getMappedPort(15672),
+        rmqContainer.getContainer().getAmqpPort());
+    rabbitClient = rmqContainer.getRabbitClient();
   }
+
+  /*@AfterAll
+  void tearDown() {
+      vertx.close();
+      LOGGER.debug("RMQ container stopped called");
+      rmqContainer.stop();
+  }*/
 
   @AfterAll
   void tearDown() {
-    if (rabbitMQClient != null) {
-      rabbitMQClient.stop();
-    }
-
-    if (rabbitMQContainer != null && rabbitMQContainer.isRunning()) {
-      rabbitMQContainer.stop();
-    }
-  }
-
-  // Helper method to block on Future (for sync-like behavior in setup)
-  private void await(Future<?> future) throws Exception {
-    future.toCompletionStage().toCompletableFuture().get();
+    vertx.close();
+    rmqContainer.stop();
   }
 
   @Order(1)
