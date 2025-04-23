@@ -157,6 +157,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     return routingKey;
   }
 
+  private static SelectQuery appendSelectQuery(
+      PostSubscriptionModel postSubscriptionModel, String subscriptionId) {
+    Condition queueNameCondition =
+        new Condition("queue_name", Condition.Operator.EQUALS, List.of(subscriptionId));
+    Condition entityCondition =
+        new Condition(
+            "entity", Condition.Operator.EQUALS, List.of(postSubscriptionModel.getEntityId()));
+    Condition condition =
+        new Condition(List.of(queueNameCondition, entityCondition), Condition.LogicalOperator.AND);
+    return new SelectQuery("subscriptions", List.of("*"), condition, null, null, null, null);
+  }
+
   @Override
   public Future<GetSubscriptionModel> getSubscription(String subscriptionId) {
     LOGGER.info("getSubscription() method started");
@@ -173,7 +185,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         .onComplete(
             getDataBroker -> {
               if (getDataBroker.succeeded()) {
-                  LOGGER.error("result == {}", getDataBroker.result());
                 promise.complete(getDataBroker.result());
               } else {
                 promise.fail(getDataBroker.cause());
@@ -362,12 +373,27 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         .compose(
             catalogueResult -> {
               LOGGER.trace("appendStreaming successful ");
-              LOGGER.trace("catalogueResult: " + catalogueResult.toString());
-              SubsType subType = SubsType.valueOf(postSubscriptionModel.getSubscriptionType());
-              InsertQuery insertQuery =
-                  appendSubsQuery(
-                      subscriptionId, entityId, catalogueResult, subType, postSubscriptionModel);
-              return postgresService.insert(insertQuery);
+              SelectQuery selectQuery = appendSelectQuery(postSubscriptionModel, subscriptionId);
+              return postgresService
+                  .select(selectQuery)
+                  .map(selectHandler -> new AppendMetaData(selectHandler, catalogueResult));
+            })
+        .compose(
+            selectSuccess -> {
+              LOGGER.trace("catalogueResult: " + selectSuccess.catalogue().toString());
+              if (selectSuccess.selectQueryResult().getRows().isEmpty()) {
+                SubsType subType = SubsType.valueOf(postSubscriptionModel.getSubscriptionType());
+                InsertQuery insertQuery =
+                    appendSubsQuery(
+                        subscriptionId,
+                        entityId,
+                        selectSuccess.catalogue(),
+                        subType,
+                        postSubscriptionModel);
+                return postgresService.insert(insertQuery);
+              } else {
+                return Future.succeededFuture(new QueryResult());
+              }
             })
         .onSuccess(
             subscriptionDataResultSuccess -> {
