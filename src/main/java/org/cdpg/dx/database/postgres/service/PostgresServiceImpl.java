@@ -1,17 +1,22 @@
 package org.cdpg.dx.database.postgres.service;
 
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.pgclient.PgPool;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Row;
+import org.cdpg.dx.database.postgres.models.*;
+
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.JsonArray;
+
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import org.cdpg.dx.database.postgres.models.*;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

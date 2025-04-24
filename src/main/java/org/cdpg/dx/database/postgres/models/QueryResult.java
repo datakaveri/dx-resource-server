@@ -1,8 +1,9 @@
 package org.cdpg.dx.database.postgres.models;
 
 import io.vertx.codegen.annotations.DataObject;
-import io.vertx.core.json.JsonArray;
+import io.vertx.codegen.json.annotations.JsonGen;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.JsonArray;
 
 @DataObject(generateConverter = true)
 public class QueryResult {

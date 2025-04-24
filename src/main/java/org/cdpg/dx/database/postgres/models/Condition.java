@@ -3,6 +3,7 @@ package org.cdpg.dx.database.postgres.models;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -137,6 +138,37 @@ public class Condition {
       };
     }
   }
+
+  public String toSQL(List<Object> params) {
+    if (isGroup) {
+      return conditions.stream()
+        .map(cond -> "(" + cond.toSQL(params) + ")") // Recursively build condition strings
+        .collect(Collectors.joining(" " + logicalOperator.getSymbol() + " "));
+    } else {
+      return switch (operator) {
+        case EQUALS, NOT_EQUALS, GREATER, LESS, GREATER_EQUALS, LESS_EQUALS, LIKE -> {
+          params.add(values.get(0));
+          yield column + " " + operator.getSymbol() + " $" + params.size();
+        }
+        case IN, NOT_IN -> {
+          String placeholders = values.stream().map(value -> {
+            params.add(value);
+            return "$" + params.size();
+          }).collect(Collectors.joining(", "));
+          yield column + " " + operator.getSymbol() + " (" + placeholders + ")";
+        }
+        case BETWEEN -> {
+          params.add(values.get(0));
+          String first = "$" + params.size();
+          params.add(values.get(1));
+          String second = "$" + params.size();
+          yield column + " BETWEEN " + first + " AND " + second;
+        }
+        case IS_NULL, IS_NOT_NULL -> column + " " + operator.getSymbol();
+      };
+    }
+  }
+
 
   // Get query parameters
   public List<Object> getQueryParams() {

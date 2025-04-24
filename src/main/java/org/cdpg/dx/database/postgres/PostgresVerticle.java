@@ -1,5 +1,6 @@
 package org.cdpg.dx.database.postgres;
-import static org.cdpg.dx.common.AddressConstants.PG_SERVICE_ADDRESS;
+import static io.vertx.pgclient.PgPool.*;
+import static org.cdpg.dx.common.Constants.PG_SERVICE_ADDRESS;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
@@ -9,10 +10,13 @@ import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;
 import io.vertx.serviceproxy.ServiceBinder;
 import io.vertx.sqlclient.PoolOptions;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.database.postgres.service.PostgresServiceImpl;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.Map;
 
 public class PostgresVerticle extends AbstractVerticle {
   private static final Logger LOGGER = LogManager.getLogger(PostgresVerticle.class);
