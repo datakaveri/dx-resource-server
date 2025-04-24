@@ -102,9 +102,6 @@ public class DeleteQuery implements Query {
         if (limit != null) {
             query.append(" LIMIT ").append(limit);
         }
-        if(condition.getQueryParams()!= null){
-            query = new StringBuilder(query.toString().replace("$1", "$1::UUID"));
-        }
 
         return query.toString();
     }

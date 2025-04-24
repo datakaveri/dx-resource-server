@@ -1,7 +1,7 @@
 package org.cdpg.dx.rs.subscription.service;
 
 import static org.cdpg.dx.common.AddressConstants.DATA_BROKER_SERVICE_ADDRESS;
-import static org.cdpg.dx.common.AddressConstants.PG_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.Constants.PG_SERVICE_ADDRESS;
 import static org.mockito.Mockito.when;
 
 import io.vertx.core.DeploymentOptions;
