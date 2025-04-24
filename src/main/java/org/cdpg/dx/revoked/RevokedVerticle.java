@@ -12,8 +12,8 @@ import org.cdpg.dx.revoked.client.RevokedClientImpl;
 import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.revoked.service.RevokedServiceImpl;
 
-import static org.cdpg.dx.common.AddressConstants.PG_SERVICE_ADDRESS;
-import static org.cdpg.dx.common.AddressConstants.REVOKED_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.util.ProxyAddressConstants.PG_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.util.ProxyAddressConstants.REVOKED_SERVICE_ADDRESS;
 
 public class RevokedVerticle extends AbstractVerticle {
     private static final Logger LOGGER = LogManager.getLogger(RevokedVerticle.class);
