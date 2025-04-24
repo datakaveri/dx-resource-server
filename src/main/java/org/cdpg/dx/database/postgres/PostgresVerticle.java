@@ -1,6 +1,6 @@
 package org.cdpg.dx.database.postgres;
 import static io.vertx.pgclient.PgPool.*;
-import static org.cdpg.dx.common.Constants.PG_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.util.ProxyAddressConstants.PG_SERVICE_ADDRESS;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;

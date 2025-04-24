@@ -1,6 +1,6 @@
-package org.cdpg.dx.common;
+package org.cdpg.dx.common.util;
 
-public class AddressConstants {
+public class ProxyAddressConstants {
   public static final String PG_SERVICE_ADDRESS = "org.cdpg.dx.database.postgres";
   public static final String ELASTIC_SERVICE_ADDRESS ="org.cdpg.dx.database.elastic";
   public static final String UNIQUE_ATTRIBUTE_SERVICE_ADDRESS = "org.cdpg.dx.uniqueattribute";

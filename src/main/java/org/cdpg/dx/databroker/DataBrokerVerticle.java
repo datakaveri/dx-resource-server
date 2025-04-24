@@ -1,6 +1,6 @@
 package org.cdpg.dx.databroker;
 
-import static org.cdpg.dx.common.AddressConstants.*;
+import static org.cdpg.dx.common.util.ProxyAddressConstants.*;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.MessageConsumer;

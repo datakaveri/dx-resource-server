@@ -2,7 +2,7 @@ package org.cdpg.dx.auditing.handler;
 
 import static org.cdpg.dx.auditing.util.Constants.AUDITING_EXCHANGE;
 import static org.cdpg.dx.auditing.util.Constants.ROUTING_KEY;
-import static org.cdpg.dx.common.AddressConstants.DATA_BROKER_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.util.ProxyAddressConstants.DATA_BROKER_SERVICE_ADDRESS;
 
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;

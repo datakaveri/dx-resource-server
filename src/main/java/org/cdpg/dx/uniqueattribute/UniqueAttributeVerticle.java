@@ -12,8 +12,8 @@ import org.cdpg.dx.uniqueattribute.client.UniqueAttributeClientImpl;
 import org.cdpg.dx.uniqueattribute.service.UniqueAttributeService;
 import org.cdpg.dx.uniqueattribute.service.UniqueAttributeServiceImpl;
 
-import static org.cdpg.dx.common.AddressConstants.PG_SERVICE_ADDRESS;
-import static org.cdpg.dx.common.AddressConstants.UNIQUE_ATTRIBUTE_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.util.ProxyAddressConstants.PG_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.util.ProxyAddressConstants.UNIQUE_ATTRIBUTE_SERVICE_ADDRESS;
 
 public class UniqueAttributeVerticle extends AbstractVerticle {
   private static final Logger LOGGER = LogManager.getLogger(UniqueAttributeVerticle.class);
