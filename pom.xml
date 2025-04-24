@@ -330,7 +330,8 @@
             <version>5.5.0</version>
             <scope>test</scope>
         </dependency>
-        <!--  rabbit test container  -->
+
+        <!--  RabbitMQ test container  -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>rabbitmq</artifactId>
