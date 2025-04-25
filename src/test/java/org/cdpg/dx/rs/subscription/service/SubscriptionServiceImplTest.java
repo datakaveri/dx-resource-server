@@ -210,8 +210,8 @@ public class SubscriptionServiceImplTest {
               context.failed();
             });
   }
- // @Order(2)
- // @Test
+  @Order(2)
+  @Test
   void testGetSubscription_success(VertxTestContext context) {
 
     subscriptionService.getSubscription("fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub")
@@ -225,10 +225,10 @@ public class SubscriptionServiceImplTest {
             });
   }
 
- // @Order(3)
- // @Test
+  @Order(3)
+  @Test
   void testUpdateSubscription_success(VertxTestContext context) {
-    subscriptionService.updateSubscription("83c2e5c2-3574-4e11-9530-2b1fbdfce832","my-sub2","2025-05-01T00:00:00Z")
+    subscriptionService.updateSubscription("83c2e5c2-3574-4e11-9530-2b1fbdfce832","fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub","2025-05-01T00:00:00Z")
         .onSuccess(
             result -> {
               context.completeNow();
@@ -277,8 +277,8 @@ public class SubscriptionServiceImplTest {
                     });
   }
 
-  //@Order(5)
-  //@Test
+  @Order(5)
+  @Test
   void testDeleteSubscription_success(VertxTestContext context) {
 
     subscriptionService.deleteSubscription("fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub","fd47486b-3497-4248-ac1e-082e4d37a66c")
