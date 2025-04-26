@@ -56,6 +56,12 @@
             <artifactId>vertx-codegen</artifactId>
             <classifier>processor</classifier>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/io.vertx/vertx-web -->
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web-openapi</artifactId>
+            <version>${vertx.version}</version>
+        </dependency>
         <!--  https://mvnrepository.com/artifact/org.postgresql/postgresql  -->
         <dependency>
             <groupId>org.postgresql</groupId>

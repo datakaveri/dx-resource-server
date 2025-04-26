@@ -1,9 +1,85 @@
 package org.cdpg.dx.util;
 
+import io.vertx.core.http.HttpMethod;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class Constants {
+  // Header params
+  public static final String HEADER_ACCEPT = "Accept";
+  public static final String HEADER_CONTENT_LENGTH = "Content-Length";
+  public static final String HEADER_CONTENT_TYPE = "Content-Type";
+  public static final String HEADER_ORIGIN = "Origin";
+  public static final String HEADER_REFERER = "Referer";
+  public static final String HEADER_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
+  public static final String HEADER_TOKEN = "token";
+  public static final String HEADER_HOST = "Host";
+  public static final String HEADER_OPTIONS = "options";
+  public static final String HEADER_BEARER_AUTHORIZATION = "Bearer";
+  public static final String HEADER_CSV = "csv";
+  public static final String HEADER_JSON = "json";
+  public static final String HEADER_PARQUET = "parquet";
+  public static final String COUNT_HEADER = "Count";
+  public static final String HEADER_PUBLIC_KEY = "publicKey";
+  public static final String HEADER_RESPONSE_FILE_FORMAT = "format";
+
+  /** Accept Headers and CORS */
+  public static final String MIME_APPLICATION_JSON = "application/json";
+
+  public static final String MIME_TEXT_HTML = "text/html";
+
+  /** API Documentation endpoint */
+  public static final String ROUTE_STATIC_SPEC = "/apis/spec";
+
+  public static final String ROUTE_DOC = "/apis";
+
+  // request/response params
+  public static final String CONTENT_TYPE = "content-type";
+  public static final String APPLICATION_JSON = "application/json";
+  public static final Set<String> ALLOWED_HEADERS =
+      new HashSet<>(
+          Arrays.asList(
+              HEADER_ACCEPT,
+              HEADER_TOKEN,
+              HEADER_CONTENT_LENGTH,
+              HEADER_CONTENT_TYPE,
+              HEADER_HOST,
+              HEADER_ORIGIN,
+              HEADER_REFERER,
+              HEADER_ALLOW_ORIGIN));
+  public static final Set<HttpMethod> ALLOWED_METHODS =
+      new HashSet<>(
+          Arrays.asList(
+              HttpMethod.GET,
+              HttpMethod.POST,
+              HttpMethod.OPTIONS,
+              HttpMethod.DELETE,
+              HttpMethod.PATCH,
+              HttpMethod.PUT));
+  // Request's operationIds
+  public static final String GET_SPATIAL_DAT = "getSpatialData";
+  public static final String GET_LATEST_ENTITY_DATA = "getLatestEntityData";
+  public static final String TEMPORAL_SEARCH = "temporalSearch";
+  public static final String POST_TEMPORAL_SEARCH = "postTemporalSearch";
+  public static final String POST_SPATIAL_SEARCH = "postSpatialSearch";
+  public static final String GET_ADAPTER_EXCHANGE = "getAdapterexchange";
+  public static final String REGISTER_ADAPTER = "registerAdapter";
+  public static final String GET_ADAPTOR_DETAILS_BY_ID_ALT = "getAdaptorDetailsById";
+  public static final String DELETE_ADAPTOR_BY_ID = "deleteAdaptorById";
+  public static final String POST_INGESTION_ADAPTOR_ENTITIES = "PostingestionAdaptorEntities";
+  public static final String GET_LIST_OF_SUBSCRIBERS = "getListOfSubscribers";
+  public static final String POST_SUBSCRIPTION = "postSubscription";
+  public static final String APPEND_SUBSCRIPTION = "appendStreamingSubscription";
+  public static final String UPDATE_SUBSCRIPTION = "updateStreamingSubscription";
+  public static final String GET_SUBSCRIBER_BY_ID = "getSubscriberById";
+  public static final String DELETE_SUBSCRIBER_BY_ID = "deleteSubscriberById";
+  public static final String RESET_PASSWORD = "resetPassword";
+  public static final String ASYNC_SEARCH = "asyncSearch";
+  public static final String ASYNC_SEARCH_STATUS = "asyncSearchStatus";
+
   public static final String EVENT = "event";
   public static final String API_ENDPOINT = "apiEndpoint";
   public static final String API_METHOD = "method";
@@ -40,10 +116,6 @@ public class Constants {
 
   public static final String RESET_PWD = "/user/resetPassword";
 
-  /** API Documentation endpoint */
-  public static final String ROUTE_STATIC_SPEC = "/apis/spec";
-
-  public static final String ROUTE_DOC = "/apis";
   public static final List<String> openEndPoints =
       List.of("/temporal/entities", "/entities", "/entityOperations/query");
   public static final String REVOKE_TOKEN = "/revokeToken";
@@ -53,11 +125,6 @@ public class Constants {
   public static final String MONTHLY_OVERVIEW = "/overview";
   public static final String SUMMARY_ENDPOINT = "/summary";
   public static final String INGESTION_PATH_ENTITIES = "/ingestion/entities";
-
-  /** Accept Headers and CORS */
-  public static final String MIME_APPLICATION_JSON = "application/json";
-
-  public static final String MIME_TEXT_HTML = "text/html";
 
   // ngsi-ld/IUDX query paramaters
   public static final String NGSILDQUERY_ID = "id";
@@ -82,29 +149,6 @@ public class Constants {
   public static final String NGSILDQUERY_TIME_PROPERTY = "timeProperty";
   public static final String NGSILDQUERY_FROM = "offset";
   public static final String NGSILDQUERY_SIZE = "limit";
-
-  // Header params
-  public static final String HEADER_TOKEN = "token";
-  public static final String HEADER_BEARER_AUTHORIZATION = "Bearer";
-  public static final String HEADER_CSV = "csv";
-  public static final String HEADER_JSON = "json";
-  public static final String HEADER_PARQUET = "parquet";
-  public static final String HEADER_HOST = "Host";
-  public static final String HEADER_ACCEPT = "Accept";
-  public static final String HEADER_CONTENT_LENGTH = "Content-Length";
-  public static final String HEADER_CONTENT_TYPE = "Content-Type";
-  public static final String HEADER_ORIGIN = "Origin";
-  public static final String HEADER_REFERER = "Referer";
-  public static final String HEADER_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
-  public static final String HEADER_OPTIONS = "options";
-
-  public static final String COUNT_HEADER = "Count";
-  public static final String HEADER_PUBLIC_KEY = "publicKey";
-  public static final String HEADER_RESPONSE_FILE_FORMAT = "format";
-
-  // request/response params
-  public static final String CONTENT_TYPE = "content-type";
-  public static final String APPLICATION_JSON = "application/json";
 
   // json fields
   public static final String JSON_INSTANCEID = "instanceID";
