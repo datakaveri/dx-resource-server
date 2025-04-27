@@ -25,26 +25,52 @@ public class CatalogueVerticle extends AbstractVerticle {
 
   @Override
   public void start() throws Exception {
-    binder = new ServiceBinder(vertx);
-    WebClientOptions options =
-        new WebClientOptions().setTrustAll(true).setVerifyHost(false).setSsl(true);
-    webClient = WebClient.create(vertx, options);
-    catalogueClient =
-        new CatalogueClientImpl(
-            config().getString("catServerHost"),
-            config().getInteger("catServerPort"),
-            config().getString("dxCatalogueBasePath"),
-            webClient);
-    catalogueService = new CatalogueServiceImpl(vertx, catalogueClient);
-    consumer =
-        binder
-            .setAddress(CATALOGUE_SERVICE_ADDRESS)
-            .register(CatalogueService.class, catalogueService);
-    LOGGER.info("Catalogue Verticle deployed.");
+    try {
+      validateConfig();
+      binder = new ServiceBinder(vertx);
+
+      WebClientOptions options =
+          new WebClientOptions().setTrustAll(true).setVerifyHost(false).setSsl(true);
+      webClient = WebClient.create(vertx, options);
+
+      catalogueClient =
+          new CatalogueClientImpl(
+              config().getString("catServerHost"),
+              config().getInteger("catServerPort"),
+              config().getString("dxCatalogueBasePath"),
+              webClient);
+
+      catalogueService = new CatalogueServiceImpl(vertx, catalogueClient);
+      consumer =
+          binder
+              .setAddress(CATALOGUE_SERVICE_ADDRESS)
+              .register(CatalogueService.class, catalogueService);
+
+      LOGGER.info("Catalogue Verticle deployed.");
+    } catch (Exception e) {
+      LOGGER.error("Failed to deploy CatalogueVerticle: {}", e.getMessage());
+      throw e; // Rethrow to signal deployment failure
+    }
   }
 
   @Override
   public void stop() throws Exception {
-    binder.unregister(consumer);
+    LOGGER.info("Shutting down CatalogueVerticle and unregistering service proxy.");
+    if (binder != null && consumer != null) {
+      binder.unregister(consumer);
+    }
+  }
+
+  private void validateConfig() {
+    checkConfigExists("catServerHost");
+    checkConfigExists("catServerPort");
+    checkConfigExists("dxCatalogueBasePath");
+  }
+
+  private void checkConfigExists(String key) {
+    if (config().getValue(key) == null) {
+      LOGGER.error("Configuration error: Missing required configuration: [{}]", key);
+      throw new IllegalArgumentException("Missing required configuration: " + key);
+    }
   }
 }
