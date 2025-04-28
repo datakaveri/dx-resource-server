@@ -45,11 +45,11 @@ public class RabbitClient {
     iudxInternalRabbitMqClient
         .start()
         .onSuccess(
-            iudxRabbitClientStart -> {
-              LOGGER.info("RMQ client started for Iudx Internal Vhost");
+            iudxInternalRabbitClientStart -> {
+              LOGGER.info("RMQ client started for Internal Vhost");
             })
         .onFailure(
-            iudxRabbitClientStart -> {
+            iudxInternalRabbitClientStart -> {
               LOGGER.fatal("RMQ client startup failed");
             });
     iudxRabbitMqClient
@@ -597,7 +597,8 @@ public class RabbitClient {
         .onComplete(
             ar -> {
               if (ar.succeeded()) {
-                if (ar.result().statusCode() == HttpStatus.SC_NO_CONTENT) {
+                if (ar.result().statusCode() == HttpStatus.SC_NO_CONTENT
+                    || ar.result().statusCode() == HttpStatus.SC_CREATED) {
                   LOGGER.debug("user password changed");
                   promise.complete();
                 } else {
@@ -618,24 +619,22 @@ public class RabbitClient {
     Promise<Void> promise = Promise.promise();
     Future<Void> rabbitMqClientIudxInternalStartFuture;
     if (!iudxInternalRabbitMqClient.isConnected()) {
-      rabbitMqClientIudxInternalStartFuture = iudxRabbitMqClient.start();
+      rabbitMqClientIudxInternalStartFuture = iudxInternalRabbitMqClient.start();
     } else {
       rabbitMqClientIudxInternalStartFuture = Future.succeededFuture();
     }
     rabbitMqClientIudxInternalStartFuture
         .compose(
             started -> {
-              LOGGER.trace("Rabbitmq client started in PublishMessageInternal");
               return iudxInternalRabbitMqClient.basicPublish(exchangeName, routingKey, buffer);
             })
         .onSuccess(
             publishSuccess -> {
-              LOGGER.debug("publishMessage success");
               promise.complete();
             })
         .onFailure(
             publishFailure -> {
-              LOGGER.debug("publishMessage failure");
+              LOGGER.error("publishMessage failure " + publishFailure);
               promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
             });
     return promise.future();
@@ -654,12 +653,10 @@ public class RabbitClient {
     rabbitMqClientIudxStartFuture
         .compose(
             started -> {
-              LOGGER.trace("Rabbitmq client started in PublishMessageExternal");
               return iudxRabbitMqClient.basicPublish(exchangeName, routingKey, buffer);
             })
         .onSuccess(
             resultHandler -> {
-              LOGGER.info("Success : Message published to queue");
               promise.complete();
             })
         .onFailure(
