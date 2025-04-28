@@ -5,5 +5,5 @@ import io.vertx.core.json.JsonObject;
 public interface AAAClient {
     Future<JsonObject> fetchUserData(String userId, String role, String resourceServer);
 
-     Future<String> fetchPublicKeyOrCert();
+     Future<String> fetchCertKey();
 }

@@ -39,4 +39,22 @@ public record JwtData(
         }
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "JwtData{" +
+                "accessToken='" + accessToken + '\'' +
+                ", sub='" + sub + '\'' +
+                ", iss='" + iss + '\'' +
+                ", aud='" + aud + '\'' +
+                ", exp=" + exp +
+                ", iat=" + iat +
+                ", iid='" + iid + '\'' +
+                ", role='" + role + '\'' +
+                ", cons=" + cons +
+                ", drl='" + drl + '\'' +
+                ", did='" + did + '\'' +
+                ", expiry='" + expiry + '\'' +
+                '}';
+    }
 }

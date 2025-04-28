@@ -14,10 +14,13 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.TimeoutHandler;
 import io.vertx.ext.web.openapi.RouterBuilder;
+import io.vertx.ext.web.openapi.RouterBuilderOptions;
 import io.vertx.serviceproxy.HelperUtils;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.auth.authentication.client.SecretKeyClientImpl;
+import org.cdpg.dx.auth.authentication.handler.TokenAuthenticationHandler;
 import org.cdpg.dx.util.HttpStatusCode;
 
 public class ApiServerVerticle extends AbstractVerticle {
@@ -40,9 +43,12 @@ public class ApiServerVerticle extends AbstractVerticle {
     String dxApiBasePath = config().getString("dxApiBasePath");
     boolean isTimeLimitEnabled = config().getBoolean("isTimeLimitEnabled", false);
 
+    SecretKeyClientImpl secretKeyClient = new SecretKeyClientImpl(config(), vertx);
+    TokenAuthenticationHandler authenticatorHandler =
+        new TokenAuthenticationHandler(config(), secretKeyClient, vertx);
+
     ControllerFactory controllerFactory =
         new ControllerFactory(isTimeLimitEnabled, dxApiBasePath, vertx);
-
     List<ApiController> controllers = controllerFactory.createControllers();
 
     RouterBuilder.create(vertx, "docs/openapi.yaml")
@@ -56,6 +62,11 @@ public class ApiServerVerticle extends AbstractVerticle {
                 routerBuilder.rootHandler(BodyHandler.create().setHandleFileUploads(false));
 
                 LOGGER.debug("Registering controllers...");
+                RouterBuilderOptions factoryOptions =
+                    new RouterBuilderOptions().setMountResponseContentTypeHandler(true);
+                routerBuilder.setOptions(factoryOptions);
+                routerBuilder.securityHandler("authorization", authenticatorHandler);
+
                 controllers.forEach(controller -> controller.register(routerBuilder));
 
                 LOGGER.debug("Creating router...");

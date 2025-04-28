@@ -57,7 +57,7 @@ public class AAAServiceImpl implements AAAService {
 
   private Future<String> fetchCertKeyFromServer() {
     return authWebClient
-        .fetchPublicKeyOrCert()
+        .fetchCertKey()
         .compose(
             cert -> {
               if (cert != null && !cert.isEmpty()) {

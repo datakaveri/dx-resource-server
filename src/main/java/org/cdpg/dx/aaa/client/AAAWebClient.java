@@ -57,7 +57,7 @@ public class AAAWebClient implements AAAClient {
   }
 
   @Override
-  public Future<String> fetchPublicKeyOrCert() {
+  public Future<String> fetchCertKey() {
     return client
         .get(authServerPort, authServerHost, authServerCertPath)
         .send()

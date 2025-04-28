@@ -5,9 +5,6 @@ import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import org.cdpg.dx.aaa.models.UserInfo;
-import org.cdpg.dx.catalogue.service.CatalogueService;
-import org.cdpg.dx.common.models.User;
 
 @VertxGen
 @ProxyGen
@@ -17,7 +14,8 @@ public interface AAAService {
     return new AAAServiceVertxEBProxy(vertx, address);
   }
 
- // Future<User> fetchUserInfo(UserInfo userInfo);
+  // todo : since vertx don't support java record,we need to use JsonObject or some other dataobject
+  // Future<User> fetchUserInfo(UserInfo userInfo);
 
   Future<String> getPublicOrCertKey();
 }
