@@ -6,14 +6,17 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
+import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.catalogue.service.CatalogueService;
+import org.cdpg.dx.common.models.JwtData;
 import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.rs.apiserver.ApiController;
 import org.cdpg.dx.rs.subscription.service.SubscriptionService;
 import org.cdpg.dx.rs.subscription.service.SubscriptionServiceImpl;
+import org.cdpg.dx.util.RoutingContextHelper;
 
 public class SubsCriptionController implements ApiController {
   private static final Logger LOGGER = LogManager.getLogger(SubsCriptionController.class);
@@ -72,6 +75,10 @@ public class SubsCriptionController implements ApiController {
   }
 
   private void handleGetSubscriberById(RoutingContext ctx) {
+    LOGGER.trace("hadleGetSubscriberById() started");
+
+    Optional<JwtData> jwtData = RoutingContextHelper.getJwtData(ctx);
+    LOGGER.error("handleGetSubscriberById {}", jwtData.get());
 
     String id = ctx.pathParam("id");
     String name = ctx.pathParam("name");
@@ -101,6 +108,7 @@ public class SubsCriptionController implements ApiController {
   }
 
   private void handleGetListOfSubscribers(RoutingContext ctx) {
+    LOGGER.trace("handleGetListOfSubscribers() started");
 
     subscriptionService
         .getAllSubscriptionQueueForUser("fd47486b-3497-4248-ac1e-082e4d37a66c")
@@ -123,18 +131,22 @@ public class SubsCriptionController implements ApiController {
   }
 
   private void handlePostSubscription(RoutingContext ctx) {
+    LOGGER.trace("handlePostSubscription() started");
     sendDummyResponse(ctx, "Dummy response for postSubscription");
   }
 
   private void handleUpdateSubscription(RoutingContext ctx) {
+    LOGGER.trace("handleUpdateSubscription() started");
     sendDummyResponse(ctx, "Dummy response for updateSubscription");
   }
 
   private void handleAppendSubscription(RoutingContext ctx) {
+    LOGGER.trace("handleAppendSubscription() started");
     sendDummyResponse(ctx, "Dummy response for appendSubscription");
   }
 
   private void handleDeleteSubscriberById(RoutingContext ctx) {
+    LOGGER.trace("handleDeleteSubscriberById() started");
     sendDummyResponse(ctx, "Dummy response for deleteSubscriberById");
   }
 

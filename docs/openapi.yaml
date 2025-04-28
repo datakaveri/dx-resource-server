@@ -143,6 +143,10 @@ servers:
   - url: 'https://example.com/ngsi-ld/v1'
     description: 'Development Server URL'
 
+# Global security definition (applies to all paths unless overridden)
+security:
+  - authorization: []
+
 paths:
 
   /ngsi-ld/v1/entities/{id}:
@@ -1430,6 +1434,8 @@ paths:
           source: |
             curl --location --request GET 'https://example.com/ngsi-ld/v1/subscription' \
             --header 'token: <tokenValue>'
+      security:
+        - authorization: []
     post:
       tags:
         - Data Subscriber
@@ -2741,6 +2747,11 @@ paths:
       description: The `resourceattribute` API is used by admin user to delete unique attribute for a resource in DX(Data exchange). The user could provide the resource `id` to delete the unique attribute.
 
 components:
+  securitySchemes:
+    authorization:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     createastreamingsubscriptionrequest:
       title: createastreamingsubscriptionrequest
