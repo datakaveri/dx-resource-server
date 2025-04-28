@@ -1,17 +1,5 @@
 openapi: 3.0.2
 
-schemes:
-  - "http"
-  - "https"
-
-produces:
-  - "application/json"
-  - "text/plain"
-
-consumes:
-  - "application/json"
-  - "text/plain"
-
 info:
   title: "Data exchange Resource Server APIs"
   version: 5.6.0
@@ -155,16 +143,19 @@ servers:
   - url: 'https://example.com/ngsi-ld/v1'
     description: 'Development Server URL'
 
+# Global security definition (applies to all paths unless overridden)
+security:
+  - authorization: []
+
 paths:
 
-  /entities/{id}:
+  /ngsi-ld/v1/entities/{id}:
     get:
       tags:
         - Latest Entity
       summary: Latest Data
-      operationId: latest-entities
+      operationId: getLatestEntityData
       parameters:
-
         - name: token
           in: header
           description: A <b> valid data exchange Auth token </b> to process the request. <br/> This field is <b> mandatory </b> for accessing a <b> resource </b> .  <br/> If not provided with a valid token, user will be responded with <b> 401 Unauthorized </b> .
@@ -242,11 +233,11 @@ paths:
 
       deprecated: false
 
-  /entities:
+  /ngsi-ld/v1/entities:
     get:
       tags:
         - Spatial Entities
-      operationId: Spatial Search
+      operationId: getSpatialData
       parameters:
 
         - name: token
@@ -491,11 +482,11 @@ paths:
           - The value should be equal to `count` and it is <b>case sensitive</b>
 
 
-  /temporal/entities:
+  /ngsi-ld/v1/temporal/entities:
     get:
       tags:
         - Temporal Entities
-      summary: Temporal Search
+      summary: temporalSearch
       operationId: temporal-entities
       parameters:
 
@@ -760,12 +751,12 @@ paths:
           - It <b>cannot</b> be used along with a <b>attrs</b> filter. 
           - The value should be equal to `count` and it is <b>case sensitive</b>
 
-  /entityOperations/query:
+  /ngsi-ld/v1/entityOperations/query:
     post:
       tags:
         - Entities Post Query
       summary: Spatial search
-      operationId: complex-query
+      operationId: postTemporalSearch
       parameters:
 
         - name: token
@@ -915,12 +906,12 @@ paths:
 
       deprecated: false
 
-  /temporal/entityOperations/query:
+  /ngsi-ld/v1/temporal/entityOperations/query:
     post:
       tags:
         - Entities Post Query
       summary: Spatial + temporal search
-      operationId: spatial-complex-query
+      operationId: postSpatialSearch
       parameters:
 
         - name: token
@@ -1092,7 +1083,7 @@ paths:
           - The value should be equal to `count` and it is <b>case sensitive</b>
       deprecated: false
 
-  /ingestion:
+  /ngsi-ld/v1/ingestion:
     get:
       tags:
         - Data Ingestion Adaptor
@@ -1101,7 +1092,7 @@ paths:
         Based on the input provided, the API validates the access control of the user with DX(Data exchange) Auth server to allow or deny access to the API.'
 
 
-      operationId: adapterexchange
+      operationId: getAdapterexchangeList
       parameters:
         - name: token
           in: header
@@ -1110,8 +1101,7 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
       responses:
         200:
           description: 'Successfully retrieving list of all adapter exchanges'
@@ -1139,7 +1129,7 @@ paths:
       tags:
         - Data Ingestion Adaptor
       summary: Register ingestion adapter
-      operationId: registeradapter
+      operationId: registerAdapter
       parameters:
         - name: token
           in: header
@@ -1148,8 +1138,7 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
       x-codeSamples:
         - lang: 'cURL'
@@ -1207,12 +1196,12 @@ paths:
           - `entities`: List of DX(Data exchange) resource id's .
       deprecated: false
 
-  /ingestion/{id}:
+  /ngsi-ld/v1/ingestion/{id}:
     get:
       tags:
         - Data Ingestion Adaptor
       summary: Retrieve ingestion adapter details
-      operationId: getadaptordetails
+      operationId: getAdaptorDetailsById
       parameters:
         - name: token
           in: header
@@ -1221,8 +1210,7 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
         - name: id
           in: path
@@ -1233,6 +1221,7 @@ paths:
             type: string
             format: uuid
             maxLength: 36
+            pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
       responses:
         200:
           content:
@@ -1275,7 +1264,7 @@ paths:
       tags:
         - Data Ingestion Adaptor
       summary: Delete ingestion adaptor
-      operationId: deleteadaptor
+      operationId: deleteAdaptorById
       parameters:
         - name: token
           in: header
@@ -1284,8 +1273,7 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
         - name: id
           in: path
@@ -1296,6 +1284,7 @@ paths:
             type: string
             format: uuid
             maxLength: 36
+            pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
       responses:
         200:
           description: 'Successful deletion of ingestion adapter'
@@ -1335,12 +1324,12 @@ paths:
 
       deprecated: false
 
-  /ingestion/entities:
+  /ngsi-ld/v1/ingestion/entities:
     post:
       tags:
         - Data Ingestion Adaptor
       summary: Ingestion adapter
-      operationId: ingestionAdaptor
+      operationId: PostingestionAdaptorEntities
       parameters:
         - name: token
           in: header
@@ -1406,12 +1395,12 @@ paths:
       deprecated: false
 
 
-  /subscription:
+  /ngsi-ld/v1/subscription:
     get:
       tags:
         - Data Subscriber
       summary: list of subscription queues
-      operationId: subscriptionqueues
+      operationId: getListOfSubscribers
       parameters:
         - name: token
           in: header
@@ -1420,8 +1409,7 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
       responses:
         200:
           description: 'Successfully retrieving list of all subscription queues'
@@ -1446,11 +1434,13 @@ paths:
           source: |
             curl --location --request GET 'https://example.com/ngsi-ld/v1/subscription' \
             --header 'token: <tokenValue>'
+      security:
+        - authorization: []
     post:
       tags:
         - Data Subscriber
       summary: Create subscription
-      operationId: createastreamingsubscription
+      operationId: postSubscription
       parameters:
 
         - name: token
@@ -1460,8 +1450,7 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
         - name: options
           in: header
@@ -1532,12 +1521,12 @@ paths:
 
       deprecated: false
 
-  /subscription/{id}:
+  /ngsi-ld/v1/subscription/{id}/{name}:
     get:
       tags:
         - Data Subscriber
       summary: Retrieve subscription details
-      operationId: getstreamingsubscription
+      operationId: getSubscriberById
       parameters:
 
         - name: token
@@ -1547,8 +1536,7 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
         - name: options
           in: header
@@ -1567,6 +1555,14 @@ paths:
             type: string
             format: uuid
             maxLength: 36
+        - name: name
+          in: path
+          description: ' '
+          required: true
+          style: simple
+          schema:
+            type: string
+
 
       responses:
         200:
@@ -1614,7 +1610,7 @@ paths:
       tags:
         - Data Subscriber
       summary: Append subscription
-      operationId: appendstreamingsubscription
+      operationId: appendStreamingSubscription
       parameters:
         - name: token
           in: header
@@ -1623,8 +1619,7 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
         - name: options
           in: header
@@ -1643,6 +1638,13 @@ paths:
             type: string
             format: uuid
             maxLength: 36
+        - name: name
+          in: path
+          description: ' '
+          required: true
+          style: simple
+          schema:
+            type: string
 
 
       x-codeSamples:
@@ -1705,7 +1707,7 @@ paths:
       tags:
         - Data Subscriber
       summary: Update subscription
-      operationId: updatestreamingsubscription
+      operationId: updateStreamingSubscription
       parameters:
         - name: token
           in: header
@@ -1714,8 +1716,7 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
         - name: options
           in: header
@@ -1734,6 +1735,13 @@ paths:
             type: string
             format: uuid
             maxLength: 36
+        - name: name
+          in: path
+          description: ' '
+          required: true
+          style: simple
+          schema:
+            type: string
 
       x-codeSamples:
         - lang: 'cURL'
@@ -1795,7 +1803,7 @@ paths:
       tags:
         - Data Subscriber
       summary: Delete subscription
-      operationId: deleteasubscription
+      operationId: deleteSubscriberById
       parameters:
         - name: options
           in: header
@@ -1813,8 +1821,7 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
         - name: id
           in: path
@@ -1825,6 +1832,13 @@ paths:
             type: string
             format: uuid
             maxLength: 36
+        - name: name
+          in: path
+          description: ' '
+          required: true
+          style: simple
+          schema:
+            type: string
 
       responses:
         200:
@@ -1867,7 +1881,7 @@ paths:
 
       deprecated: false
 
-  /user/resetPassword:
+  /user/v1/resetPassword:
     post:
       tags:
         - Management
@@ -1915,12 +1929,12 @@ paths:
                 "$ref": "#/components/schemas/generalResourceNotFoundErrorResponse"
           description: 'Password not found'
 
-  /async/search:
+  /ngis-ld/v1/async/search:
     get:
       tags:
         - Async
       summary: Search
-      operationId: async search
+      operationId: asyncSearch
       parameters:
 
         - name: token
@@ -2052,12 +2066,12 @@ paths:
                 "$ref": "#/components/schemas/standardResourceNotFoundErrorResponse"
           description: 'Resource not found'
 
-  /async/status:
+  /ngsi-ld/async/status:
     get:
       tags:
         - Async
       summary: Search status
-      operationId: async search status
+      operationId: asyncSearchStatus
       parameters:
 
         - name: token
@@ -2123,7 +2137,7 @@ paths:
       tags:
         - Metering
       summary: consumer search
-      operationId: consumer search
+      operationId: consumerSearch
       parameters:
 
         - name: token
@@ -2236,7 +2250,7 @@ paths:
       tags:
         - Metering
       summary: provider search
-      operationId: provider search
+      operationId: providerSearch
       parameters:
 
         - name: token
@@ -2359,7 +2373,7 @@ paths:
       tags:
         - Metering
       summary: summary details
-      operationId: summary details
+      operationId: summaryDetails
       parameters:
 
         - name: token
@@ -2421,7 +2435,7 @@ paths:
       tags:
         - Metering
       summary: overview
-      operationId: overview
+      operationId: getOverview
       parameters:
 
         - name: token
@@ -2485,7 +2499,7 @@ paths:
       tags:
         - Admin
       summary: revoke token
-      operationId: revoke user token
+      operationId: revokeUserToken
       parameters:
         - name: token
           in: header
@@ -2547,7 +2561,7 @@ paths:
       tags:
         - Admin
       summary: Create unique attribute.
-      operationId: create an unique attribute setting for resource.
+      operationId: createUniqueAttributeResource.
       parameters:
         - name: token
           in: header
@@ -2733,6 +2747,11 @@ paths:
       description: The `resourceattribute` API is used by admin user to delete unique attribute for a resource in DX(Data exchange). The user could provide the resource `id` to delete the unique attribute.
 
 components:
+  securitySchemes:
+    authorization:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     createastreamingsubscriptionrequest:
       title: createastreamingsubscriptionrequest
@@ -2755,6 +2774,9 @@ components:
           maxItems: 5
           items:
             type: string
+            format: uuid
+            maxLength: 36
+            pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
           description: ''
       example:
         name: alias-name-of-application
@@ -3283,6 +3305,7 @@ components:
           type: array
           items:
             type: string
+            pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
       example:
         entities:
           - UUID
