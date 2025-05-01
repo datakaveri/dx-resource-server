@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.cdpg.dx.util.Constants.NGSILDQUERY_MAXDISTANCE;
@@ -18,7 +19,9 @@ public class GeoQ {
     private List<Double> pointCoordinates;              // For Point
     private List<List<Double>> bboxCoordinates;      // For bbox
     private List<List<Double>> linestringCoordinates;  // For linestring
-    private List<List<Double>> polygonCoordinates;     // For Polygon
+    private List<List<Double>> polygonCoordinates;// For Polygon
+    private Double lat;
+    private Double lon;
     private String geoRel;
     private String geoproperty;
     private Double maxDistance;
@@ -74,22 +77,23 @@ public class GeoQ {
         json.put("georel", geoRel);
         json.put("geoproperty", geoproperty);
         if (pointCoordinates != null) {
-            json.put("coordinates", new JsonArray(pointCoordinates));
+            json.put("lat", lat);
+            json.put("lon",lon);
         }
         if (bboxCoordinates != null) {
-            json.put("bboxCoordinates", new JsonArray(bboxCoordinates));
+            json.put("coordinates", new JsonArray(bboxCoordinates));
         }
         if (linestringCoordinates != null) {
-            json.put("linestringCoordinates", new JsonArray(linestringCoordinates));
+            json.put("coordinates", new JsonArray(Arrays.asList(linestringCoordinates.toArray())));
         }
         if (polygonCoordinates != null) {
-            json.put("polygonCoordinates", new JsonArray(polygonCoordinates));
+            json.put("coordinates", new JsonArray(polygonCoordinates));
         }
         if (maxDistance != null) {
-            json.put("maxDistance", maxDistance);
+            json.put("radius", maxDistance);
         }
         if (minDistance != null) {
-            json.put("minDistance", minDistance);
+            json.put("radius", minDistance);
         }
         return json;
     }
@@ -109,6 +113,8 @@ public class GeoQ {
     }
 
     public void setPointCoordinates(List<Double> pointCoordinates) {
+        this.lat=pointCoordinates.get(0);
+        this.lon=pointCoordinates.get(1);
         this.pointCoordinates = pointCoordinates;
     }
 

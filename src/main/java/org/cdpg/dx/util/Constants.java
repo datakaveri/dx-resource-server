@@ -149,6 +149,10 @@ public class Constants {
   public static final String NGSILDQUERY_TIME_PROPERTY = "timeProperty";
   public static final String NGSILDQUERY_FROM = "offset";
   public static final String NGSILDQUERY_SIZE = "limit";
+  // pagination
+
+  public static final int DEFAULT_SIZE_VALUE = 5000;
+  public static final int DEFAULT_FROM_VALUE = 0;
 
   // json fields
   public static final String JSON_INSTANCEID = "instanceID";

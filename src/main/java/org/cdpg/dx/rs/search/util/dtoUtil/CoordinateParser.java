@@ -8,7 +8,7 @@ public class CoordinateParser {
 
     /**
      * Parses a coordinate string into a list of coordinate pairs.
-     * 
+     *
      * @param coordinatesString the coordinate string (e.g., \"[[1.0,2.0],[3.0,4.0]]\" or \"1.0,2.0,3.0,4.0\")
      * @param geometryType the geometry type, which affects parsing logic
      * @return a list of coordinate pairs (each pair is a List<Double>)
@@ -34,7 +34,7 @@ public class CoordinateParser {
             coordinateList.add(point);
             return coordinateList;
         }
-        
+
         // For bbox, linestring, and polygon, we expect coordinate pairs.
         for (int i = 0; i < coordinates.length - 1; i += 2) {
             String first = coordinates[i].trim();

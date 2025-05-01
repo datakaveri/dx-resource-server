@@ -51,7 +51,7 @@ public class SearchApiServiceImpl implements SearchApiService {
         RequestType requestType = RequestType.valueOf(requestParams.get("requestType"));
             isParamsValid = paramsValidator.validate(requestParams, requestType);
         isParamsValid.onSuccess(successHandler->{
-                promise.complete(new RequestDTO(requestParams));
+                promise.complete(new RequestDTO(requestParams,applicableFilters));
         }).onFailure(failureHandler->{
             promise.fail("Invalid params");
         });
@@ -67,7 +67,7 @@ public class SearchApiServiceImpl implements SearchApiService {
         RequestType requestType = RequestType.valueOf(requestBody.getString("requestType"));
         isParamsValid = paramsValidator.validate(requestBody, requestType);
         isParamsValid.onSuccess(successHandler->{
-            promise.complete(new RequestDTO(requestBody));
+            promise.complete(new RequestDTO(requestBody,applicableFilters));
         }).onFailure(failureHandler->{
             promise.fail("Invalid params");
         });
