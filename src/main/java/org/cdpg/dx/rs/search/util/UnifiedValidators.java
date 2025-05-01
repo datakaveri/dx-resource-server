@@ -1,12 +1,21 @@
 package org.cdpg.dx.rs.search.util;
 
 
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.json.schema.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.rs.search.util.validatorTypes.GeoValidator;
 import org.cdpg.dx.rs.search.util.validatorTypes.TemporalValidator;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -122,6 +131,7 @@ public final class UnifiedValidators {
         }
 
         for (String term : terms) {
+            // RECHECK THIS matcher length can be 3 or 4
             Matcher matcher = QUERY_TERM_PATTERN.matcher(term.trim());
             if (!matcher.matches()) {
                 return false;
@@ -194,6 +204,34 @@ public final class UnifiedValidators {
             return true;
         }
         return value.equals("count");
+    }
+
+    public static boolean validateJsonSchema(JsonObject requestJson,RequestType requestType) {
+        SchemaRouter schemaRouter = SchemaRouter.create(Vertx.vertx(), new SchemaRouterOptions());
+        SchemaParser schemaParser = SchemaParser.createOpenAPI3SchemaParser(schemaRouter);
+        String jsonSchema = null;
+        try {
+           jsonSchema = loadJson(requestType.getFilename());
+            Schema schema=schemaParser.parse(new JsonObject(jsonSchema));
+            schema.validateSync(requestJson);
+        } catch (ValidationException | NoSyncValidationException e) {
+            return false;
+        }
+        return true;
+    }
+
+    private static String loadJson(String filename) {
+        String jsonStr = null;
+        Map<String,String> jsonSchemaMap=new HashMap<>();
+        try (InputStream inputStream = UnifiedValidators.class.getClassLoader().getResourceAsStream(filename)) {
+            jsonStr = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
+            jsonSchemaMap.put(filename, jsonStr);
+        } catch (IOException e) {
+//            LOGGER.error(e);
+//            throw new DxRuntimeException(HttpStatusCode.BAD_REQUEST.getValue(), SCHEMA_READ_ERROR_URN);
+            return "";
+        }
+        return jsonStr;
     }
 
     public static boolean validateDistance(String distance) {

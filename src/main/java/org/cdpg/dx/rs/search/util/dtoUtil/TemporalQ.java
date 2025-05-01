@@ -57,10 +57,9 @@ public class TemporalQ {
      */
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
-        json.put("timerel", timerel)
-                .put("time", time)
-                .put("endtime", endtime)
-                .put("timeProperty", timeProperty);
+        if(timerel!=null) json.put("timerel", timerel);
+        if(time!=null) json.put("time", time);
+        if(endtime!=null) json.put("endtime", endtime);
         return json;
     }
 
