@@ -10,17 +10,17 @@ import org.cdpg.dx.catalogue.service.CatalogueService;
 import org.cdpg.dx.database.elastic.service.ElasticsearchService;
 import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.databroker.service.DataBrokerService;
-import org.cdpg.dx.rs.subscription.SubsCriptionController;
+import org.cdpg.dx.rs.subscription.SubscriptionController;
 
 public class ControllerFactory {
   private static final Logger LOGGER = LogManager.getLogger(ControllerFactory.class);
   private final Vertx vertx;
+  private final boolean isTimeLimitEnabled;
+  private final String dxApiBasePath;
   private PostgresService pgService;
   private ElasticsearchService esService;
   private DataBrokerService brokerService;
   private CatalogueService catService;
-  private boolean isTimeLimitEnabled;
-  private String dxApiBasePath;
 
   public ControllerFactory(boolean isTimeLimitEnabled, String dxApiBasePath, Vertx vertx) {
     this.isTimeLimitEnabled = isTimeLimitEnabled;
@@ -30,7 +30,7 @@ public class ControllerFactory {
   }
 
   public List<ApiController> createControllers() {
-    return List.of(new SubsCriptionController(vertx, pgService, brokerService, catService));
+    return List.of(new SubscriptionController(vertx, pgService, brokerService, catService));
   }
 
   private void CreateProxies(Vertx vertx) {

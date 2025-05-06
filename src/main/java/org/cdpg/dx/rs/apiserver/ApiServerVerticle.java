@@ -7,7 +7,7 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.net.KeyStoreOptions;
+import io.vertx.core.net.JksOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -171,7 +171,8 @@ public class ApiServerVerticle extends AbstractVerticle {
   }
 
   private void setServerOptions(HttpServerOptions serverOptions) {
-    boolean isSsl = config().getBoolean("ssl", false);
+    boolean isSsl = config().getBoolean("ssl");
+    LOGGER.info("isSsl : {}", isSsl);
     if (isSsl) {
       LOGGER.info("Info: Starting HTTPs server");
       validateConfig();
@@ -179,7 +180,7 @@ public class ApiServerVerticle extends AbstractVerticle {
       String keystorePassword = config().getString("keystorePassword");
       serverOptions
           .setSsl(true)
-          .setKeyCertOptions(new KeyStoreOptions().setPath(keystore).setPassword(keystorePassword));
+          .setKeyCertOptions(new JksOptions().setPath(keystore).setPassword(keystorePassword));
     } else {
       LOGGER.info("Info: Starting HTTP server");
       serverOptions.setSsl(false);
