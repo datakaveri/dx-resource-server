@@ -1521,7 +1521,7 @@ paths:
 
       deprecated: false
 
-  /ngsi-ld/v1/subscription/{id}/{name}:
+  /ngsi-ld/v1/subscription/{userid}/{name}:
     get:
       tags:
         - Data Subscriber
@@ -1546,9 +1546,9 @@ paths:
           schema:
             type: string
             enum: [ streaming ]
-        - name: id
+        - name: userid
           in: path
-          description: 'Subscription ID obtained during registration.'
+          description: 'user id'
           required: true
           style: simple
           schema:
@@ -1602,7 +1602,8 @@ paths:
         Retrieve Subscription API allows a subscriber to fetch the list of `entities` subscribed. Based on the input provided, the API validates the access control of the user with DX(Data exchange) Auth server to allow or deny access to the API. 
         
         #### Retrieve Subscription Details
-        To retrieve subscriber list, the provider must present the `id` and `token`. Retrieve API validates the request with the Auth server to allow or deny access to the subscriber.
+        To retrieve subscriber list, the provider must present the `subscription-id` and `token`. Retrieve API validates the request with the Auth server to allow or deny access to the subscriber.
+        Subscription ID obtained during registration. Subscription ID is combination of userid and name (userid/name).
           - `options`: A header parameter which specifies the type of subscription. Should be `streaming` to request for a streaming registration.
     
 
@@ -1629,9 +1630,9 @@ paths:
           schema:
             type: string
             enum: [ streaming ]
-        - name: id
+        - name: userid
           in: path
-          description: 'Subscription ID obtained during registration.'
+          description: 'user id'
           required: true
           style: simple
           schema:
@@ -1698,7 +1699,8 @@ paths:
         Append Subscription API allows a subscriber to add a new stream to the list of `entities` subscribed. Based on the input provided, the API validates the access control of the user with DX(Data exchange) Auth server to allow or deny access to the API. 
         
         #### Append Subscription 
-        To append an entity to the subscriber list, the provider must present the `id` and `token` along with the list of `entities`. Append API validates the request with the Auth server to allow or deny access to the subscriber.
+        To append an entity to the subscriber list, the provider must present the `subscription-id` and `token` along with the list of `entities`. Append API validates the request with the Auth server to allow or deny access to the subscriber.
+        Subscription ID obtained during registration. Subscription ID is combination of userid and name (userid/name).
           - `options`: A header parameter which specifies the type of subscription. Should be `streaming` to request for a streaming registration.
 
       deprecated: false
@@ -1726,9 +1728,9 @@ paths:
           schema:
             type: string
             enum: [ streaming ]
-        - name: id
+        - name: userid
           in: path
-          description: 'Subscription ID obtained during registration.'
+          description: 'user id'
           required: true
           style: simple
           schema:
@@ -1794,7 +1796,8 @@ paths:
         Update Subscription API allows a subscriber to replace the list of `entities` subscribed. Based on the input provided, the API validates the access control of the user with DX(Data exchange) Auth server to allow or deny access to the API. 
         
         #### Update (Replace) Subscription 
-        To replace the subscriber list, the provider must present the `id` and `token` along with the list of `entities`. Update API validates the request with the Auth server to allow or deny access to the subscriber.
+        To replace the subscriber list, the provider must present the `subscription-id` and `token` along with the list of `entities`. Update API validates the request with the Auth server to allow or deny access to the subscriber.
+        Subscription ID obtained during registration. Subscription ID is combination of userid and name (userid/name).
           - `options`: A header parameter which specifies the type of subscription. Should be `streaming` to request for a streaming registration.
 
       deprecated: false
@@ -1823,9 +1826,9 @@ paths:
             type: string
             pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
-        - name: id
+        - name: userid
           in: path
-          description: 'Subscription ID obtained during registration.'
+          description: 'user id'
           required: true
           style: simple
           schema:
@@ -1876,7 +1879,8 @@ paths:
         Delete Subscription API allows a subscriber to delete the subscription. Based on the input provided, the API validates the access control of the user with DX(Data exchange) Auth server to allow or deny access to the API. 
         
         #### Delete Subscription 
-        To delete the subscription list, the provider must present the `id` and `token`. Delete API validates the request with the Auth server to allow or deny access to the subscriber.
+        To delete the subscription list, the provider must present the `subscription-id` and `token`. Delete API validates the request with the Auth server to allow or deny access to the subscriber.
+        Subscription ID obtained during registration. Subscription ID is combination of userid and name (userid/name).
           - `options`: A header parameter which specifies the type of subscription. Should be `streaming` to request for a streaming registration.
 
       deprecated: false

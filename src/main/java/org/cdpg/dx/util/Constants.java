@@ -188,7 +188,7 @@ public class Constants {
   public static final String JSON_VHOST_ID = "vhostId";
   public static final String DOMAIN = "domain";
   public static final String USERSHA = "userSha";
-  public static final String JSON_ALIAS = "alias";
+  public static final String NAME = "name";
   public static final String JSON_COUNT = "Count";
   public static final String RESOURCE_SERVER = "resourceServer";
   public static final String RESOURCE_GROUP = "resourceGroup";

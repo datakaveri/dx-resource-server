@@ -131,7 +131,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       }
     } catch (Exception ex) {
       LOGGER.error("Error while getting resourceGroup {}", ex.getMessage());
-      return null;
+      return "Error: " + ex.getMessage();
     }
   }
 
@@ -152,7 +152,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       }
     } catch (Exception ex) {
       LOGGER.error("Error while getting resourceGroup {}", ex.getMessage());
-      return null;
+      return "Error: " + ex.getMessage();
     }
     return routingKey;
   }
