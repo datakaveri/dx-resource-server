@@ -6,6 +6,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
@@ -18,11 +19,15 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.auditing.handler.AuditingHandler;
+import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
+import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
 import org.cdpg.dx.catalogue.service.CatalogueService;
 import org.cdpg.dx.common.models.JwtData;
 import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.databroker.service.DataBrokerService;
+import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.rs.apiserver.ApiController;
+import org.cdpg.dx.rs.authorization.handler.ResourcePolicyAuthorizationHandler;
 import org.cdpg.dx.rs.subscription.model.PostSubscriptionModel;
 import org.cdpg.dx.rs.subscription.service.SubscriptionService;
 import org.cdpg.dx.rs.subscription.service.SubscriptionServiceImpl;
@@ -35,15 +40,21 @@ public class SubscriptionController implements ApiController {
 
   private final SubscriptionService subscriptionService;
   private final AuditingHandler auditingHandler;
+  private final ClientRevocationValidationHandler clientRevocationValidationHandler;
+  private final ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler;
 
   public SubscriptionController(
       Vertx vertx,
       PostgresService pgService,
       DataBrokerService brokerService,
-      CatalogueService catalogueService) {
+      CatalogueService catalogueService,
+      RevokedService revokedService) {
     this.subscriptionService =
         new SubscriptionServiceImpl(pgService, brokerService, catalogueService);
     this.auditingHandler = new AuditingHandler(vertx);
+    this.resourcePolicyAuthorizationHandler =
+        new ResourcePolicyAuthorizationHandler(catalogueService);
+    this.clientRevocationValidationHandler = new ClientRevocationValidationHandler(revokedService);
   }
 
   private static String getExpiry(Optional<JwtData> jwtData) {
@@ -59,38 +70,53 @@ public class SubscriptionController implements ApiController {
     builder
         .operation(GET_SUBSCRIBER_BY_ID)
         .handler(auditingHandler::handleApiAudit)
+        .handler(clientRevocationValidationHandler)
+            .handler(this::roleAccessValidation)
         .handler(this::handleGetSubscriberById)
         .failureHandler(this::handleFailure);
 
     builder
         .operation(GET_LIST_OF_SUBSCRIBERS)
-        .handler(this::handleGetListOfSubscribers)
+        .handler(clientRevocationValidationHandler)
+            .handler(this::roleAccessValidation)
+            .handler(this::handleGetListOfSubscribers)
         .failureHandler(this::handleFailure);
 
     builder
         .operation(POST_SUBSCRIPTION)
         .handler(auditingHandler::handleApiAudit)
-        .handler(getIdFromBodyHandler)
+            .handler(getIdFromBodyHandler)
+        .handler(clientRevocationValidationHandler)
+        .handler(resourcePolicyAuthorizationHandler)
+            .handler(this::roleAccessValidation)
         .handler(this::handlePostSubscription)
         .failureHandler(this::handleFailure);
 
     builder
         .operation(UPDATE_SUBSCRIPTION)
         .handler(auditingHandler::handleApiAudit)
-        .handler(getIdFromBodyHandler)
+            .handler(getIdFromBodyHandler)
+        .handler(clientRevocationValidationHandler)
+        .handler(resourcePolicyAuthorizationHandler)
+            .handler(this::roleAccessValidation)
         .handler(this::handleUpdateSubscription)
         .failureHandler(this::handleFailure);
 
     builder
         .operation(APPEND_SUBSCRIPTION)
         .handler(auditingHandler::handleApiAudit)
-        .handler(getIdFromBodyHandler)
+            .handler(getIdFromBodyHandler)
+        .handler(clientRevocationValidationHandler)
+        .handler(resourcePolicyAuthorizationHandler)
+            .handler(this::roleAccessValidation)
         .handler(this::handleAppendSubscription)
         .failureHandler(this::handleFailure);
 
     builder
         .operation(DELETE_SUBSCRIBER_BY_ID)
         .handler(auditingHandler::handleApiAudit)
+        .handler(clientRevocationValidationHandler)
+            .handler(this::roleAccessValidation)
         .handler(this::handleDeleteSubscriberById)
         .failureHandler(this::handleFailure);
   }
@@ -353,5 +379,18 @@ public class SubscriptionController implements ApiController {
         .putHeader("Content-Type", "application/json")
         .setStatusCode(statusCode)
         .end(new JsonObject().put("error", message).put("status", statusCode).encode());
+  }
+
+  public void roleAccessValidation(RoutingContext routingContext) {
+    Optional<JwtData> jwtData = RoutingContextHelper.getJwtData(routingContext);
+    if (!"consumer".equalsIgnoreCase(jwtData.get().role())) {
+      routingContext.next();
+    }
+    boolean hasSubAccess = jwtData.get().cons().getJsonArray("access", new JsonArray()).contains("sub");
+    if (!hasSubAccess) {
+      LOGGER.error("Role validation failed");
+      routingContext.fail(new AuthorizationException("Role validation failed"));
+    }
+    routingContext.next();
   }
 }
