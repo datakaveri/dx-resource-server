@@ -39,6 +39,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class SubscriptionServiceImplTest {
   private static final Logger LOGGER = LogManager.getLogger(SubscriptionServiceImplTest.class);
+
   @Container
   private static final PostgreSQLContainer<?> POSTGRES =
       new PostgreSQLContainer<>("postgres:15")
@@ -178,7 +179,7 @@ public class SubscriptionServiceImplTest {
     postSub.setUserId("fd47486b-3497-4248-ac1e-082e4d37a66c");
     postSub.setName("my-sub");
     postSub.setEntityId("83c2e5c2-3574-4e11-9530-2b1fbdfce832");
-    postSub.setExpiry("2025-05-01T00:00:00Z");
+    postSub.setExpiry("2025-05-01T00:00:00");
     postSub.setDelegatorId("fd47486b-3497-4248-ac1e-082e4d37a66c");
     postSub.setSubscriptionType("STREAMING");
 
@@ -210,11 +211,13 @@ public class SubscriptionServiceImplTest {
               context.failed();
             });
   }
+
   @Order(2)
   @Test
   void testGetSubscription_success(VertxTestContext context) {
 
-    subscriptionService.getSubscription("fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub")
+    subscriptionService
+        .getSubscription("fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub")
         .onSuccess(
             result -> {
               context.completeNow();
@@ -228,7 +231,11 @@ public class SubscriptionServiceImplTest {
   @Order(3)
   @Test
   void testUpdateSubscription_success(VertxTestContext context) {
-    subscriptionService.updateSubscription("83c2e5c2-3574-4e11-9530-2b1fbdfce832","fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub","2025-05-01T00:00:00Z")
+    subscriptionService
+        .updateSubscription(
+            "83c2e5c2-3574-4e11-9530-2b1fbdfce832",
+            "fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub",
+            "2025-05-01T00:00:00")
         .onSuccess(
             result -> {
               context.completeNow();
@@ -236,7 +243,7 @@ public class SubscriptionServiceImplTest {
         .onFailure(
             failure -> {
               context.failed();
-    });
+            });
   }
 
   @Order(4)
@@ -246,42 +253,45 @@ public class SubscriptionServiceImplTest {
     postSub.setUserId("fd47486b-3497-4248-ac1e-082e4d37a66c");
     postSub.setName("my-sub4");
     postSub.setEntityId("83c2e5c2-3574-4e11-9530-2b1fbdfce832");
-    postSub.setExpiry("2025-05-01T00:00:00Z");
+    postSub.setExpiry("2025-05-01T00:00:00");
     postSub.setDelegatorId("fd47486b-3497-4248-ac1e-082e4d37a66c");
     postSub.setSubscriptionType("STREAMING");
 
     JsonObject catalogueResult =
-            new JsonObject()
-                    .put("resourceGroup", "8b95ab80-2aaf-4636-a65e-7f2563d0d371")
-                    .put("accessPolicy", "SECURE")
-                    .put("provider", "bbeacb12-5e54-339d-92e0-d8e063b551a8")
-                    .put("instance", "surat")
-                    .put(
-                            "description",
-                            "Realtime bus position information from Surat city public transit buses.")
-                    .put("label", "Surat Transit Realtime Position-UUID")
-                    .put("type", new JsonArray().add("iudx:Resource").add("iudx:TransitManagement"))
-                    .put("name", "surat-itms-live-eta")
-                    .put("id", "83c2e5c2-3574-4e11-9530-2b1fbdfce832");
+        new JsonObject()
+            .put("resourceGroup", "8b95ab80-2aaf-4636-a65e-7f2563d0d371")
+            .put("accessPolicy", "SECURE")
+            .put("provider", "bbeacb12-5e54-339d-92e0-d8e063b551a8")
+            .put("instance", "surat")
+            .put(
+                "description",
+                "Realtime bus position information from Surat city public transit buses.")
+            .put("label", "Surat Transit Realtime Position-UUID")
+            .put("type", new JsonArray().add("iudx:Resource").add("iudx:TransitManagement"))
+            .put("name", "surat-itms-live-eta")
+            .put("id", "83c2e5c2-3574-4e11-9530-2b1fbdfce832");
 
     when(catalogueService.fetchCatalogueInfo("83c2e5c2-3574-4e11-9530-2b1fbdfce832"))
-            .thenReturn(Future.succeededFuture(catalogueResult));
-    subscriptionService.appendSubscription(postSub,"fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub")
-            .onSuccess(
-                    result -> {
-                      context.completeNow();
-                    })
-            .onFailure(
-                    failure -> {
-                      context.failed();
-                    });
+        .thenReturn(Future.succeededFuture(catalogueResult));
+    subscriptionService
+        .appendSubscription(postSub, "fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub")
+        .onSuccess(
+            result -> {
+              context.completeNow();
+            })
+        .onFailure(
+            failure -> {
+              context.failed();
+            });
   }
 
   @Order(5)
   @Test
   void testDeleteSubscription_success(VertxTestContext context) {
 
-    subscriptionService.deleteSubscription("fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub","fd47486b-3497-4248-ac1e-082e4d37a66c")
+    subscriptionService
+        .deleteSubscription(
+            "fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub", "fd47486b-3497-4248-ac1e-082e4d37a66c")
         .onSuccess(
             result -> {
               context.completeNow();
@@ -294,9 +304,10 @@ public class SubscriptionServiceImplTest {
 
   @Order(6)
   @Test
-    void testFailureRmqContainer(VertxTestContext context) {
-      rabbitMQContainer.stop();
-      subscriptionService.getSubscription("fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub")
+  void testFailureRmqContainer(VertxTestContext context) {
+    rabbitMQContainer.stop();
+    subscriptionService
+        .getSubscription("fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub")
         .onSuccess(
             result -> {
               context.failed();
@@ -305,22 +316,22 @@ public class SubscriptionServiceImplTest {
             failure -> {
               context.completeNow();
             });
-    }
+  }
 
-    @Order(7)
-    @Test
-    void testFailurePostgresContainer(VertxTestContext context) {
-        POSTGRES.stop();
-        subscriptionService.deleteSubscription("fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub","fd47486b-3497-4248-ac1e-082e4d37a66c")
-                .onSuccess(
-                        result -> {
-                            context.failed();
-                        })
-                .onFailure(
-                        failure -> {
-                            context.completeNow();
-                        });
-    }
-
-
+  @Order(7)
+  @Test
+  void testFailurePostgresContainer(VertxTestContext context) {
+    POSTGRES.stop();
+    subscriptionService
+        .deleteSubscription(
+            "fd47486b-3497-4248-ac1e-082e4d37a66c/my-sub", "fd47486b-3497-4248-ac1e-082e4d37a66c")
+        .onSuccess(
+            result -> {
+              context.failed();
+            })
+        .onFailure(
+            failure -> {
+              context.completeNow();
+            });
+  }
 }
