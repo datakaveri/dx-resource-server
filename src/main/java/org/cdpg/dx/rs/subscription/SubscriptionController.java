@@ -58,10 +58,11 @@ public class SubscriptionController implements ApiController {
   }
 
   private static String getExpiry(Optional<JwtData> jwtData) {
-    return LocalDateTime.ofInstant(
+    String expiryTime = LocalDateTime.ofInstant(
             Instant.ofEpochSecond(Long.parseLong(jwtData.get().exp().toString())),
-            ZoneId.systemDefault())
-        .toString();
+            ZoneId.systemDefault()).toString();
+    LOGGER.info("expiry time :: " + expiryTime);
+    return expiryTime;
   }
 
   @Override
@@ -71,44 +72,44 @@ public class SubscriptionController implements ApiController {
         .operation(GET_SUBSCRIBER_BY_ID)
         .handler(auditingHandler::handleApiAudit)
         .handler(clientRevocationValidationHandler)
-            .handler(this::roleAccessValidation)
+        .handler(this::roleAccessValidation)
         .handler(this::handleGetSubscriberById)
         .failureHandler(this::handleFailure);
 
     builder
         .operation(GET_LIST_OF_SUBSCRIBERS)
         .handler(clientRevocationValidationHandler)
-            .handler(this::roleAccessValidation)
-            .handler(this::handleGetListOfSubscribers)
+        .handler(this::roleAccessValidation)
+        .handler(this::handleGetListOfSubscribers)
         .failureHandler(this::handleFailure);
 
     builder
         .operation(POST_SUBSCRIPTION)
         .handler(auditingHandler::handleApiAudit)
-            .handler(getIdFromBodyHandler)
+        .handler(getIdFromBodyHandler)
         .handler(clientRevocationValidationHandler)
         .handler(resourcePolicyAuthorizationHandler)
-            .handler(this::roleAccessValidation)
+        .handler(this::roleAccessValidation)
         .handler(this::handlePostSubscription)
         .failureHandler(this::handleFailure);
 
     builder
         .operation(UPDATE_SUBSCRIPTION)
         .handler(auditingHandler::handleApiAudit)
-            .handler(getIdFromBodyHandler)
+        .handler(getIdFromBodyHandler)
         .handler(clientRevocationValidationHandler)
         .handler(resourcePolicyAuthorizationHandler)
-            .handler(this::roleAccessValidation)
+        .handler(this::roleAccessValidation)
         .handler(this::handleUpdateSubscription)
         .failureHandler(this::handleFailure);
 
     builder
         .operation(APPEND_SUBSCRIPTION)
         .handler(auditingHandler::handleApiAudit)
-            .handler(getIdFromBodyHandler)
+        .handler(getIdFromBodyHandler)
         .handler(clientRevocationValidationHandler)
         .handler(resourcePolicyAuthorizationHandler)
-            .handler(this::roleAccessValidation)
+        .handler(this::roleAccessValidation)
         .handler(this::handleAppendSubscription)
         .failureHandler(this::handleFailure);
 
@@ -116,7 +117,7 @@ public class SubscriptionController implements ApiController {
         .operation(DELETE_SUBSCRIBER_BY_ID)
         .handler(auditingHandler::handleApiAudit)
         .handler(clientRevocationValidationHandler)
-            .handler(this::roleAccessValidation)
+        .handler(this::roleAccessValidation)
         .handler(this::handleDeleteSubscriberById)
         .failureHandler(this::handleFailure);
   }
@@ -386,7 +387,8 @@ public class SubscriptionController implements ApiController {
     if (!"consumer".equalsIgnoreCase(jwtData.get().role())) {
       routingContext.next();
     }
-    boolean hasSubAccess = jwtData.get().cons().getJsonArray("access", new JsonArray()).contains("sub");
+    boolean hasSubAccess =
+        jwtData.get().cons().getJsonArray("access", new JsonArray()).contains("sub");
     if (!hasSubAccess) {
       LOGGER.error("Role validation failed");
       routingContext.fail(new AuthorizationException("Role validation failed"));
