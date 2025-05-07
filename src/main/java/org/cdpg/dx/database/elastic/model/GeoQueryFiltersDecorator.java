@@ -7,7 +7,6 @@ import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.database.elastic.exception.EsQueryException;
 import org.cdpg.dx.database.elastic.util.QueryType;
 
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,12 +38,8 @@ public class GeoQueryFiltersDecorator implements ElasticsearchQueryDecorator {
       String relation = requestQuery.containsKey(GEOREL) ? requestQuery.getString(GEOREL) : WITHIN;
 
       Map<String, Object> geoJsonParams = getGeoJson(requestQuery);
-      String query = String.format(geoQuery, "location", getGeoJson(requestQuery), relation);
-
       geoJsonParams.put("relation", relation);
       geoJsonParams.put(GEO_PROPERTY, "location");
-      String encodedString = Base64.getEncoder().encodeToString(query.getBytes());
-
       geoWrapperQuery.setQueryParameters(geoJsonParams);
     } else if (requestQuery.containsKey(GEOMETRY)
             && (requestQuery.getString(GEOMETRY).equalsIgnoreCase(POLYGON)

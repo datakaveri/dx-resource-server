@@ -7,7 +7,6 @@ import org.apache.logging.log4j.Logger;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.cdpg.dx.util.Constants.*;
@@ -21,18 +20,19 @@ public class TemporalValidator {
 
 
     public boolean validateTemporalParams(JsonObject temporalParams) {
+        LOGGER.debug("Inside validateTemporalParams");
         if (temporalParams == null || temporalParams.isEmpty()) {
             return true;
         }
 
-        String timerel = temporalParams.getString(JSON_TIMEREL);
+        String timeRel = temporalParams.getString(JSON_TIMEREL);
         String time = temporalParams.getString(JSON_TIME);
         String endTime = temporalParams.getString(JSON_ENDTIME);
 
-        if (!validateTemporalRelation(timerel)) return false;
-        if (!validateTimePresence(timerel, time, endTime)) return false;
+        if (!validateTemporalRelation(timeRel)) return false;
+        if (!validateTimePresence(timeRel, time, endTime)) return false;
         if (!validateDateFormat(time, endTime)) return false;
-        if ((JSON_DURING.equalsIgnoreCase(timerel) || JSON_BETWEEN.equalsIgnoreCase(timerel))) {
+        if ((JSON_DURING.equalsIgnoreCase(timeRel) || JSON_BETWEEN.equalsIgnoreCase(timeRel))) {
             return validateTimeInterval(time, endTime);
         }
         return true;
@@ -40,27 +40,33 @@ public class TemporalValidator {
 
     private boolean validateTemporalRelation(String timerel) {
         if (timerel == null || timerel.isBlank()) {
-            LOGGER.info("Missing temporal relation (timerel)");
+            LOGGER.debug("Missing temporal relation (timerel)");
             return false;
         }
 
-        List<String> allowedRelations = ALLOWED_TEMPORAL_RELATIONS;
-        if (!allowedRelations.contains(timerel.toLowerCase())) {
-            LOGGER.info(String.format("Invalid timerel '%s' ", timerel));
+        if (!ALLOWED_TEMPORAL_RELATIONS.contains(timerel.toLowerCase())) {
+            LOGGER.debug("Invalid timerel '{}' ", timerel);
             return false;
         }
         return true;
     }
 
-    private boolean validateTimePresence(String timerel, String time, String endTime) {
+    private boolean validateTimePresence(String timeRel, String time, String endTime) {
         if (time == null || time.isBlank()) {
-            LOGGER.info("Time parameter is required");
+            LOGGER.debug("Time parameter is required");
             return false;
         }
 
-        if ((JSON_DURING.equalsIgnoreCase(timerel) || JSON_BETWEEN.equalsIgnoreCase(timerel))) {
+        if ((JSON_DURING.equalsIgnoreCase(timeRel) || JSON_BETWEEN.equalsIgnoreCase(timeRel))) {
             if (endTime == null || endTime.isBlank()) {
-                LOGGER.info("Endtime parameter is required for " + timerel);
+                LOGGER.error("Endtime parameter is required for {}", timeRel);
+                return false;
+            }
+        }
+
+        if(JSON_AFTER.equalsIgnoreCase(timeRel) || JSON_BEFORE.equalsIgnoreCase(timeRel)){
+            if(endTime != null || time == null || time.isBlank()){
+                LOGGER.error("Time rel not valid. endtime not allowed/ only time is allowed." );
                 return false;
             }
         }
@@ -78,7 +84,7 @@ public class TemporalValidator {
             ZonedDateTime.parse(normalizedDate);
             return true;
         } catch (DateTimeParseException e) {
-            LOGGER.info("Invalid date format: " + date);
+            LOGGER.error("Invalid date format: {}",date);
             return false;
         }
     }
@@ -89,7 +95,7 @@ public class TemporalValidator {
             ZonedDateTime end = ZonedDateTime.parse(endTime.replace(" ", "+"));
 
             if (end.isBefore(start)) {
-                LOGGER.info("Endtime must be after time");
+                LOGGER.error("Endtime must be after time");
                 return false;
             }
 
@@ -98,12 +104,12 @@ public class TemporalValidator {
             int maxDays = DEFAULT_TIME_LIMIT_DAYS;
 
             if (daysBetween > maxDays) {
-                LOGGER.info(String.format("Time interval exceeds %d days limit", maxDays));
+                LOGGER.error("Time interval exceeds {} days limit", maxDays);
                 return false;
             }
             return true;
         } catch (DateTimeParseException ex) {
-            LOGGER.info("Invalid date format during interval validation");
+            LOGGER.error("Invalid date format during interval validation");
             return false;
         }
     }

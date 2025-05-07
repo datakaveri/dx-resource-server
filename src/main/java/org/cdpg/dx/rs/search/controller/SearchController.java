@@ -1,53 +1,166 @@
 package org.cdpg.dx.rs.search.controller;
 
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerResponse;
-import io.vertx.ext.web.Router;
+import io.vertx.core.MultiMap;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.openapi.RouterBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cdpg.dx.rs.search.service.SearchApiService;
+import org.cdpg.dx.catalogue.service.CatalogueService;
+import org.cdpg.dx.database.elastic.service.ElasticsearchService;
+import org.cdpg.dx.rs.apiserver.ApiController;
+import org.cdpg.dx.rs.search.model.RequestDTO;
+import org.cdpg.dx.rs.search.service.SearchApiServiceImpl;
+import org.cdpg.dx.rs.search.util.RequestType;
 
-import java.util.List;
-import java.util.Map;
+import org.cdpg.dx.rs.search.util.ResponseModel;
+import org.cdpg.dx.util.ResponseUrn;
 
-public class SearchController {
+import static org.cdpg.dx.util.Constants.JSON_COUNT;
+import static org.cdpg.dx.util.Constants.POST_SPATIAL_SEARCH;
+import static org.cdpg.dx.util.Constants.POST_TEMPORAL_SEARCH;
+import static org.cdpg.dx.util.Constants.GET_SPATIAL_DATA;
+import static org.cdpg.dx.util.Constants.TEMPORAL_SEARCH;
+
+/**
+ * Controller to handle spatial and temporal search endpoints.
+ * Uses the shared SearchRequestDto model from util package.
+ */
+public class SearchController implements ApiController {
     private static final Logger LOGGER = LogManager.getLogger(SearchController.class);
-    private final Router router;
-    private final SearchApiService searchApiService;
-    private final int timeLimit;
-    private final String timeLimitConfig;
-    private final String tenantPrefix;
+    private final SearchApiServiceImpl searchService;
 
-    public SearchController(Vertx vertx, Router router, SearchApiService searchApiService, int timeLimit, String timeLimitConfig, String tenantPrefix) {
-        this.router = router;
-        this.searchApiService = searchApiService;
-        this.timeLimit = timeLimit;
-        this.timeLimitConfig = timeLimitConfig;
-        this.tenantPrefix = tenantPrefix;
-//        initializeRoutes();
+    /**
+     * Initializes the search controller with required services and config.
+     */
+    public SearchController(ElasticsearchService elasticsearchService,
+                            CatalogueService catalogueService,
+                            String tenantPrefix,
+                            String timeLimit) {
+        this.searchService = new SearchApiServiceImpl(
+                elasticsearchService,
+                catalogueService,
+                tenantPrefix,
+                timeLimit
+        );
     }
 
-//    private void initializeRoutes() {
-//        router.get("/search/entities").handler(this::getEntitiesQuery);
-//        router.post("/search/entities").handler(this::postEntitiesQuery);
-//        router.get("/search/temporal").handler(this::getTemporalQuery);
-//    }
-//
-//    private void getEntitiesQuery(RoutingContext context) {
-//        RequestParamsDTO1 requestParams = extractRequestParams(context);
-//        processSearchQuery(requestParams, context.response(), searchApiService.handleEntitiesQuery(requestParams));
-//    }
-//
-//    private void postEntitiesQuery(RoutingContext context) {
-//        RequestParamsDTO1 requestParams = extractRequestParams(context);
-//        processSearchQuery(requestParams, context.response(), searchApiService.handlePostEntitiesQuery(requestParams));
-//    }
-//
-//    private void getTemporalQuery(RoutingContext context) {
-//        RequestParamsDTO1 requestParams = extractRequestParams(context);
-//        processSearchQuery(requestParams, context.response(), searchApiService.handleTemporalQuery(requestParams));
-//    }
+    @Override
+    public void register(RouterBuilder builder) {
+        builder
+                .operation(GET_SPATIAL_DATA)
+                .handler(ctx -> handleGetQuery(ctx, RequestType.ENTITY))
+                .failureHandler(this::handleFailure);
 
+        builder
+                .operation(TEMPORAL_SEARCH)
+                .handler(ctx -> handleGetQuery(ctx, RequestType.TEMPORAL))
+                .failureHandler(this::handleFailure);
+
+        builder
+                .operation(POST_SPATIAL_SEARCH)
+                .handler(ctx -> handlePostQuery(ctx, RequestType.POST_ENTITIES))
+                .failureHandler(this::handleFailure);
+
+        builder
+                .operation(POST_TEMPORAL_SEARCH)
+                .handler(ctx -> handlePostQuery(ctx, RequestType.POST_TEMPORAL))
+                .failureHandler(this::handleFailure);
+
+        LOGGER.info("SearchController deployed and routes registered.");
+    }
+
+    private void handleGetQuery(RoutingContext ctx, RequestType type) {
+        LOGGER.debug("Handling GET {} query", type);
+        MultiMap params = ctx.request().params(true);
+        params.add("requestType", type.name());
+        boolean countOnly = JSON_COUNT.equalsIgnoreCase(params.get("options"));
+
+        Future<RequestDTO> dtoFuture = searchService.createRequestDto(params);
+        processQuery(dtoFuture, type, countOnly, ctx);
+    }
+
+    private void handlePostQuery(RoutingContext ctx, RequestType type) {
+        LOGGER.debug("Handling POST {} query", type);
+        JsonObject body = ctx.getBodyAsJson();
+        body.put("requestType", type.name());
+        boolean countOnly = JSON_COUNT.equalsIgnoreCase(body.getString("options"));
+
+        Future<RequestDTO> dtoFuture = searchService.createRequestDto(body);
+        processQuery(dtoFuture, type, countOnly, ctx);
+    }
+
+    /**
+     * Centralizes execution of search requests.
+     */
+    private void processQuery(
+            Future<RequestDTO> dtoFuture,
+            RequestType type,
+            boolean countOnly,
+            RoutingContext ctx
+    ) {
+        dtoFuture
+                .compose(dto -> dispatchQuery(dto, type))
+                .onSuccess(result -> sendResponse(ctx, result, countOnly))
+                .onFailure(err -> {
+                    LOGGER.error("Error processing {} request", type, err);
+                    handleFailure(ctx);
+                });
+    }
+
+    private Future<ResponseModel> dispatchQuery(
+            RequestDTO dto,
+            RequestType type
+    ) {
+        return switch (type) {
+            case ENTITY -> searchService.handleEntitiesQuery(dto);
+            case TEMPORAL -> searchService.handleTemporalQuery(dto);
+            case POST_ENTITIES, POST_TEMPORAL -> searchService.handlePostEntitiesQuery(dto);
+            default -> Future.failedFuture("Unsupported request type: " + type);
+        };
+    }
+
+    private void sendResponse(
+            RoutingContext ctx,
+            ResponseModel responseModel,
+            boolean countOnly
+    ) {
+        JsonObject raw = responseModel.getResponse();
+        JsonObject response = new JsonObject()
+                .put("type", ResponseUrn.SUCCESS_URN.getUrn())
+                .put("title", ResponseUrn.SUCCESS_URN.getMessage());
+
+        if (countOnly) {
+            response.put("results", new JsonArray()
+                    .add(new JsonObject().put("totalHits", raw.getInteger("totalHits")))
+            );
+        } else {
+            response
+                    .put("results", raw.getJsonArray("results"))
+                    .put("limit", raw.getInteger("limit"))
+                    .put("offset", raw.getInteger("offset"))
+                    .put("totalHits", raw.getInteger("totalHits"));
+        }
+
+        ctx.response()
+                .putHeader("Content-Type", "application/json")
+                .setStatusCode(200)
+                .end(response.encode());
+    }
+
+    private void handleFailure(RoutingContext ctx) {
+        int status = ctx.statusCode() >= 400 ? ctx.statusCode() : 500;
+        String message = ctx.failure() != null ? ctx.failure().getMessage() : "Unknown error occurred";
+
+        ctx.response()
+                .putHeader("Content-Type", "application/json")
+                .setStatusCode(status)
+                .end(new JsonObject()
+                        .put("error", message)
+                        .put("status", status)
+                        .encode()
+                );
+    }
 }

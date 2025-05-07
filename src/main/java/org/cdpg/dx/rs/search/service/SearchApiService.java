@@ -14,7 +14,7 @@ public interface SearchApiService {
     Future<ResponseModel> handlePostEntitiesQuery(RequestDTO params);
     Future<ResponseModel> handleTemporalQuery(RequestDTO params);
 
-    Future<RequestDTO> createRequestDto (MultiMap requestParams, ApplicableFilters applicableFilters);
-    Future<RequestDTO> createRequestDto (JsonObject requestBody, ApplicableFilters applicableFilters);
+    Future<RequestDTO> createRequestDto (MultiMap requestParams);
+    Future<RequestDTO> createRequestDto (JsonObject requestBody);
 
 }

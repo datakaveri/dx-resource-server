@@ -107,7 +107,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     private Future<Integer> executeCount(CountRequest request) {
         Promise<Integer> promise = Promise.promise();
-        LOGGER.info("REQUEDT "+request);
+        LOGGER.info("REQUEST "+request);
         // Execute the count request asynchronously
         asyncClient.count(request).whenComplete((response, error) -> {
             if (error != null) {

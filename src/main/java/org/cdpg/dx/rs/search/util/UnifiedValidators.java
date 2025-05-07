@@ -39,6 +39,7 @@ public final class UnifiedValidators {
     }
 
     public static boolean validateAttributes(String attribute) {
+        LOGGER.debug("Validating attribute {}",attribute);
         if (attribute == null) {
             return true;
         }
@@ -48,11 +49,13 @@ public final class UnifiedValidators {
 
         String[] attrs = attribute.split(",");
         if (attrs.length > VALIDATION_MAX_ATTRS) {
+            LOGGER.error("Attributes cannot be more than max limit {}",VALIDATION_MAX_ATTRS);
             return false;
         }
 
         for (String attr : attrs) {
             if (attr.length() > VALIDATIONS_MAX_ATTR_LENGTH || !ATTRS_VALUE_REGEX.matcher(attr).matches()) {
+                LOGGER.error("Attribute cannot be more than max limit or attribute in invalid format" );
                 return false;
             }
         }
@@ -60,7 +63,7 @@ public final class UnifiedValidators {
     }
 
     public static boolean validateId(String value, boolean required) {
-        LOGGER.debug("Validating ID: value={}, required={}", value, required);
+        LOGGER.debug("Validating Id");
 
         if (value == null) {
             return !required;
@@ -121,6 +124,7 @@ public final class UnifiedValidators {
     }
 
     public static boolean validateQType(String value) {
+        LOGGER.debug("Validating Q type value {}",value);
         if (value == null || value.isBlank()) {
             return false;
         }
@@ -136,7 +140,6 @@ public final class UnifiedValidators {
             if (!matcher.matches()) {
                 return false;
             }
-
             String attribute = matcher.group(1);
             String operator = matcher.group(2);
             String queryValue = matcher.group(3).trim();
@@ -149,6 +152,7 @@ public final class UnifiedValidators {
     }
 
     private static boolean isValidQueryTerm(String attribute, String operator, String value) {
+        LOGGER.debug("Validating Valid query terms.");
         // Validate attribute format
         if (!VALIDATION_Q_ATTR_PATTERN.matcher(attribute).matches()) {
             return false;
@@ -175,6 +179,7 @@ public final class UnifiedValidators {
 
 
     public static boolean validateGeoQ(JsonObject geoQ, boolean required) {
+        LOGGER.debug("Validating geoQ {}",geoQ.isEmpty());
         if (geoQ == null || geoQ.isEmpty()) {
             return !required;
         }
@@ -182,6 +187,7 @@ public final class UnifiedValidators {
     }
 
     public static boolean validateTempQ(JsonObject tempQ, boolean required) {
+        LOGGER.debug("Validating tempQ");
         if (tempQ == null || tempQ.isEmpty()) {
             return !required;
         }
@@ -189,6 +195,7 @@ public final class UnifiedValidators {
     }
 
     public static boolean validateHeader(String publicKey) {
+        LOGGER.debug("Validating header.");
         if (publicKey == null) {
             return true;
         }
@@ -200,6 +207,7 @@ public final class UnifiedValidators {
     }
 
     public static boolean validateOptions(String value) {
+       LOGGER.debug("Validating optiosn {}",value);
         if (value == null) {
             return true;
         }
@@ -207,6 +215,7 @@ public final class UnifiedValidators {
     }
 
     public static boolean validateJsonSchema(JsonObject requestJson,RequestType requestType) {
+        LOGGER.debug("Trying to validate JSON schema.");
         SchemaRouter schemaRouter = SchemaRouter.create(Vertx.vertx(), new SchemaRouterOptions());
         SchemaParser schemaParser = SchemaParser.createOpenAPI3SchemaParser(schemaRouter);
         String jsonSchema = null;
@@ -227,27 +236,11 @@ public final class UnifiedValidators {
             jsonStr = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
             jsonSchemaMap.put(filename, jsonStr);
         } catch (IOException e) {
-//            LOGGER.error(e);
-//            throw new DxRuntimeException(HttpStatusCode.BAD_REQUEST.getValue(), SCHEMA_READ_ERROR_URN);
-            return "";
+            LOGGER.error("Failed to load json file {}",e.getLocalizedMessage());
+            return e.getLocalizedMessage();
         }
         return jsonStr;
     }
-
-    public static boolean validateDistance(String distance) {
-        if (distance == null) {
-            return true;
-        }
-
-        try {
-            double distanceValue = Double.parseDouble(distance);
-            return distanceValue >= 1 && distanceValue <= VALIDATION_ALLOWED_DIST && distanceValue <= Integer.MAX_VALUE;
-        } catch (NumberFormatException e) {
-            LOGGER.error("Invalid distance format: {}", distance);
-            return false;
-        }
-    }
-
     private static boolean isNumeric(String value) {
         try {
             Double.parseDouble(value);
