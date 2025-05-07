@@ -246,8 +246,8 @@ paths:
           required: true
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+        #            maxLength: 512
+        #            pattern: '^[a-zA-Z0-9\/\@\.]*$'
 
         - name: id
           in: query
@@ -269,25 +269,46 @@ paths:
           description: 'The relation type of <b>geoquery</b> to be performed. <br/> This <b>should</b> be one from the available options in the Enum list. <br/> The relation <b> near </b> should be always accomodated with a <b> maxdistance </b> property. <br/> Apart from <b> maxdistance</b> , all other fields in the Enum list are <b> case sensitive </b> fields. <br/> The relation <b> near;maxdistance </b> is applicable only for a <b> point </b>.  <br/> The relation <b> within </b> and  <b> intersects </b> are applicable only for <b> bbox, polygon and linestring</b>.'
           schema:
             type: string
-            enum: [ near;maxdistance=<distance_in_meters>, within, intersects ]
+            enum: [ near,maxdistance=<distance_in_meters>, within, intersects,near,maxDistance=<distance_in_meters> ]
 
         - name: geometry
           in: query
           description: 'The geometry type of <b>geoquery</b> to be performed. <br/> This <b>should</b> be one from the available options in the Enum list. <br/>The list is <b>case sensitive</b> '
           schema:
             type: string
-            enum: [ Point (or) point, Polygon (or) polygon, LineString (or) linestring, bbox ]
+            enum: [ Point ,point, Polygon ,polygon, LineString ,linestring, bbox ]
 
         - name: coordinates
           in: query
-          description: 'The coordinates for a specific geometry query type. <br/> This parameter accepts both <b> one dimentional array and multi dimentional arrays </b> based on the <b> geometry</b> type. <br/> For e.g, [longitude-1,latitude-1] should be used for geometry <b>point</b>.  <br/>[[[longitude-1,latitude-1], [longitude-2,latitude-2],...., [longitude-n,latitude-n]]] should be used for geometry <b>polygon</b>. <br/> [[longitude-1,latitude-1], [longitude-2,latitude-2],...., [longitude-n,latitude-n]] should be used for geometry <b>bbox and linestring </b>. <br/> Maximum of 10 latitude, longitude pairs can be used for geometry <b>polygon, bbox and linestring </b>. <br/> Note: The data-type of this field is a string, therefore the coordinates are a string encoded multidimensional array. <br/> Maximum precision allowed is upto 6 decimal places.'
+          description: >
+            The coordinates for a specific geometry query type, JSON‑encoded as a string.  
+            
+            **Supported geometries**:
+            
+            1. **Point**: a single two‑element array  
+               e.g. `[longitude, latitude]`  
+            2. **Polygon**: a three‑dimensional array (an array of linear rings)  
+               e.g. `[[[lon1,lat1],[lon2,lat2],…,[lonN,latN]]]`  
+            3. **LineString** / **Bbox**: a two‑dimensional array  
+               e.g. `[[lon1,lat1],[lon2,lat2],…,[lonN,latN]]`  
+            
+            - Maximum of **10** coordinate pairs for Polygon, LineString, and Bbox.  
+            - Maximum precision: **6** decimal places.
           schema:
-            type: array
-            minItems: 1
-            maxItems: 10
-            items:
-              type: number
-            format: double
+            type: string
+            example: "[21.178,72.834]"
+          examples:
+            point:
+              summary: Point geometry
+              value: "[21.178,72.834]"
+            polygon:
+              summary: Polygon geometry
+              value: "[[[72.76,21.15],[72.76,21.13],[72.78,21.13],[72.78,21.15],[72.76,21.15]]]"
+            linestring:
+              summary: LineString/Bbox geometry
+              value: "[[72.8296,21.2],[72.8297,21.15]]"
+          style: form
+          explode: false
         - name: maxDistance
           description: 'The maximum distance to be queried from center point in meters. <br/> This is applicable and is <b>mandatory</b> for <b>point</b> geometry.<br/> It should be used along with relation <b>near</b>.'
           schema:
@@ -487,7 +508,7 @@ paths:
       tags:
         - Temporal Entities
       summary: temporalSearch
-      operationId: temporal-entities
+      operationId: temporalSearch
       parameters:
 
         - name: token
@@ -496,8 +517,8 @@ paths:
           required: true
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+        #            maxLength: 512
+        #            pattern: '^[a-zA-Z0-9\/\@\.]*$'
 
         - name: id
           in: query
@@ -514,7 +535,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [ between, before, after ]
+            enum: [ between, before, after ,during]
         - name: time
           in: query
           description: 'This parameter specifies the <b>start time</b> for the temporal-query in `ISO8601` format. <br/> data exchange currently accepts `IST` and `UTC` time zones for the temporal query.'
@@ -538,25 +559,23 @@ paths:
           description: 'The relation type of <b>geoquery</b> to be performed. <br/> This <b>should</b> be one from the available options in the Enum list. <br/> The relation <b> near </b> should be always accomodated with a <b> maxdistance </b> property. <br/> Apart from <b> maxdistance</b> , all other fields in the Enum list are <b> case sensitive </b> fields. <br/> The relation <b> near;maxdistance </b> is applicable only for a <b> point </b>.  <br/> The relation <b> within </b> and  <b> intersects </b> are applicable only for <b> bbox, polygon and linestring</b>.'
           schema:
             type: string
-            enum: [ near;maxdistance=<distance_in_meters>, within, intersects ]
+            enum: [ near,maxdistance=<distance_in_meters>, within, intersects,near,maxDistance=<distance_in_meters> ]
 
         - name: geometry
           in: query
           description: 'The geometry type of <b>geoquery</b> to be performed. <br/> This <b>should</b> be one from the available options in the Enum list. <br/>The list is <b>case sensitive</b> '
           schema:
             type: string
-            enum: [ Point (or) point, Polygon (or) polygon, LineString (or) linestring, bbox ]
+            enum: [ Point, point, Polygon, polygon, LineString, linestring, bbox ]
 
         - name: coordinates
           in: query
           description: 'The coordinates for a specific geometry query type. <br/> This parameter accepts both <b> one dimentional array and multi dimentional arrays </b> based on the <b> geometry</b> type. <br/> For e.g, [longitude-1,latitude-1] should be used for geometry <b>point</b>.  <br/>[[[longitude-1,latitude-1], [longitude-2,latitude-2],...., [longitude-n,latitude-n]]] should be used for geometry <b>polygon</b>. <br/> [[longitude-1,latitude-1], [longitude-2,latitude-2],...., [longitude-n,latitude-n]] should be used for geometry <b>bbox and linestring </b>. <br/> Maximum of 10 latitude, longitude pairs can be used for geometry <b>polygon, bbox and linestring </b>. <br/> Note: The data-type of this field is a string, therefore the coordinates are a string encoded multidimensional array.<br/> Maximum precision allowed is upto 6 decimal places.'
           schema:
-            type: array
-            minItems: 1
-            maxItems: 10
-            items:
-              type: number
-            format: double
+            type: string
+            pattern: '^\[\s*-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?\s*\]$'
+            example: "[21.178,72.834]"
+
         - name: maxDistance
           description: 'The maximum distance to be queried from center point in meters. <br/> This is applicable and is <b>mandatory</b> for <b>point</b> geometry.<br/> It should be used along with relation <b>near</b>.'
           schema:
@@ -756,7 +775,7 @@ paths:
       tags:
         - Entities Post Query
       summary: Spatial search
-      operationId: postTemporalSearch
+      operationId: postSpatialSearch
       parameters:
 
         - name: token
@@ -765,8 +784,8 @@ paths:
           required: true
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+      #            maxLength: 512
+      #            pattern: '^[a-zA-Z0-9\/\@\.]*$'
 
       x-codeSamples:
         - lang: 'cURL'
@@ -801,7 +820,7 @@ paths:
                 coordinates: [ 21.178,72.834 ]
                 georel: near;maxDistance=10
                 geoproperty: location
-        required: true
+        required: false
 
       responses:
         200:
@@ -911,7 +930,7 @@ paths:
       tags:
         - Entities Post Query
       summary: Spatial + temporal search
-      operationId: postSpatialSearch
+      operationId: postTemporalSearch
       parameters:
 
         - name: token
@@ -920,8 +939,8 @@ paths:
           required: true
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+      #            maxLength: 512
+      #            pattern: '^[a-zA-Z0-9\/\@\.]*$'
 
       x-codeSamples:
         - lang: 'cURL'
@@ -970,8 +989,7 @@ paths:
                 "q": "speed>30.0",
                 "attrs": "id,speed"
               }
-
-        required: true
+        required: false
 
       responses:
         200:
@@ -1988,14 +2006,14 @@ paths:
           description: 'The relation type of <b>geoquery</b> to be performed. <br/> This <b>should</b> be one from the available options in the Enum list. <br/> The relation <b> near </b> should be always accomodated with a <b> maxdistance </b> property. <br/> Apart from <b> maxdistance</b> , all other fields in the Enum list are <b> case sensitive </b> fields. <br/> The relation <b> near;maxdistance </b> is applicable only for a <b> point </b>.  <br/> The relation <b> within </b> and  <b> intersects </b> are applicable only for <b> bbox, polygon and linestring</b>.'
           schema:
             type: string
-            enum: [ near;maxdistance=<distance_in_meters>, within, intersects ]
+            enum: [ near,maxdistance=<distance_in_meters>, within, intersects,near,maxDistance=<distance_in_meters> ]
 
         - name: geometry
           in: query
           description: 'The geometry type of <b>geoquery</b> to be performed. <br/> This <b>should</b> be one from the available options in the Enum list. <br/>The list is <b>case sensitive</b> '
           schema:
             type: string
-            enum: [ Point (or) point, Polygon (or) polygon, LineString (or) linestring, bbox ]
+            enum: [ Point ,point, Polygon ,polygon, LineString ,linestring, bbox ]
 
         - name: coordinates
           in: query
@@ -2850,7 +2868,6 @@ components:
       required:
         - type
         - entities
-        - geoQ
       type: object
       properties:
         type:
@@ -2896,18 +2913,50 @@ components:
       properties:
         geometry:
           type: string
-          enum: [ Point (or) point, Polygon (or) polygon, bbox, LineString (or) linestring ]
-          description: 'The geometry type of <b>geoquery</b> to be performed. <br/> This <b>should</b> be one from the available options in the Enum list. <br/>The list is <b>case sensitive</b>'
+          enum: [Point, point, Polygon, polygon, bbox, LineString, linestring]
+          description: >
+            The geometry type of <b>geoquery</b> to be performed. <br/>
+            This <b>should</b> be one from the available options in the Enum list. <br/>
+            The list is <b>case sensitive</b>.
         coordinates:
-          type: array
-          minItems: 1
-          maxItems: 10
-          items:
-            type: number
-          description: 'The coordinates for a specific geometry query type. <br/> This parameter accepts both <b> one dimentional array and multi dimentional arrays </b> based on the <b> geometry</b> type. <br/> For e.g, [longitude-1,latitude-1] should be used for geometry <b>point</b>.  <br/>[[[longitude-1,latitude-1], [longitude-2,latitude-2],...., [longitude-n,latitude-n]]] should be used for geometry <b>polygon</b>. <br/> [[longitude-1,latitude-1], [longitude-2,latitude-2],...., [longitude-n,latitude-n]] should be used for geometry <b>bbox and linestring </b>. <br/> Maximum of 10 latitude, longitude pairs can be used for geometry <b>polygon, bbox and linestring </b>. <br/> Note: The data-type of this field is a string, therefore the coordinates are a string encoded multidimensional array. <br/> Maximum precision allowed is upto 6 decimal places.'
+          oneOf:
+            - type: array
+              minItems: 2
+              maxItems: 2
+              items:
+                type: number
+              description: >
+                Used for geometry type <b>Point</b>. Represents a single longitude, latitude pair.
+            - type: array
+              minItems: 2
+              maxItems: 10
+              items:
+                type: array
+                minItems: 2
+                maxItems: 2
+                items:
+                  type: number
+              description: >
+                Used for geometry types <b>LineString</b> and <b>bbox</b>. Each sub-array is a longitude, latitude pair.
+            - type: array
+              minItems: 1
+              maxItems: 1
+              items:
+                type: array
+                minItems: 4
+                maxItems: 10
+                items:
+                  type: array
+                  minItems: 2
+                  maxItems: 2
+                  items:
+                    type: number
+              description: >
+                Used for geometry type <b>Polygon</b>. A single polygon defined as an array of linear ring coordinates.
+
         georel:
           type: string
-          enum: [ within, contains, intersects ]
+          #          enum: [ near, within, intersects ]
           description: 'The relation type of <b>geoquery</b> to be performed. <br/> This <b>should</b> be one from the available options in the Enum list. <br/> The relation <b> near </b> should be always accomodated with a <b> maxdistance </b> property. <br/> Apart from <b> maxdistance</b> , all other fields in the Enum list are <b> case sensitive </b> fields. <br/> The relation <b> near;maxdistance </b> is applicable only for a <b> point </b>.  <br/> The relation <b> within </b> and  <b> intersects </b> are applicable only for <b> bbox, polygon and linestring</b>.'
         geoproperty:
           type: string
@@ -2925,7 +2974,6 @@ components:
       required:
         - type
         - entities
-        - geoQ
         - options
       type: object
       properties:
@@ -2957,7 +3005,6 @@ components:
       required:
         - type
         - entities
-        - geoQ
       type: object
       properties:
         type:
@@ -3111,7 +3158,6 @@ components:
       required:
         - type
         - entities
-        - temporalQ
       type: object
       properties:
         type:
@@ -3121,8 +3167,6 @@ components:
           items:
             $ref: '#/components/schemas/Entity'
           description: ''
-        temporalQ:
-          $ref: '#/components/schemas/TemporalQ'
       example:
         type: Query
         entities:
@@ -3137,7 +3181,6 @@ components:
       required:
         - timerel
         - time
-        - endtime
         - timeProperty
       type: object
       properties:
@@ -3207,9 +3250,6 @@ components:
       required:
         - type
         - entities
-        - geoQ
-        - temporalQ
-        - attrs
       type: object
       properties:
         type:
@@ -3231,7 +3271,7 @@ components:
         attrs:
           type: string
           maxLength: 512
-          description: 'The attrs parameter is used as an <b>application filter</b>. <br/> This is an optional parameter. It can be used to provide the list of attributes which the consumer expects to be responded by the server. <br/> The consumer is expected to provide <b>only</b> the attributes available in the <b>data descriptor</b> of the item in the DX(Data exchange) Catalogue. <br/> Minimum of 1 and a Maximum of 5 attributes can be provided in a comma separated fashion.'
+          description: 'The attrs parameter is used as an <b>application filter</b>. <br/> This is an optional parameter. It can be usedzz to provide the list of attributes which the consumer expects to be responded by the server. <br/> The consumer is expected to provide <b>only</b> the attributes available in the <b>data descriptor</b> of the item in the DX(Data exchange) Catalogue. <br/> Minimum of 1 and a Maximum of 5 attributes can be provided in a comma separated fashion.'
         options:
           type: string
           enum: [ count ]
@@ -3259,9 +3299,6 @@ components:
       required:
         - type
         - entities
-        - geoQ
-        - temporalQ
-        - attrs
       type: object
       properties:
         type:

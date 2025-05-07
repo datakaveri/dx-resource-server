@@ -8,8 +8,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.cdpg.dx.util.Constants.NGSILDQUERY_MAXDISTANCE;
-import static org.cdpg.dx.util.Constants.NGSILDQUERY_MINDISTANCE;
+import static org.cdpg.dx.util.Constants.*;
 
 
 public class GeoQ {
@@ -25,7 +24,6 @@ public class GeoQ {
     private String geoRel;
     private String geoproperty;
     private Double maxDistance;
-    private Double minDistance;
 
     public GeoQ() {}
 
@@ -45,11 +43,12 @@ public class GeoQ {
      * Expected format: "relation;key=value", e.g., "near;maxDistance=1000"
      */
     private void parseGeoRel() {
-        LOGGER.info("Inside parseGeoRel.");
+        LOGGER.info("Inside parseGeoRel");
         if (this.geoRel != null && !this.geoRel.isEmpty()) {
             String[] parts = this.geoRel.split(";");
             // Primary geo relation
-            this.geoRel = parts[0];
+
+            this.geoRel = parts[0].equalsIgnoreCase(JSON_NEAR)?JSON_WITHIN:parts[0];
             if (parts.length == 2) {
                 String[] distanceParts = parts[1].split("=");
                 if (distanceParts.length == 2) {
@@ -57,8 +56,6 @@ public class GeoQ {
                         double distanceValue = Double.parseDouble(distanceParts[1]);
                         if (distanceParts[0].equalsIgnoreCase(NGSILDQUERY_MAXDISTANCE)) {
                             this.maxDistance = distanceValue;
-                        } else if (distanceParts[0].equalsIgnoreCase(NGSILDQUERY_MINDISTANCE)) {
-                            this.minDistance = distanceValue;
                         }
                     } catch (NumberFormatException e) {
                         // Handle invalid distance format if needed (e.g., log the error)
@@ -74,7 +71,7 @@ public class GeoQ {
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
         json.put("geometry", geometry);
-        json.put("georel", geoRel);
+        json.put("georel", geoRel); // need to fix this
         json.put("geoproperty", geoproperty);
         if (pointCoordinates != null) {
             json.put("lat", lat);
@@ -87,13 +84,10 @@ public class GeoQ {
             json.put("coordinates", new JsonArray(Arrays.asList(linestringCoordinates.toArray())));
         }
         if (polygonCoordinates != null) {
-            json.put("coordinates", new JsonArray(polygonCoordinates));
+            json.put("coordinates", new JsonArray().add(new JsonArray(polygonCoordinates)));
         }
         if (maxDistance != null) {
             json.put("radius", maxDistance);
-        }
-        if (minDistance != null) {
-            json.put("radius", minDistance);
         }
         return json;
     }
@@ -165,14 +159,6 @@ public class GeoQ {
 
     public void setMaxDistance(Double maxDistance) {
         this.maxDistance = maxDistance;
-    }
-
-    public Double getMinDistance() {
-        return minDistance;
-    }
-
-    public void setMinDistance(Double minDistance) {
-        this.minDistance = minDistance;
     }
 
 

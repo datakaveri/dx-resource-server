@@ -4,6 +4,8 @@ import static org.cdpg.dx.common.util.ProxyAddressConstants.*;
 
 import io.vertx.core.Vertx;
 import java.util.List;
+
+import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.catalogue.service.CatalogueService;
@@ -12,6 +14,8 @@ import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.rs.subscription.SubscriptionController;
+import org.cdpg.dx.rs.search.controller.SearchController;
+
 
 public class ControllerFactory {
   private static final Logger LOGGER = LogManager.getLogger(ControllerFactory.class);
@@ -23,16 +27,20 @@ public class ControllerFactory {
   private DataBrokerService brokerService;
   private CatalogueService catService;
   private RevokedService revokedService;
+  private String tenantPrefix;
+  private String timeLimit;
 
-  public ControllerFactory(boolean isTimeLimitEnabled, String dxApiBasePath, Vertx vertx) {
+  public ControllerFactory(JsonObject config, boolean isTimeLimitEnabled, String dxApiBasePath, Vertx vertx) {
     this.isTimeLimitEnabled = isTimeLimitEnabled;
     this.dxApiBasePath = dxApiBasePath;
     this.vertx = vertx;
+    this.tenantPrefix=config.containsKey("tenantPrefix")?config.getString("tenantPrefix"):"none";
+    this.timeLimit=config.containsKey("timeLimit")?config.getString("timeLimit"):"none";
     CreateProxies(vertx);
   }
 
   public List<ApiController> createControllers() {
-    return List.of(new SubscriptionController(vertx, pgService, brokerService, catService, revokedService));
+    return List.of(new SubscriptionController(vertx, pgService, brokerService, catService, revokedService), new SearchController(esService,catService,tenantPrefix,timeLimit));
   }
 
   private void CreateProxies(Vertx vertx) {

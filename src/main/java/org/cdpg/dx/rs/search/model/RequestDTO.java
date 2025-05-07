@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.cdpg.dx.database.elastic.util.Constants.ATTRIBUTE_QUERY_KEY;
+import static org.cdpg.dx.database.elastic.util.Constants.COUNT;
 import static org.cdpg.dx.util.Constants.*;
 
 public class RequestDTO {
@@ -24,32 +25,68 @@ public class RequestDTO {
     private String id;
     private List<String> attrs;
     private String searchType;
-    private String options;
     private Integer pageFrom;
     private Integer size;
     private ApplicableFilters applicableFilters;
     private boolean isResponseFilter;
     private boolean isGeoSearch;
+
+    public boolean isTemporal() {
+        return isTemporal;
+    }
+
     private boolean isTemporal;
     private boolean isAttributeSearch;
+    private String timeLimit;
+
+    public boolean isCountQuery() {
+        return isCountQuery;
+    }
+
+    public void setCountQuery(boolean countQuery) {
+        isCountQuery = countQuery;
+    }
+
+    private boolean isCountQuery;
+    public String getSearchIndex() {
+        return searchIndex;
+    }
+
+    public void setSearchIndex(String searchIndex) {
+        this.searchIndex = searchIndex;
+    }
+
+    private String searchIndex;
+
+    public String getResourceGroupId() {
+        return resourceGroupId;
+    }
+
+    public void setResourceGroupId(String resourceGroupId) {
+        this.resourceGroupId = resourceGroupId;
+    }
+
+    private String resourceGroupId;
     // Request Body specific fields
     private GeoQ geoQ;
     private TemporalQ temporalQ;
     JsonArray query;
+
     public RequestDTO() {}
 
     // Constructor to build from MultiMap (typically for path params)
-    public RequestDTO(MultiMap params,ApplicableFilters applicableFilters) {
-        LOGGER.info("PARAMS INSIDE "+params);
+    public RequestDTO(MultiMap params,ApplicableFilters applicableFilters,String timeLimit) {
+        LOGGER.debug("Trying to create request DTO from params");
+
         this.id = params.get("id");
         this.applicableFilters=applicableFilters;
+        this.resourceGroupId = applicableFilters.getGroupId();
         this.pageFrom = params.contains("offset") ? Integer.parseInt(params.get("offset")) : DEFAULT_FROM_VALUE;
         this.size = params.contains("limit") ? Integer.parseInt(params.get("limit")) : DEFAULT_SIZE_VALUE;
         this.query = params.get("q")!=null?getQueryTerms(params.get("q")):null;
-
-//        this.isAttributeSearch = !textQuery.isEmpty();
+        this.timeLimit=timeLimit;
         this.attrs = splitCommaSeparated(params.get("attrs"));
-        this.options = params.get("options");
+        this.isCountQuery = params.contains("options") && params.get("options").equals(COUNT);
 
         if (params.contains("coordinates") && params.get("coordinates") != null) {
             this.isGeoSearch=true;
@@ -61,19 +98,21 @@ public class RequestDTO {
             this.isTemporal=true;
             this.temporalQ=new TemporalQ(createTimeJson(params));
         }
-        this.searchType =getSearchType(false);
+        this.searchType =getSearchType();
     }
 
 
-
     // Constructor to build from JSON object (typically for request body)
-    public RequestDTO(JsonObject requestBody,ApplicableFilters applicableFilters) {
-        this.options = requestBody.getString("options");
-        LOGGER.info("JSON Q "+requestBody.getString("q"));
+    public RequestDTO(JsonObject requestBody,ApplicableFilters applicableFilters,String timeLimit) {
+        LOGGER.debug("Creating Request Dto in applicable filters from request body");
+        this.isCountQuery = requestBody.containsKey("options") && requestBody.getString("options").equals(COUNT);
         this.query = requestBody.getString("q")!=null?getQueryTerms(requestBody.getString("q")):null;
-        LOGGER.info("query "+query);
         this.attrs = splitCommaSeparated(requestBody.getString("attrs"));
         this.applicableFilters=applicableFilters;
+        this.resourceGroupId = applicableFilters.getGroupId();
+        this.timeLimit=timeLimit;
+        this.pageFrom = requestBody.containsKey("offset") ? Integer.parseInt(requestBody.getString("offset")) : DEFAULT_FROM_VALUE;
+        this.size = requestBody.containsKey("limit") ? Integer.parseInt(requestBody.getString("limit")) : DEFAULT_SIZE_VALUE;
 
         if (requestBody.containsKey("entities")) {
             JsonArray entitiesArray = requestBody.getJsonArray("entities");
@@ -96,7 +135,7 @@ public class RequestDTO {
             this.isTemporal=true;
             this.temporalQ = new TemporalQ(requestBody.getJsonObject("temporalQ"));
         }
-        this.searchType =getSearchType(false);
+        this.searchType =getSearchType();
     }
 
     private List<String> splitCommaSeparated(String input) {
@@ -148,12 +187,10 @@ public class RequestDTO {
                 .put("geometry", params.get("geometry"));
     }
 
-    private String getSearchType(boolean isAsyncQuery) {
+    private String getSearchType() {
         StringBuilder searchType = new StringBuilder();
         if (isTemporal) {
             searchType.append(JSON_TEMPORAL_SEARCH);
-        } else if (!isTemporal && !isAsyncQuery) {
-            searchType.append(JSON_LATEST_SEARCH);
         }
         if (isGeoSearch) {
             searchType.append(JSON_GEO_SEARCH);
@@ -166,7 +203,7 @@ public class RequestDTO {
         }
         return searchType.toString().isEmpty()
                 ? ""
-                : searchType.substring(0, searchType.length() - 1).toString();
+                : searchType.substring(0, searchType.length() - 1);
     }
 
     /**
@@ -180,7 +217,6 @@ public class RequestDTO {
         if (pageFrom != null) json.put("offset", pageFrom);
         if (size != null) json.put("limit", size);
         if (query != null && !query.isEmpty()) json.put(ATTRIBUTE_QUERY_KEY, query);
-        LOGGER.info("QUERY IN "+json);
 
         if (applicableFilters != null && applicableFilters.getItemFilters() != null && !applicableFilters.getItemFilters().isEmpty()) {
             json.put("applicableFilters", applicableFilters.getItemFilters());
@@ -202,13 +238,15 @@ public class RequestDTO {
                 json.put(key,temporalQ.toJson().getValue(key));
             }
         }
-        if (options != null && !options.isEmpty()) json.put("options", options);
+        if (timeLimit != null && !timeLimit.isEmpty()) {
+            json.put("timeLimit", timeLimit);
+        }
+        json.put("isCountQuery", isCountQuery);
 
         return json;
     }
 
     JsonArray getQueryTerms(final String textQuery) {
-        LOGGER.info("here in query");
         this.query = new JsonArray();
         String[] qterms = textQuery.split(";");
         for (String term : qterms) {
@@ -220,14 +258,10 @@ public class RequestDTO {
             String jsonAttribute = "";
 
             String[] attributes = term.split(";");
-            LOGGER.info("Attributes : {} ", attributes);
-
             for (String attr : attributes) {
 
                 String[] attributeQueryTerms =
                         attr.split("((?=>)|(?<=>)|(?=<)|(?<=<)|(?<==)|(?=!)|(?<=!)|(?==)|(?===))");
-                LOGGER.info(Arrays.stream(attributeQueryTerms).collect(Collectors.toList()));
-                LOGGER.info(attributeQueryTerms.length);
                 if (attributeQueryTerms.length == 3) {
                     jsonOperator = attributeQueryTerms[1];
                     jsonValue = attributeQueryTerms[2];
@@ -245,5 +279,20 @@ public class RequestDTO {
 
         }
         return query;
+    }
+    public Integer getPageFrom() {
+        return pageFrom;
+    }
+
+
+    public Integer getSize() {
+        return size;
+    }
+    public String getTimeLimit() {
+        return timeLimit;
+    }
+
+    public void setTimeLimit(String timeLimit) {
+        this.timeLimit = timeLimit;
     }
 }

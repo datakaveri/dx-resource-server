@@ -9,6 +9,7 @@ import org.wololo.jts2geojson.GeoJSONReader;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
@@ -50,6 +51,7 @@ public class GeoValidator {
      * @return true if all fields are valid; false otherwise.
      */
     public  boolean validateGeo(final JsonObject geoQuery) {
+        LOGGER.debug("Validating validateGeo, geoQuery {}",geoQuery);
         if (hasPartialSpatialParams(geoQuery)) {
             LOGGER.error("Partial spatial parameters provided");
             return false;
@@ -61,10 +63,18 @@ public class GeoValidator {
         String geoProperty = geoQuery.getString(NGSILDQUERY_GEOPROPERTY);
 
         boolean validGeom = isValidGeometry(geometry);
+        LOGGER.debug("is Valid Geom {}", validGeom);
         boolean validGeoProp = isValidGeoProperty(geoProperty);
+        LOGGER.debug("is Valid validGeoProp {}", validGeoProp);
+
         boolean validGeoRel = isValidGeoRelation(geoRel);
+        LOGGER.debug("is Valid validGeoRel {}", validGeoRel);
+
         boolean validCoords = isValidCoordinatesStructure(coordinates);
+        LOGGER.debug("is Valid validCoords {}", validCoords);
+
         boolean validCoordsWithGeo = isValidCoordinatesForGeometry(geometry, coordinates);
+        LOGGER.debug("is Valid validCoordsWithGeo {}", validCoordsWithGeo);
 
         return validGeom && validGeoProp && validGeoRel && validCoords && validCoordsWithGeo;
     }
@@ -89,6 +99,8 @@ public class GeoValidator {
 
         String[] parts = geoRel.split(";");
         String primaryRelation = parts[0].trim();
+        LOGGER.debug("geoRel {}", Arrays.asList(parts));
+
         if (!VALIDATION_ALLOWED_GEOREL.contains(primaryRelation)) {
             LOGGER.error("Invalid georelation: {}", primaryRelation);
             return false;
@@ -101,7 +113,7 @@ public class GeoValidator {
             }
 
             String param = parts[1].trim();
-            if (!param.startsWith("maxDistance=")) {
+            if (!param.startsWith("maxdistance=") && !param.startsWith("maxDistance=") ) {
                 LOGGER.error("Invalid parameter for near relation: {}", param);
                 return false;
             }
@@ -251,10 +263,11 @@ public class GeoValidator {
     private boolean isClosedPolygon(List<String> coordinates) {
         if (coordinates.size() < 8) return false;
         return coordinates.get(0).equals(coordinates.get(coordinates.size() - 2)) &&
-                coordinates.get(1).equals(coordinates.get(coordinates.size() - 1));
+                coordinates.get(1).equals(coordinates.getLast());
     }
 
     private boolean validateWithJTS(GeometryType geomType, List<String> coordValues) {
+        LOGGER.debug("Trying to validate GeomType with validateWithJTS");
         try {
             JsonObject geoJson = buildGeoJson(geomType, coordValues);
             GeoJSONReader reader = new GeoJSONReader();
@@ -267,7 +280,7 @@ public class GeoValidator {
                     return false;
                 }
             }
-
+            LOGGER.debug("Is geometery valid {}", geometry.isValid());
             return geometry.isValid();
         } catch (Exception e) {
             LOGGER.error("JTS validation failed: {}", e.getMessage());

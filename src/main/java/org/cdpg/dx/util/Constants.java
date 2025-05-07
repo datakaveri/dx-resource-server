@@ -60,7 +60,7 @@ public class Constants {
               HttpMethod.PATCH,
               HttpMethod.PUT));
   // Request's operationIds
-  public static final String GET_SPATIAL_DAT = "getSpatialData";
+  public static final String GET_SPATIAL_DATA = "getSpatialData";
   public static final String GET_LATEST_ENTITY_DATA = "getLatestEntityData";
   public static final String TEMPORAL_SEARCH = "temporalSearch";
   public static final String POST_TEMPORAL_SEARCH = "postTemporalSearch";
