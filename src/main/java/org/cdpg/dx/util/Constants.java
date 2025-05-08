@@ -159,6 +159,7 @@ public class Constants {
   public static final String JSON_CONSUMER = "consumer";
 
   public static final String JSON_TYPE = "type";
+  public static final String JSON_RESULTS = "results";
   public static final String JSON_NAME = "name";
   public static final String JSON_ENTITIES = "entities";
   public static final String JSON_ID = "id";
@@ -179,8 +180,6 @@ public class Constants {
   public static final String JSON_AFTER = "after";
   public static final String JSON_TIME = "time";
   public static final String JSON_ENDTIME = "endtime";
-  public static final String JSON_BEFORE = "before";
-  public static final String JSON_AFTER = "after";
   public static final String JSON_TIMEREL = "timerel";
   public static final String JSON_ATTR_QUERY = "attr-query";
   public static final String JSON_GEOPROPERTY = "geoproperty";
@@ -276,8 +275,6 @@ public class Constants {
   public static final List<String> VALIDATION_ALLOWED_GEOREL= List.of("within", "intersects", "near");
   public static final List<String> VALIDATION_ALLOWED_TEMPORAL_REL =
       List.of("after", "before", "during", "between");
-  public static final List<String> VALIDATION_ALLOWED_GEOREL= List.of("within", "intersects", "near");
-
   public static final List<String> VALIDATION_ALLOWED_TEMPORAL_REL_ASYNC =
       List.of("during", "between");
 
