@@ -35,24 +35,15 @@ public class GetIdFromBodyHandler implements Handler<RoutingContext> {
   }
 
   private String getIdFromBody(RoutingContext routingContext) {
-    JsonObject body;
-    body = routingContext.body().asJsonObject();
-
+    JsonObject body = routingContext.body().asJsonObject();
     String id = null;
     if (body != null) {
       JsonArray array = body.getJsonArray(JSON_ENTITIES);
       if (array != null) {
-        id = array.getString(0);
-      } else {
         JsonObject json = array.getJsonObject(0);
         if (json != null) {
           id = json.getString(ID);
-          /*for something like this : "entities": [
-          {
-          "id": "UUID"
-          }
-          ]*/
-        }
+        }else id= array.getString(0);
       }
     }
     return id;

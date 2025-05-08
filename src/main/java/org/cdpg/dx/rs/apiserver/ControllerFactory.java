@@ -49,8 +49,8 @@ public class ControllerFactory {
 
     public List<ApiController> createControllers() {
         return List.of(new SubscriptionController(vertx, pgService, brokerService, catService, revokedService),
-                new SearchController(esService, catService, tenantPrefix, timeLimit),
-                new LatestController(redisService, tenantPrefix, uniqueAttributeService));
+                new SearchController(esService, catService, tenantPrefix, timeLimit,revokedService),
+                new LatestController(redisService, tenantPrefix, uniqueAttributeService,revokedService,catService));
     }
 
     private void CreateProxies(Vertx vertx) {
