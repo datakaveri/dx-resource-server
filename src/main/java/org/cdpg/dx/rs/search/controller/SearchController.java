@@ -8,15 +8,27 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
+import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
 import org.cdpg.dx.catalogue.service.CatalogueService;
+import org.cdpg.dx.common.models.JwtData;
 import org.cdpg.dx.database.elastic.service.ElasticsearchService;
+import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.rs.apiserver.ApiController;
+import org.cdpg.dx.rs.authorization.handler.ResourcePolicyAuthorizationHandler;
+import org.cdpg.dx.rs.latest.util.LatestRedisCommandArgsBuilder;
 import org.cdpg.dx.rs.search.model.RequestDTO;
 import org.cdpg.dx.rs.search.service.SearchApiServiceImpl;
 import org.cdpg.dx.rs.search.util.RequestType;
 
 import org.cdpg.dx.rs.search.util.ResponseModel;
+import org.cdpg.dx.uniqueattribute.service.UniqueAttributeService;
 import org.cdpg.dx.util.ResponseUrn;
+import org.cdpg.dx.util.RoutingContextHelper;
+import org.cdpg.dx.validations.idhandler.GetIdFromBodyHandler;
+import org.cdpg.dx.validations.idhandler.GetIdFromParams;
+
+import java.util.Optional;
 
 import static org.cdpg.dx.util.Constants.JSON_COUNT;
 import static org.cdpg.dx.util.Constants.POST_SPATIAL_SEARCH;
@@ -31,41 +43,62 @@ import static org.cdpg.dx.util.Constants.TEMPORAL_SEARCH;
 public class SearchController implements ApiController {
     private static final Logger LOGGER = LogManager.getLogger(SearchController.class);
     private final SearchApiServiceImpl searchService;
-
+    private LatestRedisCommandArgsBuilder argsBuilder;
+    private UniqueAttributeService uniqueAttrService;
+    private ClientRevocationValidationHandler clientRevocationValidationHandler;
+    private ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler;
+    private GetIdFromBodyHandler getIdFromBodyHandler;
+    private GetIdFromParams getIdFromParams;
     /**
      * Initializes the search controller with required services and config.
      */
     public SearchController(ElasticsearchService elasticsearchService,
                             CatalogueService catalogueService,
                             String tenantPrefix,
-                            String timeLimit) {
+                            String timeLimit, RevokedService revokedService) {
         this.searchService = new SearchApiServiceImpl(
                 elasticsearchService,
                 catalogueService,
                 tenantPrefix,
                 timeLimit
         );
+        this.clientRevocationValidationHandler=new ClientRevocationValidationHandler(revokedService);
+        this.resourcePolicyAuthorizationHandler=new ResourcePolicyAuthorizationHandler(catalogueService);
+        this.getIdFromBodyHandler=new GetIdFromBodyHandler();
+        this.getIdFromParams=new GetIdFromParams();
     }
 
     @Override
     public void register(RouterBuilder builder) {
         builder
                 .operation(GET_SPATIAL_DATA)
+                .handler(getIdFromParams)
+                .handler(clientRevocationValidationHandler)
+                .handler(resourcePolicyAuthorizationHandler)
                 .handler(ctx -> handleGetQuery(ctx, RequestType.ENTITY))
                 .failureHandler(this::handleFailure);
 
         builder
                 .operation(TEMPORAL_SEARCH)
+                .handler(getIdFromParams)
+                .handler(clientRevocationValidationHandler)
+                .handler(resourcePolicyAuthorizationHandler)
                 .handler(ctx -> handleGetQuery(ctx, RequestType.TEMPORAL))
                 .failureHandler(this::handleFailure);
 
         builder
                 .operation(POST_SPATIAL_SEARCH)
+                .handler(getIdFromBodyHandler)
+                .handler(clientRevocationValidationHandler)
+                .handler(resourcePolicyAuthorizationHandler)
                 .handler(ctx -> handlePostQuery(ctx, RequestType.POST_ENTITIES))
                 .failureHandler(this::handleFailure);
 
         builder
                 .operation(POST_TEMPORAL_SEARCH)
+                .handler(getIdFromBodyHandler)
+                .handler(clientRevocationValidationHandler)
+                .handler(resourcePolicyAuthorizationHandler)
                 .handler(ctx -> handlePostQuery(ctx, RequestType.POST_TEMPORAL))
                 .failureHandler(this::handleFailure);
 
@@ -162,5 +195,19 @@ public class SearchController implements ApiController {
                         .put("status", status)
                         .encode()
                 );
+    }
+
+    public void roleAccessValidation(RoutingContext routingContext) {
+        Optional<JwtData> jwtData = RoutingContextHelper.getJwtData(routingContext);
+        if (!"consumer".equalsIgnoreCase(jwtData.get().role())) {
+            routingContext.next();
+        }
+        boolean hasSubAccess =
+                jwtData.get().cons().getJsonArray("access", new JsonArray()).contains("api");
+        if (!hasSubAccess) {
+            LOGGER.error("Role validation failed");
+            routingContext.fail(new AuthorizationException("Role validation failed"));
+        }
+        routingContext.next();
     }
 }
