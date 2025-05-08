@@ -28,6 +28,7 @@ import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.rs.apiserver.ApiController;
 import org.cdpg.dx.rs.authorization.handler.ResourcePolicyAuthorizationHandler;
+import org.cdpg.dx.rs.subscription.dao.SubscriptionServiceDAO;
 import org.cdpg.dx.rs.subscription.model.PostSubscriptionModel;
 import org.cdpg.dx.rs.subscription.service.SubscriptionService;
 import org.cdpg.dx.rs.subscription.service.SubscriptionServiceImpl;
@@ -45,12 +46,12 @@ public class SubscriptionController implements ApiController {
 
   public SubscriptionController(
       Vertx vertx,
-      PostgresService pgService,
+      SubscriptionServiceDAO subscriptionServiceDAO,
       DataBrokerService brokerService,
       CatalogueService catalogueService,
       RevokedService revokedService) {
     this.subscriptionService =
-        new SubscriptionServiceImpl(pgService, brokerService, catalogueService);
+        new SubscriptionServiceImpl(subscriptionServiceDAO, brokerService, catalogueService);
     this.auditingHandler = new AuditingHandler(vertx);
     this.resourcePolicyAuthorizationHandler =
         new ResourcePolicyAuthorizationHandler(catalogueService);
