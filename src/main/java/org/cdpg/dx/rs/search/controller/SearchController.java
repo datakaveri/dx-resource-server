@@ -16,13 +16,11 @@ import org.cdpg.dx.database.elastic.service.ElasticsearchService;
 import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.rs.apiserver.ApiController;
 import org.cdpg.dx.rs.authorization.handler.ResourcePolicyAuthorizationHandler;
-import org.cdpg.dx.rs.latest.util.LatestRedisCommandArgsBuilder;
 import org.cdpg.dx.rs.search.model.RequestDTO;
 import org.cdpg.dx.rs.search.service.SearchApiServiceImpl;
 import org.cdpg.dx.rs.search.util.RequestType;
 
 import org.cdpg.dx.rs.search.util.ResponseModel;
-import org.cdpg.dx.uniqueattribute.service.UniqueAttributeService;
 import org.cdpg.dx.util.ResponseUrn;
 import org.cdpg.dx.util.RoutingContextHelper;
 import org.cdpg.dx.validations.idhandler.GetIdFromBodyHandler;
@@ -43,8 +41,6 @@ import static org.cdpg.dx.util.Constants.TEMPORAL_SEARCH;
 public class SearchController implements ApiController {
     private static final Logger LOGGER = LogManager.getLogger(SearchController.class);
     private final SearchApiServiceImpl searchService;
-    private LatestRedisCommandArgsBuilder argsBuilder;
-    private UniqueAttributeService uniqueAttrService;
     private ClientRevocationValidationHandler clientRevocationValidationHandler;
     private ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler;
     private GetIdFromBodyHandler getIdFromBodyHandler;
