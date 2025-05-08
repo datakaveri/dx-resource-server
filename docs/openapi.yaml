@@ -2,7 +2,7 @@ openapi: 3.0.2
 
 info:
   title: "Data exchange Resource Server APIs"
-  version: 5.6.0
+  version: 1.1.0
   description: |
     # Introduction
     The Resource Server is DXs'(Data exchange) data store which allows publication, subscription and discovery of data.
@@ -158,12 +158,15 @@ paths:
       parameters:
         - name: token
           in: header
-          description: A <b> valid data exchange Auth token </b> to process the request. <br/> This field is <b> mandatory </b> for accessing a <b> resource </b> .  <br/> If not provided with a valid token, user will be responded with <b> 401 Unauthorized </b> .
+          description: >
+            A <b>valid data exchange Auth token</b> to process the request. <br/>
+            This field is <b>mandatory</b> for accessing a <b>resource</b>. <br/>
+            If not provided with a valid token, user will be responded with <b>401 Unauthorized</b>.
           required: true
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
+            maxLength: 2048
+            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
         - name: id
           in: path
