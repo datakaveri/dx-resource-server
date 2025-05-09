@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.catalogue.service.CatalogueService;
-import org.cdpg.dx.database.postgres.models.*;
 import org.cdpg.dx.databroker.model.RegisterQueueModel;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.databroker.util.PermissionOpType;
@@ -159,12 +158,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                       entityId,
                                       postSubscriptionModel.getExpiry(),
                                       updateHandler.catalogueInfo().getString("name"),
-                                      updateHandler.catalogueInfo().toString(),
+                                      updateHandler.catalogueInfo(),
                                       postSubscriptionModel.getUserId(),
                                       updateHandler.catalogueInfo().getString(RESOURCE_GROUP),
                                       updateHandler.catalogueInfo().getString(PROVIDER),
                                       postSubscriptionModel.getDelegatorId(),
-                                      type))
+                                      type,
+                                      null,
+                                      null))
                               .map(postgres -> updateHandler.registerQueueModel());
                         })
                     .onSuccess(
@@ -291,12 +292,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         entityId,
                         postSubscriptionModel.getExpiry(),
                         selectSuccess.catalogue().getString("name"),
-                        selectSuccess.catalogue().toString(),
+                        selectSuccess.catalogue(),
                         postSubscriptionModel.getUserId(),
                         selectSuccess.catalogue().getString(RESOURCE_GROUP),
                         selectSuccess.catalogue().getString(PROVIDER),
                         postSubscriptionModel.getDelegatorId(),
-                        type));
+                        type,
+                        null,
+                        null));
               } else {
                 return Future.succeededFuture();
               }
@@ -321,7 +324,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   @Override
   public Future<String> deleteSubscription(String subscriptionId, String userid) {
     LOGGER.info("deleteSubscription() method started");
-    LOGGER.info("queueName to delete :: " + subscriptionId);
+    LOGGER.info("queueName to delete :: {}", subscriptionId);
     Promise<String> promise = Promise.promise();
     getEntityName(subscriptionId)
         .compose(
@@ -386,7 +389,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 } else {
                   promise.complete(entityResult.result());
                 }
-                promise.complete(entityResult.result());
               } else {
                 LOGGER.error("error:: {}", entityResult.cause().getMessage());
                 promise.fail(entityResult.cause());

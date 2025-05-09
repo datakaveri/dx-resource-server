@@ -14,18 +14,18 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.database.postgres.base.dao.AbstractBaseDAO;
 import org.cdpg.dx.database.postgres.models.*;
 import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.rs.subscription.dao.SubscriptionServiceDAO;
 import org.cdpg.dx.rs.subscription.model.SubscriptionDTO;
 
-public class SubscriptionServiceDAOImpl implements SubscriptionServiceDAO {
+public class SubscriptionServiceDAOImpl extends AbstractBaseDAO<SubscriptionDTO>
+    implements SubscriptionServiceDAO {
   private static final Logger LOGGER = LogManager.getLogger(SubscriptionServiceDAOImpl.class);
-  private final PostgresService postgresService;
-  String subs_table = SUBSCRIPTION_TABLE;
 
   public SubscriptionServiceDAOImpl(PostgresService postgresService) {
-    this.postgresService = postgresService;
+    super(postgresService, SUBSCRIPTION_TABLE, "_id", SubscriptionDTO::fromJson);
   }
 
   @Override
@@ -34,7 +34,7 @@ public class SubscriptionServiceDAOImpl implements SubscriptionServiceDAO {
     Condition conditionComponent =
         new Condition("queue_name", Condition.Operator.EQUALS, List.of(subscriptionId));
     SelectQuery selectQuery =
-        new SelectQuery(subs_table, List.of("entity"), conditionComponent, null, null, null, null);
+        new SelectQuery(tableName, List.of("entity"), conditionComponent, null, null, null, null);
     postgresService
         .select(selectQuery)
         .onComplete(
@@ -65,7 +65,7 @@ public class SubscriptionServiceDAOImpl implements SubscriptionServiceDAO {
     Condition conditionComponent =
         new Condition("user_id", Condition.Operator.EQUALS, List.of(userId));
     SelectQuery selectQuery =
-        new SelectQuery(subs_table, columns, conditionComponent, null, null, null, null);
+        new SelectQuery(tableName, columns, conditionComponent, null, null, null, null);
     postgresService
         .select(selectQuery)
         .onComplete(
@@ -85,7 +85,7 @@ public class SubscriptionServiceDAOImpl implements SubscriptionServiceDAO {
     Promise<Void> promise = Promise.promise();
     Condition condition =
         new Condition("queue_name", Condition.Operator.EQUALS, List.of(subscriptionId));
-    DeleteQuery deleteQuery = new DeleteQuery(subs_table, condition, null, null);
+    DeleteQuery deleteQuery = new DeleteQuery(tableName, condition, null, null);
 
     postgresService
         .delete(deleteQuery)
@@ -129,7 +129,7 @@ public class SubscriptionServiceDAOImpl implements SubscriptionServiceDAO {
         new Condition("entity", Condition.Operator.EQUALS, List.of(entityId));
     Condition condition =
         new Condition(List.of(queueNameCondition, entityCondition), Condition.LogicalOperator.AND);
-    return new SelectQuery(subs_table, List.of("*"), condition, null, null, null, null);
+    return new SelectQuery(tableName, List.of("*"), condition, null, null, null, null);
   }
 
   @Override
@@ -144,7 +144,7 @@ public class SubscriptionServiceDAOImpl implements SubscriptionServiceDAO {
     Condition condition =
         new Condition(List.of(queueNameCondition, entityCondition), Condition.LogicalOperator.AND);
     UpdateQuery updateQuery =
-        new UpdateQuery(subs_table, List.of("expiry"), List.of(expiry), condition, null, null);
+        new UpdateQuery(tableName, List.of("expiry"), List.of(expiry), condition, null, null);
 
     postgresService
         .update(updateQuery)
@@ -165,37 +165,14 @@ public class SubscriptionServiceDAOImpl implements SubscriptionServiceDAO {
   @Override
   public Future<Void> insertSubscription(SubscriptionDTO subscriptionDTO) {
     Promise<Void> promise = Promise.promise();
-    List<String> columns =
-        List.of(
-            "_id",
-            "_type",
-            "queue_name",
-            "entity",
-            "expiry",
-            "dataset_name",
-            "dataset_json",
-            "user_id",
-            "resource_group",
-            "provider_id",
-            "delegator_id",
-            "item_type");
-    List<Object> values =
-        List.of(
-            subscriptionDTO._id(),
-            subscriptionDTO._type(),
-            subscriptionDTO.queue_name(),
-            subscriptionDTO.entityId(),
-            subscriptionDTO.expiry(),
-            subscriptionDTO.dataset_name(),
-            subscriptionDTO.dataset_json(),
-            subscriptionDTO.user_id(),
-            subscriptionDTO.resource_group(),
-            subscriptionDTO.provider_id(),
-            subscriptionDTO.delegator_id(),
-            subscriptionDTO.item_type());
+    var columnNameAndValues = subscriptionDTO.toNonEmptyFieldsMap();
 
     postgresService
-        .insert(new InsertQuery(subs_table, columns, values))
+        .insert(
+            new InsertQuery(
+                tableName,
+                List.copyOf(columnNameAndValues.keySet()),
+                List.copyOf(columnNameAndValues.values())))
         .onComplete(
             pgHandler -> {
               if (pgHandler.succeeded()) {
