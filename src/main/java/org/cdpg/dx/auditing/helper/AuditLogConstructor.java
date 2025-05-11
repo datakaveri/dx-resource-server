@@ -35,7 +35,7 @@ public class AuditLogConstructor  {
 
   public void generateRsAuditLog() {
     Optional<JwtData> jwtData = RoutingContextHelper.getJwtData(routingContext);
-    String api = RoutingContextHelper.getEndPoint(routingContext);
+    String api = RoutingContextHelper.getAuthInfo(routingContext).getString("api_endpoint");
     long responseSize = RoutingContextHelper.getResponseSize(routingContext);
     String id = RoutingContextHelper.getId(routingContext);
 

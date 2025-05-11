@@ -19,11 +19,11 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.auditing.handler.AuditingHandler;
+import org.cdpg.dx.auditing.helper.AuditLogConstructor;
 import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
 import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
 import org.cdpg.dx.catalogue.service.CatalogueService;
 import org.cdpg.dx.common.models.JwtData;
-import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.rs.apiserver.ApiController;
@@ -59,10 +59,12 @@ public class SubscriptionController implements ApiController {
   }
 
   private static String getExpiry(Optional<JwtData> jwtData) {
-    String expiryTime = LocalDateTime.ofInstant(
-            Instant.ofEpochSecond(Long.parseLong(jwtData.get().exp().toString())),
-            ZoneId.systemDefault()).toString();
-    LOGGER.info("expiry time :: " + expiryTime);
+    String expiryTime =
+        LocalDateTime.ofInstant(
+                Instant.ofEpochSecond(Long.parseLong(jwtData.get().exp().toString())),
+                ZoneId.systemDefault())
+            .toString();
+    LOGGER.info("expiry time :: {}", expiryTime);
     return expiryTime;
   }
 
@@ -138,6 +140,7 @@ public class SubscriptionController implements ApiController {
             subscriber -> {
               LOGGER.debug("subscriber details: {}", subscriber.listString().toString());
               RoutingContextHelper.setResponseSize(routingContext, 0);
+              new AuditLogConstructor(routingContext);
               RoutingContextHelper.setId(routingContext, subscriber.entities());
               routingContext
                   .response()
@@ -201,6 +204,7 @@ public class SubscriptionController implements ApiController {
             subHandler -> {
               LOGGER.info("Success: Handle Subscription request;");
               RoutingContextHelper.setResponseSize(routingContext, 0);
+              new AuditLogConstructor(routingContext);
               response
                   .setStatusCode(201)
                   .putHeader(CONTENT_TYPE, APPLICATION_JSON)
@@ -231,6 +235,7 @@ public class SubscriptionController implements ApiController {
             if (subsRequestHandler.succeeded()) {
               LOGGER.info("Updated subscription");
               RoutingContextHelper.setResponseSize(routingContext, 0);
+              new AuditLogConstructor(routingContext);
               List<String> resultEntities = new ArrayList<String>();
               resultEntities.add(entities);
               /*JsonObject resultJson =
@@ -304,6 +309,7 @@ public class SubscriptionController implements ApiController {
             if (subsRequestHandler.succeeded()) {
               LOGGER.info("appended subscription");
               RoutingContextHelper.setResponseSize(routingContext, 0);
+              new AuditLogConstructor(routingContext);
               List<String> resultEntities = new ArrayList<String>();
               resultEntities.add(entities);
               /*JsonObject resultJson =
@@ -352,6 +358,7 @@ public class SubscriptionController implements ApiController {
           if (subHandler.succeeded()) {
             LOGGER.info("Success: Deleting subscription");
             RoutingContextHelper.setResponseSize(routingContext, 0);
+            new AuditLogConstructor(routingContext);
             RoutingContextHelper.setId(routingContext, subHandler.result());
             /*response
             .putHeader(CONTENT_TYPE, APPLICATION_JSON)
