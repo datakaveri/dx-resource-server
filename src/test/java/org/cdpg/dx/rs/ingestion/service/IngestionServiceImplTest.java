@@ -16,7 +16,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.Base64;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.catalogue.service.CatalogueService;
@@ -25,6 +24,7 @@ import org.cdpg.dx.database.postgres.PostgresVerticle;
 import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.databroker.DataBrokerVerticle;
 import org.cdpg.dx.databroker.service.DataBrokerService;
+import org.cdpg.dx.rs.ingestion.dao.impl.IngestionDAOImpl;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -61,6 +61,7 @@ class IngestionServiceImplTest {
   private PostgresService postgresService;
   private DataBrokerService dataBrokerService;
   private CatalogueService catalogueService;
+  private IngestionDAOImpl ingestionDAOImpl;
 
   @BeforeEach
   void initMocks() throws Exception {
@@ -76,7 +77,7 @@ class IngestionServiceImplTest {
         Statement stmt = conn.createStatement()) {
       String enableExtension = "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";";
       String createTableQuery =
-              """
+          """
               CREATE TABLE IF NOT EXISTS adaptors_details (
                   _id UUID NOT NULL DEFAULT uuid_generate_v4(),
                   exchange_name VARCHAR NOT NULL,
@@ -91,14 +92,16 @@ class IngestionServiceImplTest {
                   CONSTRAINT exchange_name_unique UNIQUE (exchange_name)
               );
               """;
-      String createTrigger = """
+      String createTrigger =
+"""
 CREATE OR REPLACE TRIGGER update_ad_created
 BEFORE INSERT
 ON public.adaptors_details
 FOR EACH ROW
 EXECUTE FUNCTION public.update_created();
 """;
-      String createFunction = """
+      String createFunction =
+"""
 CREATE OR REPLACE FUNCTION update_created()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -157,54 +160,62 @@ $$ LANGUAGE plpgsql;
               postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
               dataBrokerService = DataBrokerService.createProxy(vertx, DATA_BROKER_SERVICE_ADDRESS);
               catalogueService = Mockito.mock(CatalogueServiceImpl.class);
+              ingestionDAOImpl = new IngestionDAOImpl(postgresService);
               ingestionServiceImpl =
-                  new IngestionServiceImpl(catalogueService, dataBrokerService, postgresService);
+                  new IngestionServiceImpl(catalogueService, dataBrokerService, ingestionDAOImpl);
 
               return createDefaultQueues(vertx);
-
-            }).onSuccess(
-                    result -> {
-                      testContext.completeNow();
-                    })
+            })
+        .onSuccess(
+            result -> {
+              testContext.completeNow();
+            })
         .onFailure(
             err -> {
               LOGGER.error(err.getMessage());
               testContext.failNow(err);
             });
   }
+
   private Future<Void> createDefaultQueues(Vertx vertx) {
     Promise<Void> promise = Promise.promise();
 
-    WebClientOptions options = new WebClientOptions()
+    WebClientOptions options =
+        new WebClientOptions()
             .setDefaultHost(rabbitMQContainer.getHost())
             .setDefaultPort(rabbitMQContainer.getMappedPort(15672))
             .setSsl(false);
 
     WebClient client = WebClient.create(vertx, options);
 
-    JsonObject config = new JsonObject()
+    JsonObject config =
+        new JsonObject()
             .put("auto_delete", false)
             .put("durable", true)
             .put("arguments", new JsonObject());
 
-    Future<Void> f1 = client.put("/api/queues/IUDX/database")
+    Future<Void> f1 =
+        client
+            .put("/api/queues/IUDX/database")
             .putHeader("Authorization", basicAuth("guest", "guest"))
             .sendJsonObject(config)
             .compose(res -> Future.succeededFuture());
 
-    Future<Void> f2 = client.put("/api/queues/IUDX/subscriptions-monitoring")
+    Future<Void> f2 =
+        client
+            .put("/api/queues/IUDX/subscriptions-monitoring")
             .putHeader("Authorization", basicAuth("guest", "guest"))
             .sendJsonObject(config)
             .compose(res -> Future.succeededFuture());
 
-    Future<Void> f3 = client.put("/api/queues/IUDX/redis-latest")
+    Future<Void> f3 =
+        client
+            .put("/api/queues/IUDX/redis-latest")
             .putHeader("Authorization", basicAuth("guest", "guest"))
             .sendJsonObject(config)
             .compose(res -> Future.succeededFuture());
 
-    CompositeFuture.all(f1, f2, f3)
-            .onSuccess(v -> promise.complete())
-            .onFailure(promise::fail);
+    CompositeFuture.all(f1, f2, f3).onSuccess(v -> promise.complete()).onFailure(promise::fail);
 
     return promise.future();
   }
@@ -233,7 +244,7 @@ $$ LANGUAGE plpgsql;
             .put("type", new JsonArray().add("iudx:Resource"));
 
     when(catalogueService.fetchCatalogueInfo("935f2045-f5c6-4c76-b14a-c29a88589bf3"))
-            .thenReturn(Future.succeededFuture(catalogueResult));
+        .thenReturn(Future.succeededFuture(catalogueResult));
     ingestionServiceImpl
         .registerAdapter(
             "935f2045-f5c6-4c76-b14a-c29a88589bf3", "b2c27f3f-2524-4a84-816e-91f9ab23f837")
@@ -246,10 +257,9 @@ $$ LANGUAGE plpgsql;
   void testGetAdapter_success(VertxTestContext testContext) {
 
     ingestionServiceImpl
-            .getAdapterDetails(
-                    "8b95ab80-2aaf-4636-a65e-7f2563d0d371")
-            .onSuccess(v -> testContext.completeNow())
-            .onFailure(err -> testContext.failNow(err));
+        .getAdapterDetails("8b95ab80-2aaf-4636-a65e-7f2563d0d371")
+        .onSuccess(v -> testContext.completeNow())
+        .onFailure(err -> testContext.failNow(err));
   }
 
   @Order(3)
@@ -257,9 +267,9 @@ $$ LANGUAGE plpgsql;
   void testDeleteAdapter_success(VertxTestContext testContext) {
 
     ingestionServiceImpl
-            .deleteAdapter(
-                    "8b95ab80-2aaf-4636-a65e-7f2563d0d371","b2c27f3f-2524-4a84-816e-91f9ab23f837")
-            .onSuccess(v -> testContext.completeNow())
-            .onFailure(err -> testContext.failNow(err));
+        .deleteAdapter(
+            "8b95ab80-2aaf-4636-a65e-7f2563d0d371", "b2c27f3f-2524-4a84-816e-91f9ab23f837")
+        .onSuccess(v -> testContext.completeNow())
+        .onFailure(err -> testContext.failNow(err));
   }
 }
