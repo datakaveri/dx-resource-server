@@ -40,7 +40,7 @@ public class AuditingHandler {
             }
 
           } catch (Exception e) {
-            LOGGER.error("Error: while publishing auditing log: " + e.getMessage());
+            LOGGER.error("Error: while publishing auditing log: {}", e.getMessage());
             throw new RuntimeException(e);
           }
         });

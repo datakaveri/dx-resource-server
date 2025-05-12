@@ -36,6 +36,8 @@ public class Constants {
 
   public static final String ENTITIES = "entities";
   public static final String RESOURCE_GROUP = "resourceGroup";
+  public static final String PROVIDER = "provider";
   public static final String ID = "id";
   public static final String QUEUE_ALREADY_EXISTS = "Queue already exists";
+  public static final String SUBSCRIPTION_TABLE = "subscriptions";
 }

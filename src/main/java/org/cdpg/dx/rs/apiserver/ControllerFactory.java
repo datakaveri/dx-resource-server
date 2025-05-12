@@ -12,6 +12,8 @@ import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.rs.subscription.SubscriptionController;
+import org.cdpg.dx.rs.subscription.dao.SubscriptionServiceDAO;
+import org.cdpg.dx.rs.subscription.dao.impl.SubscriptionServiceDAOImpl;
 
 public class ControllerFactory {
   private static final Logger LOGGER = LogManager.getLogger(ControllerFactory.class);
@@ -23,6 +25,7 @@ public class ControllerFactory {
   private DataBrokerService brokerService;
   private CatalogueService catService;
   private RevokedService revokedService;
+  private SubscriptionServiceDAO subscriptionServiceDAO;
 
   public ControllerFactory(boolean isTimeLimitEnabled, String dxApiBasePath, Vertx vertx) {
     this.isTimeLimitEnabled = isTimeLimitEnabled;
@@ -32,7 +35,7 @@ public class ControllerFactory {
   }
 
   public List<ApiController> createControllers() {
-    return List.of(new SubscriptionController(vertx, pgService, brokerService, catService, revokedService));
+    return List.of(new SubscriptionController(vertx, subscriptionServiceDAO, brokerService, catService, revokedService));
   }
 
   private void CreateProxies(Vertx vertx) {
@@ -41,5 +44,10 @@ public class ControllerFactory {
     brokerService = DataBrokerService.createProxy(vertx, DATA_BROKER_SERVICE_ADDRESS);
     catService = CatalogueService.createProxy(vertx, CATALOGUE_SERVICE_ADDRESS);
     revokedService = RevokedService.createProxy(vertx, REVOKED_SERVICE_ADDRESS);
+    initialization();
+  }
+
+  private void initialization(){
+    subscriptionServiceDAO = new SubscriptionServiceDAOImpl(pgService);
   }
 }

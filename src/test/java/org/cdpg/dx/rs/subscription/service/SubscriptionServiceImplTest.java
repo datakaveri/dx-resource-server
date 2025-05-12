@@ -22,6 +22,7 @@ import org.cdpg.dx.database.postgres.PostgresVerticle;
 import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.databroker.DataBrokerVerticle;
 import org.cdpg.dx.databroker.service.DataBrokerService;
+import org.cdpg.dx.rs.subscription.dao.impl.SubscriptionServiceDAOImpl;
 import org.cdpg.dx.rs.subscription.model.PostSubscriptionModel;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,6 +60,7 @@ public class SubscriptionServiceImplTest {
   private PostgresService postgresService;
   private DataBrokerService dataBrokerService;
   private CatalogueService catalogueService;
+  private SubscriptionServiceDAOImpl subscriptionServiceDAO;
 
   @BeforeEach
   void initMocks() throws Exception {
@@ -155,8 +157,9 @@ public class SubscriptionServiceImplTest {
               postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
               dataBrokerService = DataBrokerService.createProxy(vertx, DATA_BROKER_SERVICE_ADDRESS);
               catalogueService = Mockito.mock(CatalogueServiceImpl.class);
+              subscriptionServiceDAO = new SubscriptionServiceDAOImpl(postgresService);
               subscriptionService =
-                  new SubscriptionServiceImpl(postgresService, dataBrokerService, catalogueService);
+                  new SubscriptionServiceImpl(subscriptionServiceDAO, dataBrokerService, catalogueService);
 
               return new HelperDataBrokerMethod(dataBrokerService).createExchange();
             })
