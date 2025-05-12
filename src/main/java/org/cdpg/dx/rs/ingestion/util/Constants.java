@@ -16,4 +16,5 @@ public class Constants {
                             ITEM_TYPE_RESOURCE_GROUP,
                             ITEM_TYPE_RESOURCE_SERVER,
                             ITEM_TYPE_PROVIDER));
+    public static final String INGESTION_TABLE = "adaptors_details";
 }
