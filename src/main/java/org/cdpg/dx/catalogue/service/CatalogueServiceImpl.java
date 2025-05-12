@@ -20,6 +20,8 @@ public class CatalogueServiceImpl implements CatalogueService {
   private static final Logger LOGGER = LogManager.getLogger(CatalogueServiceImpl.class);
   private final Cache<String, JsonObject> catalogueCache =
       CacheBuilder.newBuilder().maximumSize(10000).expireAfterWrite(1L, TimeUnit.DAYS).build();
+  private final Cache<String, String> providerOwnerCache =
+      CacheBuilder.newBuilder().maximumSize(1000).expireAfterWrite(1L, TimeUnit.DAYS).build();
   private final CatalogueClient catalogueClient;
 
   public CatalogueServiceImpl(Vertx vertx, CatalogueClient catalogueClient) {
@@ -54,6 +56,27 @@ public class CatalogueServiceImpl implements CatalogueService {
     return promise.future();
   }
 
+  @Override
+  public Future<String> getProviderOwnerId(String id) {
+    Promise<String> promise = Promise.promise();
+    if (providerOwnerCache.getIfPresent(id) != null) {
+      return Future.succeededFuture(providerOwnerCache.getIfPresent(id));
+    } else {
+      providerOwnerInfo(id)
+          .onSuccess(
+              successHandler -> {
+                if (providerOwnerCache.getIfPresent(id) != null) {
+                  promise.complete(providerOwnerCache.getIfPresent(id));
+                } else {
+                  LOGGER.info("id :{} not found in catalogue server", id);
+                  promise.fail(new ServiceException(ERROR_NOT_FOUND, BAD_REQUEST_ERROR));
+                }
+              })
+          .onFailure(promise::fail);
+    }
+    return promise.future();
+  }
+
   public Future<Void> refreshCatalogue() {
     LOGGER.trace("refresh catalogue() called");
     Promise<Void> promise = Promise.promise();
@@ -72,7 +95,7 @@ public class CatalogueServiceImpl implements CatalogueService {
             })
         .onFailure(
             failure -> {
-              LOGGER.error("Failed to refresh catalogue",failure);
+              LOGGER.error("Failed to refresh catalogue", failure);
               promise.fail(new ServiceException(ERROR_BAD_REQUEST, "Failed to refresh catalogue"));
             });
     return promise.future();
@@ -98,6 +121,26 @@ public class CatalogueServiceImpl implements CatalogueService {
               promise.fail(
                   new ServiceException(ERROR_BAD_REQUEST, "Failed to search in catalogue"));
             });
+    return promise.future();
+  }
+
+  private Future<Void> providerOwnerInfo(String id) {
+    LOGGER.trace("id to check provider info:: {}", id);
+    Promise<Void> promise = Promise.promise();
+    catalogueClient
+        .getProviderOwnerUserId(id)
+        .onSuccess(
+            successHandler -> {
+              providerOwnerCache.put(id, successHandler);
+              promise.complete();
+            })
+        .onFailure(
+            failure -> {
+              LOGGER.error("Failed to provider id details in catalogue {}", id);
+              promise.fail(
+                  new ServiceException(ERROR_BAD_REQUEST, "Failed to search in catalogue"));
+            });
+
     return promise.future();
   }
 }

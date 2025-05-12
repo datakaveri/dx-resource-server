@@ -5,6 +5,7 @@ import static org.cdpg.dx.common.ErrorCode.ERROR_NOT_FOUND;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.predicate.ResponsePredicate;
 import io.vertx.serviceproxy.ServiceException;
@@ -86,6 +87,41 @@ public class CatalogueClientImpl implements CatalogueClient {
               } else {
                 LOGGER.error("catalogue call search api failed: " + catHandler.cause());
                 promise.fail(new ServiceException(ERROR_NOT_FOUND, "Failed to call catalogue"));
+              }
+            });
+
+    return promise.future();
+  }
+
+  @Override
+  public Future<String> getProviderOwnerUserId(String id) {
+    LOGGER.trace("get cat provider info for id: {} ", id);
+    Promise<String> promise = Promise.promise();
+    String relationshipCatPath = catBasePath + "/relationship";
+    webClient
+        .get(catPort, catHost, relationshipCatPath)
+        .addQueryParam("id", id)
+        .addQueryParam("rel", "provider")
+        .expect(ResponsePredicate.JSON)
+        .send(
+            catHandler -> {
+              if (catHandler.succeeded()) {
+                JsonArray response = catHandler.result().bodyAsJsonObject().getJsonArray("results");
+                response.forEach(
+                    json -> {
+                      JsonObject res = (JsonObject) json;
+                      String providerUserId;
+                      providerUserId = res.getString("providerUserId");
+                      if (providerUserId == null) {
+                        providerUserId = res.getString("ownerUserId");
+                        LOGGER.info(" owneruserid : {}", providerUserId);
+                      }
+                      promise.complete(providerUserId);
+                    });
+              } else {
+                LOGGER.error(
+                    "Failed to call catalogue while getting provider user id {}",
+                    catHandler.cause().getMessage());
               }
             });
 
