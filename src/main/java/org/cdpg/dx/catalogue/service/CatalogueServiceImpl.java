@@ -108,12 +108,19 @@ public class CatalogueServiceImpl implements CatalogueService {
         .getCatalogueInfoForId(id)
         .onSuccess(
             successHandler -> {
-              successHandler.forEach(
-                  result -> {
-                    JsonObject res = (JsonObject) result;
-                    catalogueCache.put(id, res);
-                  });
-              promise.complete();
+              if (successHandler.isEmpty()) {
+                LOGGER.error("id :{} not found in catalogue server", id);
+                promise.fail(new ServiceException(ERROR_NOT_FOUND, BAD_REQUEST_ERROR));
+              } else {
+                successHandler
+                    .get()
+                    .forEach(
+                        result -> {
+                          JsonObject res = (JsonObject) result;
+                          catalogueCache.put(id, res);
+                        });
+                promise.complete();
+              }
             })
         .onFailure(
             failure -> {

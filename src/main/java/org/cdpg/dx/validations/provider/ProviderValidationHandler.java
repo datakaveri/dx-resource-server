@@ -36,6 +36,7 @@ public class ProviderValidationHandler implements Handler<RoutingContext> {
         .getProviderOwnerId(id)
         .compose(
             providerIdHandler -> {
+              LOGGER.trace("providerOwnerId {}", providerIdHandler);
               return validateProviderUser(
                   providerIdHandler, RoutingContextHelper.getJwtData(routingContext).get());
             })

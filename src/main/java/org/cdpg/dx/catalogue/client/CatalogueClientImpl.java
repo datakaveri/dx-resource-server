@@ -9,6 +9,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.predicate.ResponsePredicate;
 import io.vertx.serviceproxy.ServiceException;
+import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -66,9 +67,9 @@ public class CatalogueClientImpl implements CatalogueClient {
   }
 
   @Override
-  public Future<JsonArray> getCatalogueInfoForId(String id) {
+  public Future<Optional<JsonArray>> getCatalogueInfoForId(String id) {
     LOGGER.debug("get cat info for id: {} ", id);
-    Promise<JsonArray> promise = Promise.promise();
+    Promise<Optional<JsonArray>> promise = Promise.promise();
     String url = catBasePath + "/search";
     webClient
         .get(catPort, catHost, url)
@@ -82,8 +83,9 @@ public class CatalogueClientImpl implements CatalogueClient {
         .send(
             catHandler -> {
               if (catHandler.succeeded()) {
-                JsonArray response = catHandler.result().bodyAsJsonObject().getJsonArray("results");
-                promise.complete(response);
+                JsonObject responseJson = catHandler.result().bodyAsJsonObject();
+                JsonArray response = responseJson.getJsonArray("results");
+                promise.complete(Optional.ofNullable(response));
               } else {
                 LOGGER.error("catalogue call search api failed: " + catHandler.cause());
                 promise.fail(new ServiceException(ERROR_NOT_FOUND, "Failed to call catalogue"));
