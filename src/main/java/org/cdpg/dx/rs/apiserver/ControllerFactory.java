@@ -13,6 +13,7 @@ import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.database.redis.service.RedisService;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.revoked.service.RevokedService;
+import org.cdpg.dx.rs.admin.controller.AdminController;
 import org.cdpg.dx.rs.latest.controller.LatestController;
 import org.cdpg.dx.rs.search.controller.SearchController;
 import org.cdpg.dx.rs.subscription.SubscriptionController;
@@ -56,7 +57,8 @@ public class ControllerFactory {
         new SearchController(esService, catService, tenantPrefix, timeLimit, revokedService),
         new LatestController(
             redisService, tenantPrefix, uniqueAttributeService, revokedService, catService),
-        new UserManagementController(brokerService, revokedService));
+        new UserManagementController(brokerService, revokedService),
+          new AdminController(pgService,brokerService,revokedService));
   }
 
   private void CreateProxies(Vertx vertx) {

@@ -2531,8 +2531,6 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
 
       x-codeSamples:
         - lang: 'cURL'
@@ -2584,7 +2582,7 @@ paths:
       tags:
         - Admin
       summary: Create unique attribute.
-      operationId: createUniqueAttributeResource.
+      operationId: createUniqueAttributeResource
       parameters:
         - name: token
           in: header
@@ -2593,8 +2591,6 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
 
       x-codeSamples:
         - lang: 'cURL'
@@ -2644,7 +2640,7 @@ paths:
       tags:
         - Admin
       summary: Update unique attribute
-      operationId: update a unique attribute setting for resource
+      operationId: updateUniqueAttributeResource
       parameters:
         - name: token
           in: header
@@ -2653,8 +2649,6 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
 
       x-codeSamples:
         - lang: 'cURL'
@@ -2711,7 +2705,7 @@ paths:
       tags:
         - Admin
       summary: Delete unique attribute
-      operationId: delete a unique attribute setting for resource
+      operationId: deleteUniqueAttributeResource
       parameters:
         - name: token
           in: header
@@ -2720,8 +2714,6 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
         - name: id
           in: query
           description: 'Valid DX(Data exchange) resource id'
