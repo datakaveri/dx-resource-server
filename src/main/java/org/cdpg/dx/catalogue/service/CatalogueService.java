@@ -10,9 +10,12 @@ import io.vertx.core.json.JsonObject;
 @VertxGen
 @ProxyGen
 public interface CatalogueService {
-    @GenIgnore
-    static CatalogueService createProxy(Vertx vertx, String address) {
-        return new CatalogueServiceVertxEBProxy(vertx, address);
-    }
-    Future<JsonObject> fetchCatalogueInfo(String id);
+  @GenIgnore
+  static CatalogueService createProxy(Vertx vertx, String address) {
+    return new CatalogueServiceVertxEBProxy(vertx, address);
+  }
+
+  Future<JsonObject> fetchCatalogueInfo(String id);
+
+  Future<String> getProviderOwnerId(String id);
 }

@@ -1,18 +1,28 @@
 package org.cdpg.dx.auditing.model;
+
 import io.vertx.core.json.JsonObject;
 
 public class RsAuditLog implements AuditLog {
-  private String primaryKey;
-  private String userid;
-  private String id;
-  private String api;
-  private long responseSize;
-  private long epochTime;
-  private String isoTime;
-  private String delegatorId;
-  private String origin;
+  private final String primaryKey;
+  private final String userid;
+  private final String id;
+  private final String api;
+  private final long responseSize;
+  private final long epochTime;
+  private final String isoTime;
+  private final String delegatorId;
+  private final String origin;
 
-  public RsAuditLog(String primaryKey, String userid, String id, String api, long responseSize, long epochTime, String isoTime, String delegatorId, String origin) {
+  public RsAuditLog(
+      String primaryKey,
+      String userid,
+      String id,
+      String api,
+      long responseSize,
+      long epochTime,
+      String isoTime,
+      String delegatorId,
+      String origin) {
     this.primaryKey = primaryKey;
     this.userid = userid;
     this.id = id;
@@ -23,6 +33,7 @@ public class RsAuditLog implements AuditLog {
     this.delegatorId = delegatorId;
     this.origin = origin;
   }
+
   @Override
   public JsonObject toJson() {
     JsonObject json = new JsonObject();
@@ -37,4 +48,6 @@ public class RsAuditLog implements AuditLog {
     json.put("origin", origin);
     return json;
   }
+  // TODO: Other values are taken out from auditing server while refactoring like providerId,
+  // resourcegroup, events etc...
 }

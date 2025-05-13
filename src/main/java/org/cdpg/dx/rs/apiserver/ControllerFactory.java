@@ -18,6 +18,8 @@ import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.rs.latest.controller.LatestController;
 import org.cdpg.dx.rs.subscription.SubscriptionController;
 import org.cdpg.dx.rs.search.controller.SearchController;
+import org.cdpg.dx.rs.subscription.dao.SubscriptionServiceDAO;
+import org.cdpg.dx.rs.subscription.dao.impl.SubscriptionServiceDAOImpl;
 import org.cdpg.dx.uniqueattribute.service.UniqueAttributeService;
 
 
@@ -35,7 +37,7 @@ public class ControllerFactory {
     private String timeLimit;
     private RedisService redisService;
     private UniqueAttributeService uniqueAttributeService;
-
+    private SubscriptionServiceDAO subscriptionServiceDAO;
 
     public ControllerFactory(JsonObject config, boolean isTimeLimitEnabled, String dxApiBasePath, Vertx vertx) {
         this.isTimeLimitEnabled = isTimeLimitEnabled;
@@ -48,7 +50,7 @@ public class ControllerFactory {
     }
 
     public List<ApiController> createControllers() {
-        return List.of(new SubscriptionController(vertx, pgService, brokerService, catService, revokedService),
+        return List.of(new SubscriptionController(vertx, subscriptionServiceDAO, brokerService, catService, revokedService),
                 new SearchController(esService, catService, tenantPrefix, timeLimit,revokedService),
                 new LatestController(redisService, tenantPrefix, uniqueAttributeService,revokedService,catService));
     }
@@ -61,5 +63,9 @@ public class ControllerFactory {
         revokedService = RevokedService.createProxy(vertx, REVOKED_SERVICE_ADDRESS);
         redisService = RedisService.createProxy(vertx, REDIS_SERVICE_ADDRESS);
         uniqueAttributeService = UniqueAttributeService.createProxy(vertx, UNIQUE_ATTRIBUTE_SERVICE_ADDRESS);
+        initialization();
     }
+  private void initialization(){
+    subscriptionServiceDAO = new SubscriptionServiceDAOImpl(pgService);
+  }
 }

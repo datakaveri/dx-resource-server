@@ -11,36 +11,32 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.catalogue.service.CatalogueService;
 import org.cdpg.dx.database.postgres.models.*;
-import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.databroker.model.ExchangeSubscribersResponse;
 import org.cdpg.dx.databroker.model.RegisterExchangeModel;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.databroker.util.PermissionOpType;
 import org.cdpg.dx.databroker.util.Vhosts;
+import org.cdpg.dx.rs.ingestion.dao.IngestionDAO;
 import org.cdpg.dx.rs.ingestion.model.AdapterMetaDataModel;
+import org.cdpg.dx.rs.ingestion.model.IngestionDTO;
 
 public class IngestionServiceImpl implements IngestionService {
   private static final Logger LOGGER = LogManager.getLogger(IngestionServiceImpl.class);
   private final DataBrokerService dataBroker;
-  private final PostgresService postgresService;
+  private final IngestionDAO ingestionDAO;
   private final CatalogueService catalogueService;
 
   public IngestionServiceImpl(
-      CatalogueService catalogueService,
-      DataBrokerService dataBroker,
-      PostgresService postgresService) {
+      CatalogueService catalogueService, DataBrokerService dataBroker, IngestionDAO ingestionDAO) {
     this.catalogueService = catalogueService;
     this.dataBroker = dataBroker;
-    this.postgresService = postgresService;
+    this.ingestionDAO = ingestionDAO;
   }
 
   private static String getResourceGroup(JsonObject catalogueResult) {
@@ -52,12 +48,12 @@ public class IngestionServiceImpl implements IngestionService {
       }
     } catch (Exception ex) {
       LOGGER.error("Error while getting resourceGroup {}", ex.getMessage());
-      return null;
+      return ex.getMessage();
     }
   }
 
   private static String getRoutingKey(String entitiesId, JsonObject cacheServiceResult) {
-    String routingKey = null;
+    String routingKey;
     try {
       Set<String> type = new HashSet<String>(cacheServiceResult.getJsonArray("type").getList());
       Set<String> itemTypeSet = type.stream().map(e -> e.split(":")[1]).collect(Collectors.toSet());
@@ -73,50 +69,23 @@ public class IngestionServiceImpl implements IngestionService {
       }
     } catch (Exception ex) {
       LOGGER.error("Error while getting resourceGroup {}", ex.getMessage());
-      return null;
+      return ex.getMessage();
     }
     return routingKey;
-  }
-
-  private static InsertQuery getInsertQuery(
-      String userId, JsonObject cacheServiceResult, String exchangeName) {
-    List<String> columns =
-        List.of(
-            "exchange_name",
-            "resource_id",
-            "dataset_name",
-            "dataset_details_json",
-            "user_id",
-            "providerid");
-    List<Object> values =
-        List.of(
-            exchangeName,
-            cacheServiceResult.getString("id"),
-            cacheServiceResult.getString("name"),
-            cacheServiceResult.toString(),
-            userId,
-            cacheServiceResult.getString("provider"));
-    return new InsertQuery("adaptors_details", columns, values);
   }
 
   @Override
   public Future<RegisterExchangeModel> registerAdapter(String entitiesId, String userId) {
     Promise<RegisterExchangeModel> promise = Promise.promise();
-    if(entitiesId == null || entitiesId.isEmpty() || userId == null || userId.isEmpty()) {
+    if (entitiesId == null || entitiesId.isEmpty() || userId == null || userId.isEmpty()) {
       promise.fail(new ServiceException(ERROR_BAD_REQUEST, "Invalid input or blank value"));
       return promise.future();
     }
-    Condition conditionComponent =
-        new Condition("exchange_name", Condition.Operator.EQUALS, List.of(entitiesId));
-    SelectQuery selectQuery =
-        new SelectQuery(
-            "adaptors_details", List.of("*"), conditionComponent, null, null, null, null);
-    postgresService
-        .select(selectQuery)
+    ingestionDAO
+        .getAdapterDetailsByExchangeName(entitiesId)
         .onSuccess(
             postgresHandler -> {
-              var result = postgresHandler.getRows();
-              if (!result.isEmpty()) {
+              if (!postgresHandler.isEmpty()) {
                 LOGGER.error("Adapter already exists, conflict");
                 // TODO: change to DXException
                 promise.fail(new ServiceException(ERROR_CONFLICT, EXCHANGE_EXISTS));
@@ -190,13 +159,21 @@ public class IngestionServiceImpl implements IngestionService {
                     .compose(
                         registerExchangeHandler -> {
                           LOGGER.debug("Success : Subscription-Monitoring Queue Binding");
-                          InsertQuery insertQuery =
-                              getInsertQuery(
-                                  userId,
-                                  registerExchangeHandler.catalogueResult(),
-                                  registerExchangeHandler.registerExchange().getExchangeName());
-                          return postgresService
-                              .insert(insertQuery)
+                          return ingestionDAO
+                              .insertAdapterDetails(
+                                  new IngestionDTO(
+                                      null,
+                                      registerExchangeHandler.registerExchange().getExchangeName(),
+                                      registerExchangeHandler.catalogueResult().getString("id"),
+                                      registerExchangeHandler.catalogueResult().getString("name"),
+                                      registerExchangeHandler.catalogueResult(),
+                                      userId,
+                                      null,
+                                      null,
+                                      UUID.fromString(
+                                          registerExchangeHandler
+                                              .catalogueResult()
+                                              .getString("provider"))))
                               .map(pgHandler -> registerExchangeHandler);
                         })
                     .onSuccess(
@@ -234,11 +211,7 @@ public class IngestionServiceImpl implements IngestionService {
         .compose(
             updatePermissionHandler -> {
               LOGGER.info("Permission deleted for exchange successfully");
-              Condition exchangeCondition =
-                  new Condition("exchange_name", Condition.Operator.EQUALS, List.of(exchangeName));
-              DeleteQuery deleteQuery =
-                  new DeleteQuery("adaptors_details", exchangeCondition, null, null);
-              return postgresService.delete(deleteQuery);
+              return ingestionDAO.deleteAdapterByExchangeName(exchangeName);
             })
         .onSuccess(
             pgHandler -> {
@@ -252,6 +225,7 @@ public class IngestionServiceImpl implements IngestionService {
             });
     return promise.future();
   }
+
   @Override
   public Future<ExchangeSubscribersResponse> getAdapterDetails(String exchangeName) {
     Promise<ExchangeSubscribersResponse> promise = Promise.promise();
@@ -278,8 +252,8 @@ public class IngestionServiceImpl implements IngestionService {
             catalogueResult -> {
               String resourceGroupId = getResourceGroup(catalogueResult);
               if (resourceGroupId == null) {
-                return Future.failedFuture(new ServiceException(
-                        ERROR_BAD_REQUEST, "resourceGroupId not found"));
+                return Future.failedFuture(
+                    new ServiceException(ERROR_BAD_REQUEST, "resourceGroupId not found"));
               }
 
               LOGGER.debug("Info : resourceGroupId  " + resourceGroupId);
@@ -292,12 +266,12 @@ public class IngestionServiceImpl implements IngestionService {
                 jsonObject.put(ID, entities);
               }
               LOGGER.trace(request);
-              LOGGER.debug("Info : routingKey  " + routingKey);
+              LOGGER.debug("Info : routingKey {}", routingKey);
               return dataBroker.publishMessageExternal(resourceGroupId, routingKey, request);
             })
         .onSuccess(
             resultHandler -> {
-              LOGGER.info("result handler ::" + resultHandler);
+              LOGGER.info("result handler ::{}", resultHandler);
               if (resultHandler.equalsIgnoreCase("success")) {
                 promise.complete();
               }
@@ -321,12 +295,7 @@ public class IngestionServiceImpl implements IngestionService {
         .compose(
             catalogueResult -> {
               String providerId = catalogueResult.getString("provider");
-              Condition conditionComponent =
-                  new Condition("providerid", Condition.Operator.EQUALS, List.of(providerId));
-              SelectQuery selectQuery =
-                  new SelectQuery(
-                      "adaptors_details", List.of("*"), conditionComponent, null, null, null, null);
-              return postgresService.select(selectQuery);
+              return ingestionDAO.getAllAdaptersDetailsByProviderId(providerId);
             })
         .onSuccess(
             postgresServiceHandler -> {

@@ -7,7 +7,6 @@ import static org.cdpg.dx.rs.subscription.util.Constants.*;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceException;
 import java.util.HashSet;
@@ -18,108 +17,27 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.catalogue.service.CatalogueService;
-import org.cdpg.dx.database.postgres.models.*;
-import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.databroker.model.RegisterQueueModel;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.databroker.util.PermissionOpType;
 import org.cdpg.dx.databroker.util.Vhosts;
+import org.cdpg.dx.rs.subscription.dao.SubscriptionServiceDAO;
 import org.cdpg.dx.rs.subscription.model.*;
 import org.cdpg.dx.rs.subscription.util.SubsType;
 
 public class SubscriptionServiceImpl implements SubscriptionService {
   private static final Logger LOGGER = LogManager.getLogger(SubscriptionServiceImpl.class);
-  private final PostgresService postgresService;
   private final DataBrokerService dataBrokerService;
   private final CatalogueService catalogueService;
+  private final SubscriptionServiceDAO subscriptionServiceDAO;
 
   public SubscriptionServiceImpl(
-      PostgresService postgresService,
+      SubscriptionServiceDAO subscriptionServiceDAO,
       DataBrokerService dataBrokerService,
       CatalogueService catalogueService) {
-    this.postgresService = postgresService;
+    this.subscriptionServiceDAO = subscriptionServiceDAO;
     this.dataBrokerService = dataBrokerService;
     this.catalogueService = catalogueService;
-  }
-
-  private static InsertQuery createSubQuery(
-      PostSubscriptionModel postSubscriptionModel,
-      SubscriptionMetaData subscriptionMetaDataResult,
-      SubsType subsType,
-      String queueName) {
-    String type =
-        subscriptionMetaDataResult.catalogueInfo().containsKey(RESOURCE_GROUP)
-            ? "RESOURCE"
-            : "RESOURCE_GROUP";
-    List<String> columns =
-        List.of(
-            "_id",
-            "_type",
-            "queue_name",
-            "entity",
-            "expiry",
-            "dataset_name",
-            "dataset_json",
-            "user_id",
-            "resource_group",
-            "provider_id",
-            "delegator_id",
-            "item_type");
-
-    List<Object> values =
-        List.of(
-            queueName,
-            subsType.type,
-            queueName,
-            postSubscriptionModel.getEntityId(),
-            postSubscriptionModel.getExpiry(),
-            subscriptionMetaDataResult.catalogueInfo().getString("name"),
-            subscriptionMetaDataResult.catalogueInfo().toString(),
-            postSubscriptionModel.getUserId(),
-            subscriptionMetaDataResult.catalogueInfo().getString(RESOURCE_GROUP),
-            subscriptionMetaDataResult.catalogueInfo().getString("provider"),
-            postSubscriptionModel.getDelegatorId(),
-            type);
-    return new InsertQuery("subscriptions", columns, values);
-  }
-
-  private static InsertQuery appendSubsQuery(
-      String subId,
-      String entities,
-      JsonObject catalogueResult,
-      SubsType subType,
-      PostSubscriptionModel postSubscriptionModel) {
-    String type = catalogueResult.containsKey(RESOURCE_GROUP) ? "RESOURCE" : "RESOURCE_GROUP";
-    List<String> columns =
-        List.of(
-            "_id",
-            "_type",
-            "queue_name",
-            "entity",
-            "expiry",
-            "dataset_name",
-            "dataset_json",
-            "user_id",
-            "resource_group",
-            "provider_id",
-            "delegator_id",
-            "item_type");
-
-    List<Object> values =
-        List.of(
-            subId,
-            subType.type,
-            subId,
-            entities,
-            postSubscriptionModel.getExpiry(),
-            catalogueResult.getString("name"),
-            catalogueResult.toString(),
-            postSubscriptionModel.getUserId(),
-            catalogueResult.getString(RESOURCE_GROUP),
-            catalogueResult.getString("provider"),
-            postSubscriptionModel.getDelegatorId(),
-            type);
-    return new InsertQuery("subscriptions", columns, values);
   }
 
   private static String getResourceGroup(JsonObject catalogueResult) {
@@ -136,7 +54,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   }
 
   private static String getRoutingKey(String entitiesId, JsonObject catalogueServiceResult) {
-    String routingKey = null;
+    String routingKey;
     try {
       Set<String> type = new HashSet<String>(catalogueServiceResult.getJsonArray("type").getList());
       Set<String> itemTypeSet = type.stream().map(e -> e.split(":")[1]).collect(Collectors.toSet());
@@ -157,23 +75,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     return routingKey;
   }
 
-  private static SelectQuery appendSelectQuery(
-      PostSubscriptionModel postSubscriptionModel, String subscriptionId) {
-    Condition queueNameCondition =
-        new Condition("queue_name", Condition.Operator.EQUALS, List.of(subscriptionId));
-    Condition entityCondition =
-        new Condition(
-            "entity", Condition.Operator.EQUALS, List.of(postSubscriptionModel.getEntityId()));
-    Condition condition =
-        new Condition(List.of(queueNameCondition, entityCondition), Condition.LogicalOperator.AND);
-    return new SelectQuery("subscriptions", List.of("*"), condition, null, null, null, null);
-  }
-
   @Override
   public Future<GetSubscriptionModel> getSubscription(String subscriptionId) {
     LOGGER.info("getSubscription() method started");
     Promise<GetSubscriptionModel> promise = Promise.promise();
-    LOGGER.info("sub id :: " + subscriptionId);
+    LOGGER.info("sub id :: {}", subscriptionId);
     getEntityName(subscriptionId)
         .compose(
             postgresSuccess -> {
@@ -201,16 +107,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     SubsType subType = SubsType.valueOf(postSubscriptionModel.getSubscriptionType());
     String entityId = postSubscriptionModel.getEntityId();
     String queueName = postSubscriptionModel.getUserId() + "/" + postSubscriptionModel.getName();
-    Condition condition =
-        new Condition("queue_name", Condition.Operator.EQUALS, List.of(queueName));
-    SelectQuery selectQuery =
-        new SelectQuery("subscriptions", List.of("queue_name"), condition, null, null, null, null);
-    postgresService
-        .select(selectQuery)
+    subscriptionServiceDAO
+        .getEntityIdByQueueName(queueName)
         .onSuccess(
             postgresHandler -> {
-              JsonArray result = postgresHandler.getRows();
-              if (!result.isEmpty()) {
+              if (!postgresHandler.equalsIgnoreCase("Not Found")) {
                 LOGGER.error("Queue already exists, conflict");
                 // TODO: change to DXException
                 promise.fail(new ServiceException(ERROR_CONFLICT, QUEUE_ALREADY_EXISTS));
@@ -247,11 +148,24 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     .compose(
                         updateHandler -> {
                           LOGGER.debug("update permission successful");
-                          InsertQuery insertQuery =
-                              createSubQuery(
-                                  postSubscriptionModel, updateHandler, subType, queueName);
-                          return postgresService
-                              .insert(insertQuery)
+                          String type = getType(updateHandler.catalogueInfo());
+                          return subscriptionServiceDAO
+                              .insertSubscription(
+                                  new SubscriptionDTO(
+                                      queueName,
+                                      subType.type,
+                                      queueName,
+                                      entityId,
+                                      postSubscriptionModel.getExpiry(),
+                                      updateHandler.catalogueInfo().getString("name"),
+                                      updateHandler.catalogueInfo(),
+                                      postSubscriptionModel.getUserId(),
+                                      updateHandler.catalogueInfo().getString(RESOURCE_GROUP),
+                                      updateHandler.catalogueInfo().getString(PROVIDER),
+                                      postSubscriptionModel.getDelegatorId(),
+                                      type,
+                                      null,
+                                      null))
                               .map(postgres -> updateHandler.registerQueueModel());
                         })
                     .onSuccess(
@@ -290,40 +204,26 @@ public class SubscriptionServiceImpl implements SubscriptionService {
   }
 
   @Override
-  public Future<String> updateSubscription(String entities, String queueName, String expiry) {
+  public Future<String> updateSubscription(String entityId, String queueName, String expiry) {
     LOGGER.info("updateSubscription() method started");
     Promise<String> promise = Promise.promise();
-    List<String> columns = List.of("*");
-    Condition queueNameCondition =
-        new Condition("queue_name", Condition.Operator.EQUALS, List.of(queueName));
-    Condition entityCondition =
-        new Condition("entity", Condition.Operator.EQUALS, List.of(entities));
-
-    Condition condition =
-        new Condition(List.of(queueNameCondition, entityCondition), Condition.LogicalOperator.AND);
-    SelectQuery selectQuery =
-        new SelectQuery("subscriptions", columns, condition, null, null, null, null);
-
-    postgresService
-        .select(selectQuery)
+    subscriptionServiceDAO
+        .getSubscriptionByQueueNameAndEntityId(queueName, entityId)
         .compose(
             selectQueryHandler -> {
-              JsonArray resultRow = selectQueryHandler.getRows();
-              LOGGER.debug("selectQueryHandler   " + selectQueryHandler.getRows());
-              if (resultRow.isEmpty()) {
+              LOGGER.debug("selectQueryHandler {}", selectQueryHandler);
+              if (selectQueryHandler.isEmpty()) {
                 return Future.failedFuture(
                     new ServiceException(
                         ERROR_BAD_REQUEST, "Subscription not found for [queue,entity]"));
               }
-              UpdateQuery updateQuery =
-                  new UpdateQuery(
-                      "subscriptions", List.of("expiry"), List.of(expiry), condition, null, null);
-              return postgresService.update(updateQuery);
+              return subscriptionServiceDAO.updateSubscriptionExpiryByQueueNameAndEntityId(
+                  queueName, entityId, expiry);
             })
         .onSuccess(
             pgHandler -> {
               LOGGER.debug("updated in subscription successful");
-              promise.complete(entities);
+              promise.complete(entityId);
             })
         .onFailure(
             failure -> {
@@ -373,50 +273,66 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         .compose(
             catalogueResult -> {
               LOGGER.trace("appendStreaming successful ");
-              SelectQuery selectQuery = appendSelectQuery(postSubscriptionModel, subscriptionId);
-              return postgresService
-                  .select(selectQuery)
-                  .map(selectHandler -> new AppendMetaData(selectHandler, catalogueResult));
+              return subscriptionServiceDAO
+                  .getSubscriptionByQueueNameAndEntityId(
+                      subscriptionId, postSubscriptionModel.getEntityId())
+                  .map(appendSelectQuery -> new AppendMetaData(appendSelectQuery, catalogueResult));
             })
         .compose(
             selectSuccess -> {
-              LOGGER.trace("catalogueResult: " + selectSuccess.catalogue().toString());
-              if (selectSuccess.selectQueryResult().getRows().isEmpty()) {
+              LOGGER.trace("catalogueResult: {}", selectSuccess.catalogue().toString());
+              if (selectSuccess.appendSelectQueryResult().isEmpty()) {
                 SubsType subType = SubsType.valueOf(postSubscriptionModel.getSubscriptionType());
-                InsertQuery insertQuery =
-                    appendSubsQuery(
+                String type = getType(selectSuccess.catalogue());
+                return subscriptionServiceDAO.insertSubscription(
+                    new SubscriptionDTO(
+                        subscriptionId,
+                        subType.type,
                         subscriptionId,
                         entityId,
+                        postSubscriptionModel.getExpiry(),
+                        selectSuccess.catalogue().getString("name"),
                         selectSuccess.catalogue(),
-                        subType,
-                        postSubscriptionModel);
-                return postgresService.insert(insertQuery);
+                        postSubscriptionModel.getUserId(),
+                        selectSuccess.catalogue().getString(RESOURCE_GROUP),
+                        selectSuccess.catalogue().getString(PROVIDER),
+                        postSubscriptionModel.getDelegatorId(),
+                        type,
+                        null,
+                        null));
               } else {
-                return Future.succeededFuture(new QueryResult());
+                return Future.succeededFuture();
               }
             })
         .onSuccess(
             subscriptionDataResultSuccess -> {
+              LOGGER.info("successfully subs data inserted");
               promise.complete(postSubscriptionModel.getEntityId());
             })
         .onFailure(
             failed -> {
-              LOGGER.error("Failed :: " + failed);
+              LOGGER.error("Failed :: {}", failed.getMessage());
               promise.fail(failed);
             });
     return promise.future();
   }
 
+  private String getType(JsonObject catalogue) {
+    return catalogue.containsKey(RESOURCE_GROUP) ? "RESOURCE" : "RESOURCE_GROUP";
+  }
+
   @Override
   public Future<String> deleteSubscription(String subscriptionId, String userid) {
     LOGGER.info("deleteSubscription() method started");
-    LOGGER.info("queueName to delete :: " + subscriptionId);
+    LOGGER.info("queueName to delete :: {}", subscriptionId);
     Promise<String> promise = Promise.promise();
     getEntityName(subscriptionId)
         .compose(
             foundEntityId -> {
               LOGGER.debug("entityId found {}", foundEntityId);
-              return deleteSubscriptionFromPg(subscriptionId).map(result -> foundEntityId);
+              return subscriptionServiceDAO
+                  .deleteSubscriptionBySubId(subscriptionId)
+                  .map(result -> foundEntityId);
             })
         .compose(
             postgresSuccess -> {
@@ -436,44 +352,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     return promise.future();
   }
 
-  private Future<Void> deleteSubscriptionFromPg(String subscriptionId) {
-    Promise<Void> promise = Promise.promise();
-    Condition condition =
-        new Condition("queue_name", Condition.Operator.EQUALS, List.of(subscriptionId));
-    DeleteQuery deleteQuery = new DeleteQuery("subscriptions", condition, null, null);
-
-    postgresService
-        .delete(deleteQuery)
-        .onComplete(
-            pgHandler -> {
-              if (pgHandler.succeeded()) {
-                LOGGER.debug("deleted from postgres");
-                promise.complete();
-              } else {
-                LOGGER.error("fail here");
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
-              }
-            });
-    return promise.future();
-  }
-
   @Override
   public Future<List<SubscriberDetails>> getAllSubscriptionQueueForUser(String userId) {
-    LOGGER.info("getAllSubscriptionQueueForUser() method started" + userId);
+    LOGGER.info("getAllSubscriptionQueueForUser() method started{}", userId);
     Promise<List<SubscriberDetails>> promise = Promise.promise();
-    List<String> columns = List.of("queue_name as queueName", "entity", "dataset_json as catItem");
-    Condition conditionComponent =
-        new Condition("user_id", Condition.Operator.EQUALS, List.of(userId));
-    SelectQuery selectQuery =
-        new SelectQuery("subscriptions", columns, conditionComponent, null, null, null, null);
-    postgresService
-        .select(selectQuery)
+    subscriptionServiceDAO
+        .getSubscriptionByUserId(userId)
         .onComplete(
             pgHandler -> {
-              if (pgHandler.succeeded()) {
-                JsonArray result = pgHandler.result().getRows();
+              LOGGER.info(
+                  "pg handler : {} and size {}",
+                  pgHandler.result().isEmpty(),
+                  pgHandler.result().size());
+              if (!pgHandler.result().isEmpty()) {
                 List<SubscriberDetails> subscriberDetails =
-                    result.stream()
+                    pgHandler.result().stream()
                         .map(obj -> new SubscriberDetails((JsonObject) obj))
                         .collect(Collectors.toList());
                 promise.complete(subscriberDetails);
@@ -486,23 +379,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
   private Future<String> getEntityName(String subscriptionId) {
     Promise<String> promise = Promise.promise();
-    Condition conditionComponent =
-        new Condition("queue_name", Condition.Operator.EQUALS, List.of(subscriptionId));
-    SelectQuery selectQuery =
-        new SelectQuery(
-            "subscriptions", List.of("entity"), conditionComponent, null, null, null, null);
-
-    postgresService
-        .select(selectQuery)
+    subscriptionServiceDAO
+        .getEntityIdByQueueName(subscriptionId)
         .onComplete(
-            pgHandler -> {
-              if (pgHandler.succeeded() && !pgHandler.result().getRows().isEmpty()) {
-                String entityId = pgHandler.result().getRows().getJsonObject(0).getString("entity");
-                LOGGER.debug("EntityId " + entityId);
-                promise.complete(entityId);
+            entityResult -> {
+              if (entityResult.succeeded()) {
+                if (entityResult.result().equalsIgnoreCase("Not Found")) {
+                  promise.fail(new ServiceException(ERROR_NOT_FOUND, NOT_FOUND_ERROR));
+                } else {
+                  promise.complete(entityResult.result());
+                }
               } else {
-                LOGGER.info("Empty response from database. EntityId not found");
-                promise.fail(new ServiceException(ERROR_NOT_FOUND, NOT_FOUND_ERROR));
+                LOGGER.error("error:: {}", entityResult.cause().getMessage());
+                promise.fail(entityResult.cause());
               }
             });
     return promise.future();

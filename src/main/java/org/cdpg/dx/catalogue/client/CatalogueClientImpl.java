@@ -5,9 +5,11 @@ import static org.cdpg.dx.common.ErrorCode.ERROR_NOT_FOUND;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.predicate.ResponsePredicate;
 import io.vertx.serviceproxy.ServiceException;
+import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -65,9 +67,9 @@ public class CatalogueClientImpl implements CatalogueClient {
   }
 
   @Override
-  public Future<JsonArray> getCatalogueInfoForId(String id) {
+  public Future<Optional<JsonArray>> getCatalogueInfoForId(String id) {
     LOGGER.debug("get cat info for id: {} ", id);
-    Promise<JsonArray> promise = Promise.promise();
+    Promise<Optional<JsonArray>> promise = Promise.promise();
     String url = catBasePath + "/search";
     webClient
         .get(catPort, catHost, url)
@@ -81,11 +83,47 @@ public class CatalogueClientImpl implements CatalogueClient {
         .send(
             catHandler -> {
               if (catHandler.succeeded()) {
-                JsonArray response = catHandler.result().bodyAsJsonObject().getJsonArray("results");
-                promise.complete(response);
+                JsonObject responseJson = catHandler.result().bodyAsJsonObject();
+                JsonArray response = responseJson.getJsonArray("results");
+                promise.complete(Optional.ofNullable(response));
               } else {
                 LOGGER.error("catalogue call search api failed: " + catHandler.cause());
                 promise.fail(new ServiceException(ERROR_NOT_FOUND, "Failed to call catalogue"));
+              }
+            });
+
+    return promise.future();
+  }
+
+  @Override
+  public Future<String> getProviderOwnerUserId(String id) {
+    LOGGER.trace("get cat provider info for id: {} ", id);
+    Promise<String> promise = Promise.promise();
+    String relationshipCatPath = catBasePath + "/relationship";
+    webClient
+        .get(catPort, catHost, relationshipCatPath)
+        .addQueryParam("id", id)
+        .addQueryParam("rel", "provider")
+        .expect(ResponsePredicate.JSON)
+        .send(
+            catHandler -> {
+              if (catHandler.succeeded()) {
+                JsonArray response = catHandler.result().bodyAsJsonObject().getJsonArray("results");
+                response.forEach(
+                    json -> {
+                      JsonObject res = (JsonObject) json;
+                      String providerUserId;
+                      providerUserId = res.getString("providerUserId");
+                      if (providerUserId == null) {
+                        providerUserId = res.getString("ownerUserId");
+                        LOGGER.info(" owneruserid : {}", providerUserId);
+                      }
+                      promise.complete(providerUserId);
+                    });
+              } else {
+                LOGGER.error(
+                    "Failed to call catalogue while getting provider user id {}",
+                    catHandler.cause().getMessage());
               }
             });
 
