@@ -48,6 +48,7 @@ public class AdminServiceImpl implements AdminService {
 
   @Override
   public Future<Void> revokedTokenRequest(String userId) {
+      LOGGER.debug("Inside revoked Token request");
     Promise<Void> promise = Promise.promise();
     SelectQuery selectQuery = selectRevokedTokenQuery(userId);
     JsonObject rmqMessage = new JsonObject();

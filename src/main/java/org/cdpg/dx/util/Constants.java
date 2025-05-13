@@ -1,6 +1,8 @@
 package org.cdpg.dx.util;
 
 import io.vertx.core.http.HttpMethod;
+import org.checkerframework.checker.units.qual.A;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -79,6 +81,11 @@ public class Constants {
   public static final String RESET_PASSWORD = "resetPassword";
   public static final String ASYNC_SEARCH = "asyncSearch";
   public static final String ASYNC_SEARCH_STATUS = "asyncSearchStatus";
+  public static final String REVOKE_TOKEN = "revokeUserToken";
+  public static final String POST_RESOURCE_ATTRIBUTE= "createUniqueAttributeResource";
+  public static final String UPDATE_RESOURCE_ATTRIBUTE= "updateUniqueAttributeResource";
+  public static final String DELETE_RESOURCE_ATTRIBUTE= "deleteUniqueAttributeResource";
+
 
   public static final String EVENT = "event";
   public static final String API_ENDPOINT = "apiEndpoint";
@@ -118,7 +125,6 @@ public class Constants {
 
   public static final List<String> openEndPoints =
       List.of("/temporal/entities", "/entities", "/entityOperations/query");
-  public static final String REVOKE_TOKEN = "/revokeToken";
   public static final String RESOURCE_ATTRIBS = "/resourceattribute";
   public static final String ADMIN = "/admin";
 
