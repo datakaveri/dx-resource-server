@@ -10,7 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.database.redis.service.RedisService;
 import org.cdpg.dx.database.redis.service.RedisServiceImpl;
 
-import static org.cdpg.dx.common.util.ProxyAddressConstants.REDIS_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.config.ServiceProxyAddressConstants.REDIS_SERVICE_ADDRESS;
 
 
 public class RedisVerticle extends AbstractVerticle {

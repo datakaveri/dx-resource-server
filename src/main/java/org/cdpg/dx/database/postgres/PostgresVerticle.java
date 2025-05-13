@@ -1,6 +1,6 @@
 package org.cdpg.dx.database.postgres;
 
-import static org.cdpg.dx.common.util.ProxyAddressConstants.PG_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.config.ServiceProxyAddressConstants.POSTGRES_SERVICE_ADDRESS;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -36,7 +36,7 @@ public class PostgresVerticle extends AbstractVerticle {
       this.pgService = new PostgresServiceImpl(this.pool);
       this.binder = new ServiceBinder(vertx);
       this.consumer =
-          binder.setAddress(PG_SERVICE_ADDRESS).register(PostgresService.class, pgService);
+          binder.setAddress(POSTGRES_SERVICE_ADDRESS).register(PostgresService.class, pgService);
 
       LOGGER.info("PostgresVerticle started successfully.");
     } catch (Exception e) {

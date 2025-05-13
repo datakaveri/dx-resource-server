@@ -2,7 +2,7 @@ package org.cdpg.dx.database.elastic.model;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.cdpg.dx.common.models.ResponseUrn;
+import org.cdpg.dx.common.ResponseUrn;
 import org.cdpg.dx.database.elastic.exception.EsQueryException;
 import org.cdpg.dx.database.elastic.util.QueryType;
 

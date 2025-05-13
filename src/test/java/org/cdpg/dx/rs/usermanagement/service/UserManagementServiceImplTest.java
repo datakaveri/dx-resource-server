@@ -1,6 +1,6 @@
 package org.cdpg.dx.rs.usermanagement.service;
 
-import static org.cdpg.dx.common.util.ProxyAddressConstants.DATA_BROKER_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.config.ServiceProxyAddressConstants.DATA_BROKER_SERVICE_ADDRESS;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.vertx.core.DeploymentOptions;

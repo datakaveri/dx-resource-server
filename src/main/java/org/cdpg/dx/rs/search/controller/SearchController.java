@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
 import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
 import org.cdpg.dx.catalogue.service.CatalogueService;
+import org.cdpg.dx.common.ResponseUrn;
 import org.cdpg.dx.common.models.JwtData;
 import org.cdpg.dx.database.elastic.service.ElasticsearchService;
 import org.cdpg.dx.revoked.service.RevokedService;
@@ -21,7 +22,6 @@ import org.cdpg.dx.rs.search.service.SearchApiServiceImpl;
 import org.cdpg.dx.rs.search.util.RequestType;
 
 import org.cdpg.dx.rs.search.util.ResponseModel;
-import org.cdpg.dx.util.ResponseUrn;
 import org.cdpg.dx.util.RoutingContextHelper;
 import org.cdpg.dx.validations.idhandler.GetIdFromBodyHandler;
 import org.cdpg.dx.validations.idhandler.GetIdFromParams;

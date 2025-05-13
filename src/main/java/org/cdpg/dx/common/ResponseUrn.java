@@ -1,4 +1,4 @@
-package org.cdpg.dx.common.models;
+package org.cdpg.dx.common;
 
 import java.util.stream.Stream;
 
@@ -28,7 +28,7 @@ public enum ResponseUrn {
       "urn:dx:acl:invalidPayloadFormat", "Invalid json format in post request [schema mismatch]"),
   BAD_REQUEST_URN("urn:dx:acl:badRequest", "bad request parameter"),
   INVALID_HEADER_VALUE_URN("urn:dx:acl:invalidHeaderValue", "Invalid header value"),
-  POLICY_ALREADY_EXIST_URN("urn:dx:acl:conflict", "Policy already exist"),
+  ACCESS_REQUEST_EXISTS_URN("urn:dx:acl:conflict", "Access request already exists"),
   INTERNAL_SERVER_ERROR("urn:dx:acl:internalServerError", "Internal Server Error"),
 
   VERIFY_FORBIDDEN_URN("urn:apd:Deny", "Policy does not exist"),

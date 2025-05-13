@@ -1,7 +1,7 @@
 package org.cdpg.dx.rs.ingestion.service;
 
-import static org.cdpg.dx.common.util.ProxyAddressConstants.DATA_BROKER_SERVICE_ADDRESS;
-import static org.cdpg.dx.common.util.ProxyAddressConstants.PG_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.config.ServiceProxyAddressConstants.DATA_BROKER_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.config.ServiceProxyAddressConstants.POSTGRES_SERVICE_ADDRESS;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -157,7 +157,7 @@ $$ LANGUAGE plpgsql;
             })
         .compose(
             v -> {
-              postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
+              postgresService = PostgresService.createProxy(vertx, POSTGRES_SERVICE_ADDRESS);
               dataBrokerService = DataBrokerService.createProxy(vertx, DATA_BROKER_SERVICE_ADDRESS);
               catalogueService = Mockito.mock(CatalogueServiceImpl.class);
               ingestionDAOImpl = new IngestionDAOImpl(postgresService);
