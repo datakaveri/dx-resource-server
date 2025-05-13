@@ -1113,7 +1113,7 @@ paths:
         Based on the input provided, the API validates the access control of the user with DX(Data exchange) Auth server to allow or deny access to the API.'
 
 
-      operationId: getAdapterexchangeList
+      operationId: getAdapterExchangeList
       parameters:
         - name: token
           in: header
@@ -1122,7 +1122,6 @@ paths:
           style: simple
           schema:
             type: string
-            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
       responses:
         200:
           description: 'Successfully retrieving list of all adapter exchanges'
@@ -1159,7 +1158,6 @@ paths:
           style: simple
           schema:
             type: string
-            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
       x-codeSamples:
         - lang: 'cURL'
@@ -1231,7 +1229,6 @@ paths:
           style: simple
           schema:
             type: string
-            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
         - name: id
           in: path
@@ -1294,7 +1291,6 @@ paths:
           style: simple
           schema:
             type: string
-            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
         - name: id
           in: path
@@ -1350,7 +1346,7 @@ paths:
       tags:
         - Data Ingestion Adaptor
       summary: Ingestion adapter
-      operationId: PostingestionAdaptorEntities
+      operationId: postIngestionAdaptorEntities
       parameters:
         - name: token
           in: header
@@ -1359,8 +1355,6 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
 
       x-codeSamples:
         - lang: 'cURL'
@@ -1430,7 +1424,7 @@ paths:
           style: simple
           schema:
             type: string
-            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
+
       responses:
         200:
           description: 'Successfully retrieving list of all subscription queues'
@@ -1471,7 +1465,6 @@ paths:
           style: simple
           schema:
             type: string
-            pattern: '^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$'
 
         - name: options
           in: header

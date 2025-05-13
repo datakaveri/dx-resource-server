@@ -61,6 +61,7 @@ public class Constants {
               HttpMethod.DELETE,
               HttpMethod.PATCH,
               HttpMethod.PUT));
+
   // Request's operationIds
   public static final String GET_SPATIAL_DATA = "getSpatialData";
   public static final String GET_LATEST_ENTITY_DATA = "getLatestEntityData";
@@ -85,7 +86,11 @@ public class Constants {
   public static final String POST_RESOURCE_ATTRIBUTE= "createUniqueAttributeResource";
   public static final String UPDATE_RESOURCE_ATTRIBUTE= "updateUniqueAttributeResource";
   public static final String DELETE_RESOURCE_ATTRIBUTE= "deleteUniqueAttributeResource";
-
+  public static final String GET_ADAPTER_LIST = "getAdapterExchangeList";
+  public static final String POST_ATTRIBUTES = "registerAdapter";
+  public static final String GET_ADAPTOR_BY_ID = "getAdaptorDetailsById";
+  public static final String DELETE_ADAPTER_BY_ID = "deleteAdaptorById";
+  public static final String POST_INGESTION_ADAPTER_ENTITIES = "postIngestionAdaptorEntities";
 
   public static final String EVENT = "event";
   public static final String API_ENDPOINT = "apiEndpoint";
