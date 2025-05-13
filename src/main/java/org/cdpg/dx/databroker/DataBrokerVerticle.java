@@ -1,6 +1,6 @@
 package org.cdpg.dx.databroker;
 
-import static org.cdpg.dx.common.util.ProxyAddressConstants.*;
+import static org.cdpg.dx.common.config.ServiceProxyAddressConstants.*;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -121,11 +121,12 @@ public class DataBrokerVerticle extends AbstractVerticle {
 
     /* Create RabbitMQ listeners for revoke client queue, unique attribute queue and async query queue. */
     revokedService = RevokedService.createProxy(vertx, REVOKED_SERVICE_ADDRESS);
-    uniqueAttributeService = UniqueAttributeService.createProxy(vertx, UNIQUE_ATTRIBUTE_SERVICE_ADDRESS);
+    uniqueAttributeService =
+        UniqueAttributeService.createProxy(vertx, UNIQUE_ATTRIBUTE_SERVICE_ADDRESS);
     RevokeClientQlistener revokeQlistener =
-            new RevokeClientQlistener(iudxInternalRabbitMqClient, revokedService);
+        new RevokeClientQlistener(iudxInternalRabbitMqClient, revokedService);
     UniqueAttribQlistener uniqueAttrQlistener =
-            new UniqueAttribQlistener(iudxInternalRabbitMqClient, uniqueAttributeService);
+        new UniqueAttribQlistener(iudxInternalRabbitMqClient, uniqueAttributeService);
 
     revokeQlistener.start();
     uniqueAttrQlistener.start();

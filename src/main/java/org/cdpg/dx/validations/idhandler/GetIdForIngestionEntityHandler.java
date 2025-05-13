@@ -1,6 +1,6 @@
 package org.cdpg.dx.validations.idhandler;
 
-import static org.cdpg.dx.util.ResponseUrn.*;
+import static org.cdpg.dx.common.ResponseUrn.*;
 import static org.cdpg.dx.validations.util.Constants.*;
 
 import io.vertx.core.Handler;
@@ -12,8 +12,8 @@ import java.util.HashSet;
 import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cdpg.dx.util.HttpStatusCode;
-import org.cdpg.dx.util.ResponseUrn;
+import org.cdpg.dx.common.HttpStatusCode;
+import org.cdpg.dx.common.ResponseUrn;
 import org.cdpg.dx.util.RoutingContextHelper;
 
 public class GetIdForIngestionEntityHandler implements Handler<RoutingContext> {

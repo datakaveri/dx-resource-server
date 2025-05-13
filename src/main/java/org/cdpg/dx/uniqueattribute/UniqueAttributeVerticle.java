@@ -1,5 +1,7 @@
 package org.cdpg.dx.uniqueattribute;
 
+import static org.cdpg.dx.common.config.ServiceProxyAddressConstants.*;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
@@ -12,9 +14,6 @@ import org.cdpg.dx.uniqueattribute.client.UniqueAttributeClientImpl;
 import org.cdpg.dx.uniqueattribute.service.UniqueAttributeService;
 import org.cdpg.dx.uniqueattribute.service.UniqueAttributeServiceImpl;
 
-import static org.cdpg.dx.common.util.ProxyAddressConstants.PG_SERVICE_ADDRESS;
-import static org.cdpg.dx.common.util.ProxyAddressConstants.UNIQUE_ATTRIBUTE_SERVICE_ADDRESS;
-
 public class UniqueAttributeVerticle extends AbstractVerticle {
   private static final Logger LOGGER = LogManager.getLogger(UniqueAttributeVerticle.class);
   private UniqueAttributeClient uniqueAttributeClient;
@@ -26,9 +25,9 @@ public class UniqueAttributeVerticle extends AbstractVerticle {
   @Override
   public void start() throws Exception {
     binder = new ServiceBinder(vertx);
-    postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
+    postgresService = PostgresService.createProxy(vertx, POSTGRES_SERVICE_ADDRESS);
     uniqueAttributeClient = new UniqueAttributeClientImpl(postgresService);
-    uniqueAttributeService = new UniqueAttributeServiceImpl(vertx,uniqueAttributeClient);
+    uniqueAttributeService = new UniqueAttributeServiceImpl(vertx, uniqueAttributeClient);
 
     consumer =
         binder

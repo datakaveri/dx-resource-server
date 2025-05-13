@@ -1,10 +1,10 @@
 package org.cdpg.dx.database.elastic.exception;
 
+import static org.cdpg.dx.database.elastic.util.Constants.*;
+
 import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpStatus;
-import org.cdpg.dx.common.models.ResponseUrn;
-
-import static org.cdpg.dx.database.elastic.util.Constants.*;
+import org.cdpg.dx.common.ResponseUrn;
 
 public class EsQueryException extends RuntimeException {
 

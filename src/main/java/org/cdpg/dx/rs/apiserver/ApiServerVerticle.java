@@ -21,7 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.auth.authentication.client.SecretKeyClientImpl;
 import org.cdpg.dx.auth.authentication.handler.TokenAuthenticationHandler;
-import org.cdpg.dx.util.HttpStatusCode;
+import org.cdpg.dx.common.HttpStatusCode;
 
 public class ApiServerVerticle extends AbstractVerticle {
   private static final Logger LOGGER = LogManager.getLogger(ApiServerVerticle.class);

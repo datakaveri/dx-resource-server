@@ -1,6 +1,6 @@
 package org.cdpg.dx.catalogue;
 
-import static org.cdpg.dx.common.util.ProxyAddressConstants.CATALOGUE_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.config.ServiceProxyAddressConstants.CATALOGUE_SERVICE_ADDRESS;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.MessageConsumer;

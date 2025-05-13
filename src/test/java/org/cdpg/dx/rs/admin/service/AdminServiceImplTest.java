@@ -1,7 +1,7 @@
 package org.cdpg.dx.rs.admin.service;
 
-import static org.cdpg.dx.common.util.ProxyAddressConstants.DATA_BROKER_SERVICE_ADDRESS;
-import static org.cdpg.dx.common.util.ProxyAddressConstants.PG_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.config.ServiceProxyAddressConstants.DATA_BROKER_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.config.ServiceProxyAddressConstants.POSTGRES_SERVICE_ADDRESS;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.vertx.core.DeploymentOptions;
@@ -191,7 +191,7 @@ class AdminServiceImplTest {
   private Future<Void> setupServices(Vertx vertx) {
     Promise<Void> promise = Promise.promise();
 
-    postgresService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
+    postgresService = PostgresService.createProxy(vertx, POSTGRES_SERVICE_ADDRESS);
     dataBrokerService = DataBrokerService.createProxy(vertx, DATA_BROKER_SERVICE_ADDRESS);
     adminService = new AdminServiceImpl(postgresService, dataBrokerService);
 

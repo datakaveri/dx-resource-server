@@ -1,6 +1,6 @@
 package org.cdpg.dx.aaa.verticles;
 
-import static org.cdpg.dx.common.util.ProxyAddressConstants.AAA_SERVICE_ADDRESS;
+import static org.cdpg.dx.common.config.ServiceProxyAddressConstants.AAA_SERVICE_ADDRESS;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
