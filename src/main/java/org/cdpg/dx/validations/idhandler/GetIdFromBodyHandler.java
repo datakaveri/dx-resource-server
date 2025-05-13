@@ -33,29 +33,36 @@ public class GetIdFromBodyHandler implements Handler<RoutingContext> {
           .end(generateResponse(RESOURCE_NOT_FOUND_URN, statusCode).toString());
     }
   }
-
-  private String getIdFromBody(RoutingContext routingContext) {
-    JsonObject body;
-    body = routingContext.body().asJsonObject();
-
-    String id = null;
-    if (body != null) {
-      JsonArray array = body.getJsonArray(JSON_ENTITIES);
-      if (array != null) {
-        id = array.getString(0);
-      } else {
-        JsonObject json = array.getJsonObject(0);
-        if (json != null) {
-          id = json.getString(ID);
-          /*for something like this : "entities": [
-          {
-          "id": "UUID"
-          }
-          ]*/
-        }
-      }
+//
+//  private String getIdFromBody(RoutingContext routingContext) {
+//    JsonObject body = routingContext.body().asJsonObject();
+//    String id = null;
+//    if (body != null) {
+//      JsonArray array = body.getJsonArray(JSON_ENTITIES);
+//      if (array != null) {
+//        JsonObject json = array.getJsonObject(0);
+//        if (json != null) {
+//          id = json.getString(ID);
+//        }else id= array.getString(0);
+//      }
+//    }
+//    return id;
+//  }
+  public static String getIdFromBody(RoutingContext routingContext) {
+    JsonObject body = routingContext.body().asJsonObject();
+    JsonArray entities = body.getJsonArray("entities");
+    if (entities == null || entities.isEmpty()) {
+      return null;
     }
-    return id;
+
+    Object firstEntity = entities.getValue(0);
+    if (firstEntity instanceof JsonObject) {
+      return ((JsonObject) firstEntity).getString("id");
+    } else if (firstEntity instanceof String) {
+      return (String) firstEntity;
+    }
+
+    return null;
   }
 
   private JsonObject generateResponse(ResponseUrn urn, HttpStatusCode statusCode) {

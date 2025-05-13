@@ -60,7 +60,7 @@ public class Constants {
               HttpMethod.PATCH,
               HttpMethod.PUT));
   // Request's operationIds
-  public static final String GET_SPATIAL_DAT = "getSpatialData";
+  public static final String GET_SPATIAL_DATA = "getSpatialData";
   public static final String GET_LATEST_ENTITY_DATA = "getLatestEntityData";
   public static final String TEMPORAL_SEARCH = "temporalSearch";
   public static final String POST_TEMPORAL_SEARCH = "postTemporalSearch";
@@ -149,12 +149,17 @@ public class Constants {
   public static final String NGSILDQUERY_TIME_PROPERTY = "timeProperty";
   public static final String NGSILDQUERY_FROM = "offset";
   public static final String NGSILDQUERY_SIZE = "limit";
+  // pagination
+
+  public static final int DEFAULT_SIZE_VALUE = 5000;
+  public static final int DEFAULT_FROM_VALUE = 0;
 
   // json fields
   public static final String JSON_INSTANCEID = "instanceID";
   public static final String JSON_CONSUMER = "consumer";
 
   public static final String JSON_TYPE = "type";
+  public static final String JSON_RESULTS = "results";
   public static final String JSON_NAME = "name";
   public static final String JSON_ENTITIES = "entities";
   public static final String JSON_ID = "id";
@@ -171,6 +176,8 @@ public class Constants {
   public static final String JSON_MINDISTANCE = "mindistance";
   public static final String JSON_DURING = "during";
   public static final String JSON_BETWEEN = "between";
+  public static final String JSON_BEFORE = "before";
+  public static final String JSON_AFTER = "after";
   public static final String JSON_TIME = "time";
   public static final String JSON_ENDTIME = "endtime";
   public static final String JSON_TIMEREL = "timerel";
@@ -260,14 +267,14 @@ public class Constants {
   public static final double VALIDATION_ALLOWED_DIST_FOR_ASYNC = 10000.0;
   public static final int VALIDATION_PAGINATION_LIMIT_MAX = 5000;
   public static final int VALIDATION_PAGINATION_OFFSET_MAX = 49999;
-  public static final List<Object> VALIDATION_ALLOWED_GEOM =
+  public static final List<String> VALIDATION_ALLOWED_GEOM =
       List.of("Point", "point", "Polygon", "polygon", "LineString", "linestring", "bbox");
-  public static final List<Object> VALIDATION_ALLOWED_GEOPROPERTY = List.of("location", "Location");
+  public static final List<String> VALIDATION_ALLOWED_GEOPROPERTY = List.of("location", "Location");
   public static final List<String> VALIDATION_ALLOWED_OPERATORS =
       List.of(">", "=", "<", ">=", "<=", "==", "!=");
+  public static final List<String> VALIDATION_ALLOWED_GEOREL= List.of("within", "intersects", "near");
   public static final List<String> VALIDATION_ALLOWED_TEMPORAL_REL =
       List.of("after", "before", "during", "between");
-
   public static final List<String> VALIDATION_ALLOWED_TEMPORAL_REL_ASYNC =
       List.of("during", "between");
 

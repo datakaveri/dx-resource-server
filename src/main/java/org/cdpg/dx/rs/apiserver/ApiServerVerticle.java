@@ -48,7 +48,7 @@ public class ApiServerVerticle extends AbstractVerticle {
         new TokenAuthenticationHandler(config(), secretKeyClient, vertx);
 
     ControllerFactory controllerFactory =
-        new ControllerFactory(isTimeLimitEnabled, dxApiBasePath, vertx);
+        new ControllerFactory(config(),isTimeLimitEnabled, dxApiBasePath, vertx);
     List<ApiController> controllers = controllerFactory.createControllers();
 
     RouterBuilder.create(vertx, "docs/openapi.yaml")

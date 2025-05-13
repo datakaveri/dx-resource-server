@@ -40,8 +40,8 @@ public class GetIdFromPathHandler implements Handler<RoutingContext> {
     Map<String, String> pathParams = routingContext.pathParams();
     LOGGER.debug("path params :" + pathParams);
     if (pathParams != null && !pathParams.isEmpty()) {
-      if (pathParams.containsKey("UUID")) {
-        id = new StringBuilder(pathParams.get("UUID"));
+      if (pathParams.containsKey(ID)) {
+        id = new StringBuilder(pathParams.get(ID));
         LOGGER.info(
             "API is : {} and path param is : {}",
             RoutingContextHelper.getRequestPath(routingContext),

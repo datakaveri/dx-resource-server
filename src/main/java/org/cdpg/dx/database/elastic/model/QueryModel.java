@@ -8,16 +8,19 @@ import co.elastic.clients.json.JsonData;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.database.elastic.util.AggregationFactory;
 import org.cdpg.dx.database.elastic.util.AggregationType;
 import org.cdpg.dx.database.elastic.util.BoolOperator;
 import org.cdpg.dx.database.elastic.util.QueryType;
-
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static org.cdpg.dx.database.elastic.util.Constants.*;
 
@@ -397,7 +400,6 @@ public class QueryModel {
     }
 
     try {
-      LOGGER.info("Query type {}",this.queryType);
       switch (this.queryType) {
         case MATCH_ALL:
           return MatchAllQuery.of(m -> m)._toQuery();
@@ -415,12 +417,11 @@ public class QueryModel {
                   ._toQuery();
         case TERMS:
           // Ensure the value is a List<String>
-          LOGGER.info("terms {}",((JsonArray) queryParameters.get(VALUE)).getList());
           List<String> termsValues;
           if (queryParameters.get(VALUE) instanceof JsonArray) {
             termsValues = ((JsonArray) queryParameters.get(VALUE)).getList();
           } else {
-            termsValues = List.of((String) queryParameters.get(VALUE));
+            termsValues = List.of(queryParameters.get(VALUE).toString());
           }
           // Convert the list to FieldValue and wrap in TermsQueryField
           TermsQueryField termsQueryField =

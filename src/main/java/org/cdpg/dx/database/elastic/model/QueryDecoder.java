@@ -1,7 +1,5 @@
 package org.cdpg.dx.database.elastic.model;
 
-import co.elastic.clients.elasticsearch.core.search.SourceConfig;
-import co.elastic.clients.elasticsearch.core.search.SourceFilter;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
@@ -58,7 +56,6 @@ public class QueryDecoder {
       temporalQuery = true;
       isValidQuery = true;
     }
-
     if (searchType.matches(ATTRIBUTE_SEARCH_REGEX)) {
       queryDecorator = new AttributeQueryFiltersDecorator(queryLists, jsonQuery);
       queryDecorator.add();
@@ -83,34 +80,19 @@ public class QueryDecoder {
 
     QueryModel q = new QueryModel();
     q.setQueries(getBoolQuery(queryLists));
+    q.setOffset(jsonQuery.getString("offset"));
+    q.setLimit(jsonQuery.getString("limit"));
+    if (jsonQuery.containsKey("attrs")) {
+      q.setIncludeFields(jsonQuery.getJsonArray("attrs").getList());
+    }
     return q;
   }
-
   private String[] getTimeLimitArray(JsonObject jsonQuery, boolean isAsyncQuery) {
     if (isAsyncQuery) {
       return new String[] {};
     }
     String timeLimit = jsonQuery.getString(TIME_LIMIT, "0,0,0");
     return timeLimit.split(",");
-  }
-
-  public SourceConfig getSourceConfigFilters(JsonObject queryJson) {
-    String searchType = queryJson.getString(SEARCH_TYPE);
-    if (!searchType.matches(RESPONSE_FILTER_REGEX)) {
-      return getSourceFilter(Collections.emptyList());
-    }
-
-    JsonArray responseFilteringFields = queryJson.getJsonArray(RESPONSE_ATTRS);
-    if (responseFilteringFields == null) {
-      LOGGER.error("Response filtering fields are not passed in attrs parameter");
-      throw new EsQueryException("Response filtering fields are not passed in attrs parameter");
-    }
-    return getSourceFilter(responseFilteringFields.getList());
-  }
-
-  private SourceConfig getSourceFilter(List<String> sourceFilterList) {
-    SourceFilter sourceFilter = SourceFilter.of(f -> f.includes(sourceFilterList));
-    return SourceConfig.of(c -> c.filter(sourceFilter));
   }
 
   private QueryModel getBoolQuery(Map<QueryType, List<QueryModel>> filterQueries) {
