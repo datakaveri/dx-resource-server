@@ -198,9 +198,9 @@ public class SearchController implements ApiController {
         if (!"consumer".equalsIgnoreCase(jwtData.get().role())) {
             routingContext.next();
         }
-        boolean hasSubAccess =
+        boolean hasApiAccess =
                 jwtData.get().cons().getJsonArray("access", new JsonArray()).contains("api");
-        if (!hasSubAccess) {
+        if (!hasApiAccess) {
             LOGGER.error("Role validation failed");
             routingContext.fail(new AuthorizationException("Role validation failed"));
         }

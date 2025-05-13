@@ -20,6 +20,7 @@ import org.cdpg.dx.rs.subscription.SubscriptionController;
 import org.cdpg.dx.rs.search.controller.SearchController;
 import org.cdpg.dx.rs.subscription.dao.SubscriptionServiceDAO;
 import org.cdpg.dx.rs.subscription.dao.impl.SubscriptionServiceDAOImpl;
+import org.cdpg.dx.rs.usermanagement.controller.UserManagementController;
 import org.cdpg.dx.uniqueattribute.service.UniqueAttributeService;
 
 
@@ -52,7 +53,8 @@ public class ControllerFactory {
     public List<ApiController> createControllers() {
         return List.of(new SubscriptionController(vertx, subscriptionServiceDAO, brokerService, catService, revokedService),
                 new SearchController(esService, catService, tenantPrefix, timeLimit,revokedService),
-                new LatestController(redisService, tenantPrefix, uniqueAttributeService,revokedService,catService));
+                new LatestController(redisService, tenantPrefix, uniqueAttributeService,revokedService,catService),
+        new UserManagementController(brokerService,revokedService));
     }
 
     private void CreateProxies(Vertx vertx) {

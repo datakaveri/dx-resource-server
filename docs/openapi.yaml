@@ -1906,7 +1906,7 @@ paths:
 
       deprecated: false
 
-  /user/v1/resetPassword:
+  /ngsi-ld/v1/user/resetPassword:
     post:
       tags:
         - Management
@@ -1920,8 +1920,6 @@ paths:
           style: simple
           schema:
             type: string
-            maxLength: 512
-            pattern: '^[a-zA-Z0-9\/\@\.]*$'
       description: Reset user password is a type of management API that could update password or retrieve lost password of the given user to subscribe the resource through subscription APIs. The user could provider the required access token while using the API.
       x-codeSamples:
         - lang: 'cURL'
