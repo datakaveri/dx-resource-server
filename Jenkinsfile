@@ -73,7 +73,7 @@ pipeline {
         script{
           sh 'scp Jmeter/ResourceServer.jmx jenkins@jenkins-master:/var/lib/jenkins/iudx/rs/Jmeter/'
           sh 'docker compose -f docker-compose.test.yml up -d perfTest'
-          sh 'sleep 120'
+          sh 'sleep 60'
         }
       }
       post{
