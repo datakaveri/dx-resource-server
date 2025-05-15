@@ -8,7 +8,6 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.cdpg.dx.database.postgres.models.*;
@@ -73,11 +72,11 @@ public class PostgresServiceImpl implements PostgresService {
             param != null ? param.getClass().getSimpleName() : "null",
             param);
 
-        if (param instanceof String) {
-          String paramStr = (String) param;
+        if (param instanceof String paramStr) {
 
           // Check if it's an ISO timestamp string
-          if (paramStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$")) {
+          if (paramStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$")
+              || paramStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{1,9}$")) {
             try {
               // Parse and
               // qconvert to LocalDateTime

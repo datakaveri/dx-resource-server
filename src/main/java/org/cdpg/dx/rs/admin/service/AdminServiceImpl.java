@@ -12,68 +12,57 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceException;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.util.DateTimeHelper;
 import org.cdpg.dx.database.postgres.models.*;
-import org.cdpg.dx.database.postgres.service.PostgresService;
 import org.cdpg.dx.databroker.service.DataBrokerService;
+import org.cdpg.dx.rs.admin.dao.RevokedTokenServiceDAO;
+import org.cdpg.dx.rs.admin.dao.UniqueAttributeServiceDAO;
+import org.cdpg.dx.rs.admin.model.RevokedTokenDTO;
+import org.cdpg.dx.rs.admin.model.UniqueAttributeDTO;
 import org.cdpg.dx.rs.admin.util.BroadcastEventType;
 
 public class AdminServiceImpl implements AdminService {
   private static final Logger LOGGER = LogManager.getLogger(AdminServiceImpl.class);
-  private final PostgresService postgresService;
   private final DataBrokerService dataBrokerService;
+  private final RevokedTokenServiceDAO revokedTokenServiceDAO;
+  private final UniqueAttributeServiceDAO uniqueAttributeServiceDAO;
 
-  public AdminServiceImpl(PostgresService postgresService, DataBrokerService dataBrokerService) {
-    this.postgresService = postgresService;
+  public AdminServiceImpl(
+      RevokedTokenServiceDAO revokedTokenServiceDAO,
+      UniqueAttributeServiceDAO uniqueAttributeServiceDAO,
+      DataBrokerService dataBrokerService) {
+    this.revokedTokenServiceDAO = revokedTokenServiceDAO;
+    this.uniqueAttributeServiceDAO = uniqueAttributeServiceDAO;
     this.dataBrokerService = dataBrokerService;
-  }
-
-  private static SelectQuery selectRevokedTokenQuery(String userId) {
-    Condition condition = new Condition("_id", Condition.Operator.EQUALS, List.of(userId));
-    return new SelectQuery("revoked_tokens", List.of("*"), condition, null, null, null, null);
-  }
-
-  private static UpdateQuery getUpdateRevokeTokenQuery(String userId) {
-    Condition condition = new Condition("_id", Condition.Operator.EQUALS, List.of(userId));
-    return new UpdateQuery(
-        "revoked_tokens",
-        List.of("expiry"),
-        List.of(LocalDateTime.now().toString()),
-        condition,
-        null,
-        null);
   }
 
   @Override
   public Future<Void> revokedTokenRequest(String userId) {
-      LOGGER.debug("Inside revoked Token request");
+    LOGGER.debug("Inside revoked Token request");
     Promise<Void> promise = Promise.promise();
-    SelectQuery selectQuery = selectRevokedTokenQuery(userId);
     JsonObject rmqMessage = new JsonObject();
     rmqMessage.put("sub", userId);
     rmqMessage.put("expiry", LocalDateTime.now().toString());
-    postgresService
-        .select(selectQuery)
+    revokedTokenServiceDAO
+        .getRevokedTokensByUserId(userId)
         .compose(
             pgSuccess -> {
-              if (pgSuccess.getRows().isEmpty()) {
-                InsertQuery insertQuery =
-                    new InsertQuery(
-                        "revoked_tokens",
-                        List.of("_id", "expiry"),
-                        List.of(userId, LocalDateTime.now().toString()));
-                return postgresService
-                    .insert(insertQuery)
+              if (pgSuccess.isEmpty()) {
+                return revokedTokenServiceDAO
+                    .insertRevokedToken(
+                        new RevokedTokenDTO(
+                            UUID.fromString(userId), LocalDateTime.now(), null, null))
                     .onSuccess(
                         success -> {
                           LOGGER.info("inserted successfully");
                         });
               } else {
-                UpdateQuery updateQuery = getUpdateRevokeTokenQuery(userId);
-                return postgresService
-                    .update(updateQuery)
+                return revokedTokenServiceDAO
+                    .updateRevokedToken(userId)
                     .onSuccess(
                         success -> {
                           LOGGER.info("updated successfully");
@@ -103,13 +92,8 @@ public class AdminServiceImpl implements AdminService {
   @Override
   public Future<Void> createUniqueAttribute(String id, String attribute) {
     Promise<Void> promise = Promise.promise();
-    InsertQuery insertQuery =
-        new InsertQuery(
-            "unique_attributes",
-            List.of("resource_id", "unique_attribute"),
-            List.of(id, attribute));
-    postgresService
-        .insert(insertQuery)
+    uniqueAttributeServiceDAO
+        .create(new UniqueAttributeDTO(null, attribute, id, null, null))
         .compose(
             pgHandler -> {
               JsonObject rmqMessage = new JsonObject();
@@ -135,17 +119,8 @@ public class AdminServiceImpl implements AdminService {
   @Override
   public Future<Void> updateUniqueAttribute(String id, String attribute) {
     Promise<Void> promise = Promise.promise();
-    Condition condition = new Condition("resource_id", Condition.Operator.EQUALS, List.of(id));
-    UpdateQuery updateQuery =
-        new UpdateQuery(
-            "unique_attributes",
-            List.of("unique_attribute"),
-            List.of(attribute),
-            condition,
-            null,
-            null);
-    postgresService
-        .update(updateQuery)
+    uniqueAttributeServiceDAO
+        .update(Map.of("resource_id", id), Map.of("unique_attribute", attribute))
         .compose(
             pgHandler -> {
               JsonObject rmqMessage = new JsonObject();
@@ -171,10 +146,8 @@ public class AdminServiceImpl implements AdminService {
   @Override
   public Future<Void> deleteUniqueAttribute(String id) {
     Promise<Void> promise = Promise.promise();
-    Condition condition = new Condition("resource_id", Condition.Operator.EQUALS, List.of(id));
-    DeleteQuery deleteQuery = new DeleteQuery("unique_attributes", condition, null, null);
-    postgresService
-        .delete(deleteQuery)
+    uniqueAttributeServiceDAO
+        .delete(UUID.fromString(id))
         .compose(
             pgHandler -> {
               JsonObject rmqMessage = new JsonObject();

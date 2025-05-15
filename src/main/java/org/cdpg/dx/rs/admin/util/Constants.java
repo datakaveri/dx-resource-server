@@ -18,4 +18,7 @@ public class Constants {
       "UPDATE unique_attributes SET unique_attribute='$1' WHERE resource_id='$2'";
   public static String DELETE_UNIQUE_ATTR_SQL =
       "DELETE FROM unique_attributes WHERE resource_id = '$1'";
+
+  public static String REVOKED_TOKEN_TABLE = "revoked_tokens";
+  public static String UNIQUE_ATTR_TABLE = "unique_attributes";
 }
