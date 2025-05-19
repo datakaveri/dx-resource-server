@@ -3,6 +3,10 @@ package org.cdpg.dx.databroker.model;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.databroker.client.RabbitClient;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -10,6 +14,7 @@ import java.util.stream.Collectors;
 @DataObject
 public class ExchangeSubscribersResponse {
   private Map<String, List<String>> subscribers;
+  private static final Logger LOGGER = LogManager.getLogger(ExchangeSubscribersResponse.class);
 
   public ExchangeSubscribersResponse() {}
 

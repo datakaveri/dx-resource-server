@@ -11,6 +11,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceException;
+import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.catalogue.service.CatalogueService;
@@ -31,9 +32,12 @@ public class ProviderValidationHandler implements Handler<RoutingContext> {
   public void handle(RoutingContext routingContext) {
     String id = RoutingContextHelper.getId(routingContext);
     LOGGER.debug("id {} to verify provider check", id);
-
-    catalogueService
-        .getProviderOwnerId(id)
+    Optional<JwtData> jwtData = RoutingContextHelper.getJwtData(routingContext);
+    roleAccessValidation(jwtData.get())
+        .compose(
+            roleAccessValidationHandler -> {
+              return catalogueService.getProviderOwnerId(id);
+            })
         .compose(
             providerIdHandler -> {
               LOGGER.trace("providerOwnerId {}", providerIdHandler);
@@ -96,5 +100,18 @@ public class ProviderValidationHandler implements Handler<RoutingContext> {
         .put(JSON_TYPE, urn.getUrn())
         .put(JSON_TITLE, statusCode.getDescription())
         .put(JSON_DETAIL, statusCode.getDescription());
+  }
+
+  public Future<Boolean> roleAccessValidation(JwtData jwtData) {
+
+    if ("provider".equalsIgnoreCase(jwtData.role())) {
+      return Future.succeededFuture(true);
+    } else if ("delegate".equalsIgnoreCase(jwtData.role())
+        && "provider".equalsIgnoreCase(jwtData.drl())) {
+      return Future.succeededFuture(true);
+    } else {
+      LOGGER.error("Client doesn't have access of this api");
+      return Future.failedFuture("Client doesn't have access of this api");
+    }
   }
 }

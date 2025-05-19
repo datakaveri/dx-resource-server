@@ -2,9 +2,12 @@ package org.cdpg.dx.rs.ingestion.service;
 
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
-import org.cdpg.dx.database.postgres.models.QueryResult;
+import io.vertx.core.json.JsonObject;
 import org.cdpg.dx.databroker.model.ExchangeSubscribersResponse;
 import org.cdpg.dx.databroker.model.RegisterExchangeModel;
+import org.cdpg.dx.rs.ingestion.model.IngestionDTO;
+
+import java.util.List;
 
 public interface IngestionService {
   Future<RegisterExchangeModel> registerAdapter(String entitiesId, String userId);
@@ -15,5 +18,5 @@ public interface IngestionService {
 
   Future<Void> publishDataFromAdapter(JsonArray json);
 
-  Future<QueryResult> getAllAdapterDetailsForUser(String iid);
+  Future<List<JsonObject>> getAllAdapterDetailsForUser(String iid);
 }
