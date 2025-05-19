@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.catalogue.service.CatalogueService;
-import org.cdpg.dx.database.postgres.models.*;
 import org.cdpg.dx.databroker.model.ExchangeSubscribersResponse;
 import org.cdpg.dx.databroker.model.RegisterExchangeModel;
 import org.cdpg.dx.databroker.service.DataBrokerService;
@@ -286,9 +285,9 @@ public class IngestionServiceImpl implements IngestionService {
   }
 
   @Override
-  public Future<QueryResult> getAllAdapterDetailsForUser(String iid) {
+  public Future<List<JsonObject>> getAllAdapterDetailsForUser(String iid) {
     LOGGER.debug("getAllAdapterDetailsForUser() started");
-    Promise<QueryResult> promise = Promise.promise();
+    Promise<List<JsonObject>> promise = Promise.promise();
 
     catalogueService
         .fetchCatalogueInfo(iid)

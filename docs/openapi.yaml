@@ -1366,7 +1366,7 @@ paths:
             --data-raw '<payload>'
 
       requestBody:
-        description: ''
+        description: entities is must in all the request
         content:
           application/json:
             schema:
@@ -3341,7 +3341,7 @@ components:
       title: ingestion entity
       required:
         - entities
-      type: object
+      type: array
       properties:
         entities:
           type: array

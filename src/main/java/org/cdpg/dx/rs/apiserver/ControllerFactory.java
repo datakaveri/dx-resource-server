@@ -70,7 +70,7 @@ public class ControllerFactory {
         new UserManagementController(brokerService, revokedService),
         new AdminController(
             revokedTokenServiceDAO, uniqueAttributeServiceDAO, brokerService, revokedService),
-        new IngestionAdaptorController(brokerService, revokedService, catService, pgService));
+        new IngestionAdaptorController(vertx,brokerService, revokedService, catService, ingestionDAO));
   }
 
   private void createProxies(Vertx vertx) {
