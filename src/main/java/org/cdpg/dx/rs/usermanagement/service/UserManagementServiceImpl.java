@@ -5,6 +5,7 @@ import io.vertx.core.Promise;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.databroker.service.DataBrokerService;
+import org.cdpg.dx.rs.usermanagement.model.ResetPassword;
 
 public class UserManagementServiceImpl implements UserManagementService {
   private static final Logger LOGGER = LogManager.getLogger(UserManagementServiceImpl.class);
@@ -15,16 +16,16 @@ public class UserManagementServiceImpl implements UserManagementService {
   }
 
   @Override
-  public Future<Void> resetPassword(String userId) {
+  public Future<ResetPassword> resetPassword(String userId) {
     LOGGER.info("Info: resetPassword method started");
-    Promise<Void> promise = Promise.promise();
+    Promise<ResetPassword> promise = Promise.promise();
     dataBrokerService
         .resetPassword(userId)
         .onComplete(
             handler -> {
               if (handler.succeeded()) {
-                LOGGER.info("Info: resetPassword method completed");
-                promise.complete();
+                promise.complete(new ResetPassword(userId, handler.result()));
+                LOGGER.info("Successfully changed the password");
               } else {
                 LOGGER.error("Error: resetPassword", handler.cause());
                 promise.fail(handler.cause());

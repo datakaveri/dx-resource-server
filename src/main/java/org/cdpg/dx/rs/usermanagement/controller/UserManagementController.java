@@ -6,7 +6,9 @@ import io.vertx.ext.web.openapi.RouterBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
+import org.cdpg.dx.common.HttpStatusCode;
 import org.cdpg.dx.common.models.JwtData;
+import org.cdpg.dx.common.response.ResponseBuilder;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.rs.apiserver.ApiController;
@@ -43,7 +45,7 @@ public class UserManagementController implements ApiController {
         String userid = jwtData.get().sub();
 
         userManagementService.resetPassword(userid).onSuccess(successHandler -> {
-            // handle response here
+         ResponseBuilder.sendSuccess(routingContext, successHandler.toJson());
         }).onFailure(failureHandler -> {
             // handle failure here
         });

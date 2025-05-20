@@ -11,6 +11,7 @@ public enum HttpStatusCode {
   // 2XX: codes
   NO_CONTENT(204, "No Content", "urn:dx:acl:noContent"),
   SUCCESS(200, "Success", "urn:dx:acl:success"),
+  CREATED(201, "Created", "urn:dx:acl:success"),
 
   // 4xx: Client Error
   BAD_REQUEST(400, "Bad Request", "urn:dx:acl:badRequest"),

@@ -1,4 +1,4 @@
-package org.cdpg.dx.rs.subscription;
+package org.cdpg.dx.rs.subscription.controller;
 
 import static org.cdpg.dx.util.Constants.*;
 
@@ -23,7 +23,9 @@ import org.cdpg.dx.auditing.helper.AuditLogConstructor;
 import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
 import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
 import org.cdpg.dx.catalogue.service.CatalogueService;
+import org.cdpg.dx.common.HttpStatusCode;
 import org.cdpg.dx.common.models.JwtData;
+import org.cdpg.dx.common.response.ResponseBuilder;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.rs.apiserver.ApiController;
@@ -142,11 +144,7 @@ public class SubscriptionController implements ApiController {
               RoutingContextHelper.setResponseSize(routingContext, 0);
               new AuditLogConstructor(routingContext);
               RoutingContextHelper.setId(routingContext, subscriber.entities());
-              routingContext
-                  .response()
-                  .putHeader("Content-Type", "application/json")
-                  .setStatusCode(200)
-                  .end(new JsonObject().put("subscriber", subscriber.listString()).encode());
+              ResponseBuilder.sendSuccess(routingContext, subscriber.listString());
             })
         .onFailure(routingContext::fail);
   }
@@ -158,11 +156,7 @@ public class SubscriptionController implements ApiController {
         .getAllSubscriptionQueueForUser(jwtData.get().sub())
         .onSuccess(
             subscriber -> {
-              routingContext
-                  .response()
-                  .putHeader("Content-Type", "application/json")
-                  .setStatusCode(200)
-                  .end(new JsonObject().put("subscriber", subscriber).encode());
+              ResponseBuilder.sendSuccess(routingContext, subscriber);
             })
         .onFailure(routingContext::fail);
   }
@@ -205,10 +199,8 @@ public class SubscriptionController implements ApiController {
               LOGGER.info("Success: Handle Subscription request;");
               RoutingContextHelper.setResponseSize(routingContext, 0);
               new AuditLogConstructor(routingContext);
-              response
-                  .setStatusCode(201)
-                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                  .end(subHandler.toJson().toString());
+              ResponseBuilder.send(
+                  routingContext, HttpStatusCode.CREATED, null, subHandler.toJson());
             })
         .onFailure(
             failure -> {
@@ -238,18 +230,9 @@ public class SubscriptionController implements ApiController {
               new AuditLogConstructor(routingContext);
               List<String> resultEntities = new ArrayList<String>();
               resultEntities.add(entities);
-              /*JsonObject resultJson =
-              new JsonObject()
-                      .put("type", ResponseUrn.SUCCESS_URN.getUrn())
-                      .put("title", ResponseUrn.SUCCESS_URN.getMessage().toLowerCase())
-                      .put(
-                              "results",
-                              new JsonArray()
-                                      .add(new JsonObject().put(ENTITIES, new JsonArray(resultEntities))));*/
-              response
-                  .setStatusCode(201)
-                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                  .end(resultEntities.toString());
+              JsonObject result = new JsonObject();
+              result.put("entities", new JsonArray(resultEntities));
+              ResponseBuilder.send(routingContext, HttpStatusCode.CREATED, null, result);
             } else {
               LOGGER.error("Fail: Bad request");
               routingContext.fail(subsRequestHandler.cause());
@@ -312,18 +295,9 @@ public class SubscriptionController implements ApiController {
               new AuditLogConstructor(routingContext);
               List<String> resultEntities = new ArrayList<String>();
               resultEntities.add(entities);
-              /*JsonObject resultJson =
-              new JsonObject()
-                      .put("type", ResponseUrn.SUCCESS_URN.getUrn())
-                      .put("title", ResponseUrn.SUCCESS_URN.getMessage().toLowerCase())
-                      .put(
-                              "results",
-                              new JsonArray()
-                                      .add(new JsonObject().put(ENTITIES, new JsonArray(resultEntities))));*/
-              response
-                  .setStatusCode(201)
-                  .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-                  .end(resultEntities.toString());
+              JsonObject result = new JsonObject();
+              result.put("entities", new JsonArray(resultEntities));
+              ResponseBuilder.send(routingContext, HttpStatusCode.CREATED, null, result);
             } else {
               LOGGER.error("Fail: Bad request");
               routingContext.fail(subsRequestHandler.cause());
@@ -360,13 +334,7 @@ public class SubscriptionController implements ApiController {
             RoutingContextHelper.setResponseSize(routingContext, 0);
             new AuditLogConstructor(routingContext);
             RoutingContextHelper.setId(routingContext, subHandler.result());
-            /*response
-            .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-            .setStatusCode(200)
-            .end(
-                    getResponseJson(
-                            SUCCESS_URN.getUrn(), SUCCESS, "Subscription deleted Successfully")
-                            .toString());*/
+            ResponseBuilder.sendSuccess(routingContext, "Subscription deleted Successfully");
           } else {
             routingContext.fail(subHandler.cause());
           }
