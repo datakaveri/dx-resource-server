@@ -47,9 +47,7 @@ public class ApiServerVerticle extends AbstractVerticle {
     TokenAuthenticationHandler authenticatorHandler =
         new TokenAuthenticationHandler(config(), secretKeyClient, vertx);
 
-    ControllerFactory controllerFactory =
-        new ControllerFactory(config(), vertx);
-    List<ApiController> controllers = controllerFactory.createControllers();
+    List<ApiController> controllers = ControllerFactory.createControllers(vertx);
 
     RouterBuilder.create(vertx, "docs/openapi.yaml")
         .onSuccess(

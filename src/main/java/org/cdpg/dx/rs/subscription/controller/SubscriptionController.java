@@ -3,7 +3,6 @@ package org.cdpg.dx.rs.subscription.controller;
 import static org.cdpg.dx.util.Constants.*;
 
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
@@ -22,18 +21,13 @@ import org.cdpg.dx.auditing.handler.AuditingHandler;
 import org.cdpg.dx.auditing.helper.AuditLogConstructor;
 import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
 import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
-import org.cdpg.dx.catalogue.service.CatalogueService;
 import org.cdpg.dx.common.HttpStatusCode;
 import org.cdpg.dx.common.models.JwtData;
 import org.cdpg.dx.common.response.ResponseBuilder;
-import org.cdpg.dx.databroker.service.DataBrokerService;
-import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.rs.apiserver.ApiController;
 import org.cdpg.dx.rs.authorization.handler.ResourcePolicyAuthorizationHandler;
-import org.cdpg.dx.rs.subscription.dao.SubscriptionServiceDAO;
 import org.cdpg.dx.rs.subscription.model.PostSubscriptionModel;
 import org.cdpg.dx.rs.subscription.service.SubscriptionService;
-import org.cdpg.dx.rs.subscription.service.SubscriptionServiceImpl;
 import org.cdpg.dx.rs.subscription.util.SubsType;
 import org.cdpg.dx.util.RoutingContextHelper;
 import org.cdpg.dx.validations.idhandler.GetIdFromBodyHandler;
@@ -47,17 +41,14 @@ public class SubscriptionController implements ApiController {
   private final ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler;
 
   public SubscriptionController(
-      Vertx vertx,
-      SubscriptionServiceDAO subscriptionServiceDAO,
-      DataBrokerService brokerService,
-      CatalogueService catalogueService,
-      RevokedService revokedService) {
-    this.subscriptionService =
-        new SubscriptionServiceImpl(subscriptionServiceDAO, brokerService, catalogueService);
-    this.auditingHandler = new AuditingHandler(vertx);
-    this.resourcePolicyAuthorizationHandler =
-        new ResourcePolicyAuthorizationHandler(catalogueService);
-    this.clientRevocationValidationHandler = new ClientRevocationValidationHandler(revokedService);
+      SubscriptionService subscriptionService,
+      AuditingHandler auditingHandler,
+      ClientRevocationValidationHandler clientRevocationValidationHandler,
+      ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler) {
+    this.subscriptionService = subscriptionService;
+    this.auditingHandler = auditingHandler;
+    this.clientRevocationValidationHandler = clientRevocationValidationHandler;
+    this.resourcePolicyAuthorizationHandler = resourcePolicyAuthorizationHandler;
   }
 
   private static String getExpiry(Optional<JwtData> jwtData) {
