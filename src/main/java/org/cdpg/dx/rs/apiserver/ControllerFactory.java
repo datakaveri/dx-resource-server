@@ -22,7 +22,7 @@ import org.cdpg.dx.rs.ingestion.dao.IngestionDAO;
 import org.cdpg.dx.rs.ingestion.dao.impl.IngestionDAOImpl;
 import org.cdpg.dx.rs.latest.controller.LatestController;
 import org.cdpg.dx.rs.search.controller.SearchController;
-import org.cdpg.dx.rs.subscription.SubscriptionController;
+import org.cdpg.dx.rs.subscription.controller.SubscriptionController;
 import org.cdpg.dx.rs.subscription.dao.SubscriptionServiceDAO;
 import org.cdpg.dx.rs.subscription.dao.impl.SubscriptionServiceDAOImpl;
 import org.cdpg.dx.rs.usermanagement.controller.UserManagementController;
@@ -59,8 +59,13 @@ public class ControllerFactory {
             redisService, tenantPrefix, uniqueAttributeService, revokedService, catService),
         new UserManagementController(brokerService, revokedService),
         new AdminController(
-            revokedTokenServiceDAO, uniqueAttributeServiceDAO, brokerService, revokedService),
-        new IngestionAdaptorController(vertx,brokerService, revokedService, catService, ingestionDAO));
+            vertx,
+            revokedTokenServiceDAO,
+            uniqueAttributeServiceDAO,
+            brokerService,
+            revokedService),
+        new IngestionAdaptorController(
+            vertx, brokerService, revokedService, catService, ingestionDAO));
   }
 
   private void createProxies(Vertx vertx) {

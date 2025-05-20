@@ -1,7 +1,8 @@
 package org.cdpg.dx.rs.usermanagement.service;
 
 import io.vertx.core.Future;
+import org.cdpg.dx.rs.usermanagement.model.ResetPassword;
 
 public interface UserManagementService {
-  Future<Void> resetPassword(String userId);
+  Future<ResetPassword> resetPassword(String userId);
 }
