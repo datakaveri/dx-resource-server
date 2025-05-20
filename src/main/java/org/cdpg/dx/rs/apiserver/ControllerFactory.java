@@ -5,8 +5,7 @@ import static org.cdpg.dx.common.config.ServiceProxyAddressConstants.*;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 import org.cdpg.dx.catalogue.service.CatalogueService;
 import org.cdpg.dx.database.elastic.service.ElasticsearchService;
 import org.cdpg.dx.database.postgres.service.PostgresService;
@@ -30,12 +29,9 @@ import org.cdpg.dx.rs.usermanagement.controller.UserManagementController;
 import org.cdpg.dx.uniqueattribute.service.UniqueAttributeService;
 
 public class ControllerFactory {
-  private static final Logger LOGGER = LogManager.getLogger(ControllerFactory.class);
   private final Vertx vertx;
-  private final boolean isTimeLimitEnabled;
-  private final String dxApiBasePath;
-  private final String tenantPrefix;
-  private final String timeLimit;
+  private String tenantPrefix;
+  private String timeLimit;
   private PostgresService pgService;
   private ElasticsearchService esService;
   private DataBrokerService brokerService;
@@ -48,18 +44,12 @@ public class ControllerFactory {
   private RevokedTokenServiceDAO revokedTokenServiceDAO;
   private IngestionDAO ingestionDAO;
 
-  public ControllerFactory(
-      JsonObject config, boolean isTimeLimitEnabled, String dxApiBasePath, Vertx vertx) {
-    this.isTimeLimitEnabled = isTimeLimitEnabled;
-    this.dxApiBasePath = dxApiBasePath;
-    this.vertx = vertx;
-    this.tenantPrefix =
-        config.containsKey("tenantPrefix") ? config.getString("tenantPrefix") : "none";
-    this.timeLimit = config.containsKey("timeLimit") ? config.getString("timeLimit") : "none";
-
-    createProxies(vertx);
-  }
-
+    public ControllerFactory(
+            JsonObject config, Vertx vertx) {
+        this.vertx = vertx;
+        createProxies(vertx);
+        initialization(config);
+    }
   public List<ApiController> createControllers() {
     return List.of(
         new SubscriptionController(
@@ -82,11 +72,12 @@ public class ControllerFactory {
     redisService = RedisService.createProxy(vertx, REDIS_SERVICE_ADDRESS);
     uniqueAttributeService =
         UniqueAttributeService.createProxy(vertx, UNIQUE_ATTRIBUTE_SERVICE_ADDRESS);
-
-    initialization();
   }
 
-  private void initialization() {
+  private void initialization(JsonObject config) {
+      this.tenantPrefix =
+              config.containsKey("tenantPrefix") ? config.getString("tenantPrefix") : "none";
+      this.timeLimit = config.containsKey("timeLimit") ? config.getString("timeLimit") : "none";
     subscriptionServiceDAO = new SubscriptionServiceDAOImpl(pgService);
     ingestionDAO = new IngestionDAOImpl(pgService);
     uniqueAttributeServiceDAO = new UniqueAttributeServiceDAOImpl(pgService);
