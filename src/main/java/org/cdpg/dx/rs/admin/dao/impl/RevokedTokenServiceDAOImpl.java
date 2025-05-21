@@ -1,13 +1,10 @@
 package org.cdpg.dx.rs.admin.dao.impl;
 
-import static org.cdpg.dx.common.ErrorCode.ERROR_INTERNAL_SERVER;
-import static org.cdpg.dx.common.ErrorMessage.INTERNAL_SERVER_ERROR;
 import static org.cdpg.dx.rs.admin.util.Constants.REVOKED_TOKEN_TABLE;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
-import io.vertx.serviceproxy.ServiceException;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.cdpg.dx.database.postgres.base.dao.AbstractBaseDAO;
@@ -40,7 +37,7 @@ public class RevokedTokenServiceDAOImpl extends AbstractBaseDAO<RevokedTokenDTO>
                 JsonArray result = pgHandler.result().getRows();
                 promise.complete(result);
               } else {
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+                promise.fail(pgHandler.cause());
               }
             });
     return promise.future();
@@ -62,7 +59,7 @@ public class RevokedTokenServiceDAOImpl extends AbstractBaseDAO<RevokedTokenDTO>
                 JsonArray result = pgHandler.result().getRows();
                 promise.complete(result);
               } else {
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+                promise.fail(pgHandler.cause());
               }
             });
 
@@ -91,7 +88,7 @@ public class RevokedTokenServiceDAOImpl extends AbstractBaseDAO<RevokedTokenDTO>
                 JsonArray result = pgHandler.result().getRows();
                 promise.complete(result);
               } else {
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+                promise.fail(pgHandler.cause());
               }
             });
 

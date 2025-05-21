@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.auditing.handler.AuditingHandler;
 import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
 import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
+import org.cdpg.dx.common.FailureHandler;
 import org.cdpg.dx.common.ResponseUrn;
 import org.cdpg.dx.common.models.JwtData;
 import org.cdpg.dx.rs.apiserver.ApiController;
@@ -29,9 +30,9 @@ public class LatestController implements ApiController {
   private final ClientRevocationValidationHandler clientRevocationValidationHandler;
   private final ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler;
   private final AuditingHandler auditingHandler;
-
+  private final FailureHandler failureHandler;
   // todo: probably remove getId handler from here could be static in the future
-  private GetIdFromPathHandler getIdFromPathHandler = new GetIdFromPathHandler();
+  private final GetIdFromPathHandler getIdFromPathHandler = new GetIdFromPathHandler();
 
   /** Initializes the latest controller with required services and config. */
   public LatestController(
@@ -43,6 +44,7 @@ public class LatestController implements ApiController {
     this.clientRevocationValidationHandler = ClientRevocationValidationHandler;
     this.resourcePolicyAuthorizationHandler = resourcePolicyAuthorizationHandler;
     this.auditingHandler = auditingHandler;
+    this.failureHandler= new FailureHandler();
   }
 
   @Override
@@ -54,7 +56,7 @@ public class LatestController implements ApiController {
         .handler(resourcePolicyAuthorizationHandler)
         .handler(this::roleAccessValidation)
         .handler(this::handleLatestSearchQuery)
-        .failureHandler(this::handleFailure);
+        .failureHandler(failureHandler);
 
     LOGGER.debug("Latest Controller deployed and route registered.");
   }
@@ -88,22 +90,6 @@ public class LatestController implements ApiController {
           .setStatusCode(200)
           .end(response.encode());
     }
-  }
-
-  private void handleFailure(RoutingContext ctx) {
-    int statusCode = ctx.statusCode() >= 400 ? ctx.statusCode() : 500;
-    Throwable failure = ctx.failure();
-    String errorMessage = failure != null ? failure.getMessage() : "Unknown error occurred";
-
-    LOGGER.warn("Request failed with status {}: {}", statusCode, errorMessage);
-
-    JsonObject errorResponse =
-        new JsonObject().put("error", errorMessage).put("status", statusCode);
-
-    ctx.response()
-        .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-        .setStatusCode(statusCode)
-        .end(errorResponse.encode());
   }
 
   public void roleAccessValidation(RoutingContext routingContext) {

@@ -1,6 +1,5 @@
 package org.cdpg.dx.databroker.client;
 
-import static org.cdpg.dx.common.ErrorCode.*;
 import static org.cdpg.dx.common.ErrorMessage.BAD_REQUEST_ERROR;
 import static org.cdpg.dx.common.ErrorMessage.INTERNAL_SERVER_ERROR;
 import static org.cdpg.dx.databroker.util.Constants.*;
@@ -14,7 +13,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.rabbitmq.RabbitMQClient;
-import io.vertx.serviceproxy.ServiceException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,6 +20,7 @@ import java.util.stream.Stream;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.exception.*;
 import org.cdpg.dx.databroker.model.ExchangeSubscribersResponse;
 import org.cdpg.dx.databroker.model.UserResponseModel;
 import org.cdpg.dx.databroker.util.PermissionOpType;
@@ -79,12 +78,12 @@ public class RabbitClient {
                     if (status == HttpStatus.SC_NO_CONTENT) {
                       promise.complete();
                     } else if (status == HttpStatus.SC_NOT_FOUND) {
-                      promise.fail(new ServiceException(ERROR_NOT_FOUND, QUEUE_DOES_NOT_EXISTS));
+                      promise.fail(new QueueNotFoundException(QUEUE_DOES_NOT_EXISTS));
                     }
                   }
                 } else {
                   LOGGER.error("Fail : deletion of queue failed - ", ar.cause());
-                  promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, QUEUE_DELETE_ERROR));
+                  promise.fail(new QueueDeletionException( QUEUE_DELETE_ERROR));
                 }
               });
     }
@@ -121,12 +120,12 @@ public class RabbitClient {
                         promise.complete(oroutingKeys);
                       }
                     } else {
-                      promise.fail(new ServiceException(ERROR_NOT_FOUND, QUEUE_DOES_NOT_EXISTS));
+                      promise.fail(new QueueNotFoundException(QUEUE_DOES_NOT_EXISTS));
                     }
                   }
                 } else {
                   LOGGER.error("Error : Listing of Queue failed - " + ar.cause());
-                  promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, QUEUE_LIST_ERROR));
+                  promise.fail(new DxRabbitMqException(QUEUE_LIST_ERROR));
                 }
               });
     }
@@ -156,7 +155,7 @@ public class RabbitClient {
                           LOGGER.error(
                               "Error : Error in user creation. Cause : " + handler.cause());
                           promise.fail(
-                              new ServiceException(ERROR_INTERNAL_SERVER, USER_CREATION_ERROR));
+                              new DxRabbitMqException(USER_CREATION_ERROR));
                         }
                       });
 
@@ -168,11 +167,11 @@ public class RabbitClient {
                   promise.complete(userResponse);
                 } else {
                   LOGGER.error("Error : Something went wrong while finding user " + reply.cause());
-                  promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, USER_CREATION_ERROR));
+                  promise.fail(new DxRabbitMqException(USER_CREATION_ERROR));
                 }
               } else {
                 LOGGER.error("Error : Something went wrong while finding user " + reply.cause());
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, USER_CREATION_ERROR));
+                promise.fail(new DxRabbitMqException(USER_CREATION_ERROR));
               }
             });
     return promise.future();
@@ -215,11 +214,11 @@ public class RabbitClient {
                 } else {
                   LOGGER.error(
                       "Error : createUser method - Some network error. cause" + ar.cause());
-                  promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, NETWORK_ISSUE));
+                  promise.fail(new DxRabbitMqException(NETWORK_ISSUE));
                 }
               } else {
                 LOGGER.info("Error : Something went wrong while creating user :", ar.cause());
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, CHECK_CREDENTIALS));
+                promise.fail(new DxRabbitMqException(CHECK_CREDENTIALS));
               }
             });
     return promise.future();
@@ -259,7 +258,7 @@ public class RabbitClient {
                         + vhost
                         + " ]");
                 promise.fail(
-                    new ServiceException(ERROR_INTERNAL_SERVER, VHOST_PERMISSION_SET_ERROR));
+                    new DxRabbitMqException(VHOST_PERMISSION_SET_ERROR));
               }
             });
     return promise.future();
@@ -290,16 +289,15 @@ public class RabbitClient {
                     if (status == HttpStatus.SC_CREATED) {
                       promise.complete(queueName);
                     } else if (status == HttpStatus.SC_NO_CONTENT) {
-                      promise.fail(new ServiceException(ERROR_CONFLICT, QUEUE_ALREADY_EXISTS));
+                      promise.fail(new QueueAlreadyExistsException(QUEUE_ALREADY_EXISTS));
                     } else if (status == HttpStatus.SC_BAD_REQUEST) {
                       promise.fail(
-                          new ServiceException(
-                              ERROR_BAD_REQUEST, QUEUE_ALREADY_EXISTS_WITH_DIFFERENT_PROPERTIES));
+                          new QueueAlreadyExistsException(QUEUE_ALREADY_EXISTS_WITH_DIFFERENT_PROPERTIES));
                     }
                   }
                 } else {
                   LOGGER.error("Fail : Creation of Queue failed - ", ar.cause());
-                  promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, QUEUE_CREATE_ERROR));
+                  promise.fail(new DxRabbitMqException( QUEUE_CREATE_ERROR));
                 }
               });
     }
@@ -335,12 +333,12 @@ public class RabbitClient {
                     if (status == HttpStatus.SC_CREATED) {
                       promise.complete();
                     } else if (status == HttpStatus.SC_NOT_FOUND) {
-                      promise.fail(new ServiceException(ERROR_NOT_FOUND, QUEUE_EXCHANGE_NOT_FOUND));
+                      promise.fail(new QueueBindingFailedException( QUEUE_EXCHANGE_NOT_FOUND));
                     }
                   }
                 } else {
                   LOGGER.error("Fail : Binding of Queue failed - ", ar.cause());
-                  promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, QUEUE_BIND_ERROR));
+                  promise.fail(new DxRabbitMqException(QUEUE_BIND_ERROR));
                 }
               });
     }
@@ -373,16 +371,15 @@ public class RabbitClient {
                               promise.complete();
                             } else {
                               promise.fail(
-                                  new ServiceException(
-                                      ERROR_BAD_REQUEST, rmqResponse.statusMessage()));
+                                  new DxRabbitMqException(rmqResponse.statusMessage()));
                             }
                           } else {
                             promise.fail(
-                                new ServiceException(ERROR_BAD_REQUEST, BAD_REQUEST_ERROR));
+                                new DxRabbitMqException( BAD_REQUEST_ERROR));
                           }
                         });
               } else {
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+                promise.fail(new DxRabbitMqException( INTERNAL_SERVER_ERROR));
               }
             });
     return promise.future();
@@ -403,16 +400,15 @@ public class RabbitClient {
                   JsonArray permissionArray = new JsonArray(rmqResponse.body().toString());
                   promise.complete(permissionArray.getJsonObject(0));
                 } else if (handler.result().statusCode() == HttpStatus.SC_NOT_FOUND) {
-                  promise.fail(new ServiceException(ERROR_NOT_FOUND, "user not exist."));
+                  promise.fail(new DxRabbitMqException("user not exist."));
                 } else {
                   LOGGER.error(handler.cause());
                   promise.fail(
-                      new ServiceException(
-                          ERROR_BAD_REQUEST, "problem while getting user permissions"));
+                      new DxRabbitMqException( "problem while getting user permissions"));
                 }
               } else {
                 promise.fail(
-                    new ServiceException(ERROR_BAD_REQUEST, handler.cause().getLocalizedMessage()));
+                    new DxRabbitMqException(handler.cause().getLocalizedMessage()));
               }
             });
     return promise.future();
@@ -471,12 +467,12 @@ public class RabbitClient {
                 if (statusCode == HttpStatus.SC_CREATED) {
                   promise.complete();
                 } else if (statusCode == HttpStatus.SC_NO_CONTENT) {
-                  promise.fail(new ServiceException(ERROR_CONFLICT, EXCHANGE_EXISTS));
+                  promise.fail(new ExchangeRegistrationException(EXCHANGE_EXISTS));
                 } else if (statusCode == HttpStatus.SC_BAD_REQUEST) {
-                  promise.fail(new ServiceException(ERROR_CONFLICT, EXCHANGE_EXISTS));
+                  promise.fail(new ExchangeRegistrationException( EXCHANGE_EXISTS));
                 }
               } else {
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+                promise.fail(new DxRabbitMqException(EXCHANGE_CREATE_ERROR));
               }
             });
 
@@ -499,11 +495,11 @@ public class RabbitClient {
                   promise.complete();
                 } else {
                   LOGGER.error("Error : Exchange not found ");
-                  promise.fail(new ServiceException(ERROR_NOT_FOUND, EXCHANGE_NOT_FOUND));
+                  promise.fail(new ExchangeNotFoundException(EXCHANGE_NOT_FOUND));
                 }
               } else {
                 LOGGER.error("Error : " + EXCHANGE_DELETE_ERROR);
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, EXCHANGE_DELETE_ERROR));
+                promise.fail(new DxRabbitMqException(EXCHANGE_DELETE_ERROR));
               }
             });
     return promise.future();
@@ -523,13 +519,12 @@ public class RabbitClient {
                   LOGGER.debug("found Exchange");
                   promise.complete();
                 } else if (status == HttpStatus.SC_NOT_FOUND) {
-                  promise.fail(new ServiceException(ERROR_NOT_FOUND, EXCHANGE_NOT_FOUND));
+                  promise.fail(new ExchangeNotFoundException(EXCHANGE_NOT_FOUND));
                 } else {
-                  promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+                  promise.fail(new DxRabbitMqException(INTERNAL_SERVER_ERROR));
                 }
               } else {
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
-              }
+                promise.fail(new DxRabbitMqException(INTERNAL_SERVER_ERROR));              }
             });
     return promise.future();
   }
@@ -575,8 +570,7 @@ public class RabbitClient {
                 }
               } else {
                 LOGGER.error("Fail : Listing of Exchange failed  ");
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
-              }
+                promise.fail(new DxRabbitMqException(INTERNAL_SERVER_ERROR));              }
             });
 
     return promise.future();
@@ -601,11 +595,11 @@ public class RabbitClient {
                   promise.complete();
                 } else {
                   LOGGER.error("Error :reset pwd method failed");
-                  promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, NETWORK_ISSUE));
+                  promise.fail(new DxRabbitMqException(NETWORK_ISSUE));
                 }
               } else {
                 LOGGER.error("User creation failed :");
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, CHECK_CREDENTIALS));
+                promise.fail(new DxRabbitMqException( CHECK_CREDENTIALS));
               }
             });
     return promise.future();
@@ -633,7 +627,7 @@ public class RabbitClient {
         .onFailure(
             publishFailure -> {
               LOGGER.error("publishMessage failure " + publishFailure);
-              promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+              promise.fail(new DxRabbitMqException( INTERNAL_SERVER_ERROR));
             });
     return promise.future();
   }
@@ -660,7 +654,7 @@ public class RabbitClient {
         .onFailure(
             failure -> {
               LOGGER.error("Fail : " + failure.getMessage());
-              promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+              promise.fail(new DxRabbitMqException(INTERNAL_SERVER_ERROR));
             });
     return promise.future();
   }

@@ -22,6 +22,7 @@ import org.cdpg.dx.auditing.helper.AuditLogConstructor;
 import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
 import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
 import org.cdpg.dx.common.HttpStatusCode;
+import org.cdpg.dx.common.FailureHandler;
 import org.cdpg.dx.common.models.JwtData;
 import org.cdpg.dx.common.response.ResponseBuilder;
 import org.cdpg.dx.rs.apiserver.ApiController;
@@ -39,9 +40,9 @@ public class SubscriptionController implements ApiController {
   private final AuditingHandler auditingHandler;
   private final ClientRevocationValidationHandler clientRevocationValidationHandler;
   private final ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler;
+  private final FailureHandler failureHandler;
 
-  public SubscriptionController(
-      SubscriptionService subscriptionService,
+  public SubscriptionController(SubscriptionService subscriptionService,
       AuditingHandler auditingHandler,
       ClientRevocationValidationHandler clientRevocationValidationHandler,
       ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler) {
@@ -49,6 +50,7 @@ public class SubscriptionController implements ApiController {
     this.auditingHandler = auditingHandler;
     this.clientRevocationValidationHandler = clientRevocationValidationHandler;
     this.resourcePolicyAuthorizationHandler = resourcePolicyAuthorizationHandler;
+    this.failureHandler=new FailureHandler();
   }
 
   private static String getExpiry(Optional<JwtData> jwtData) {
@@ -70,14 +72,14 @@ public class SubscriptionController implements ApiController {
         .handler(clientRevocationValidationHandler)
         .handler(this::roleAccessValidation)
         .handler(this::handleGetSubscriberById)
-        .failureHandler(this::handleFailure);
+        .failureHandler(failureHandler);
 
     builder
         .operation(GET_LIST_OF_SUBSCRIBERS)
         .handler(clientRevocationValidationHandler)
         .handler(this::roleAccessValidation)
         .handler(this::handleGetListOfSubscribers)
-        .failureHandler(this::handleFailure);
+        .failureHandler(failureHandler);
 
     builder
         .operation(POST_SUBSCRIPTION)
@@ -87,7 +89,7 @@ public class SubscriptionController implements ApiController {
         .handler(resourcePolicyAuthorizationHandler)
         .handler(this::roleAccessValidation)
         .handler(this::handlePostSubscription)
-        .failureHandler(this::handleFailure);
+        .failureHandler(failureHandler);
 
     builder
         .operation(UPDATE_SUBSCRIPTION)
@@ -97,7 +99,7 @@ public class SubscriptionController implements ApiController {
         .handler(resourcePolicyAuthorizationHandler)
         .handler(this::roleAccessValidation)
         .handler(this::handleUpdateSubscription)
-        .failureHandler(this::handleFailure);
+        .failureHandler(failureHandler);
 
     builder
         .operation(APPEND_SUBSCRIPTION)
@@ -107,7 +109,7 @@ public class SubscriptionController implements ApiController {
         .handler(resourcePolicyAuthorizationHandler)
         .handler(this::roleAccessValidation)
         .handler(this::handleAppendSubscription)
-        .failureHandler(this::handleFailure);
+        .failureHandler(failureHandler);
 
     builder
         .operation(DELETE_SUBSCRIBER_BY_ID)
@@ -115,7 +117,7 @@ public class SubscriptionController implements ApiController {
         .handler(clientRevocationValidationHandler)
         .handler(this::roleAccessValidation)
         .handler(this::handleDeleteSubscriberById)
-        .failureHandler(this::handleFailure);
+        .failureHandler(failureHandler);
   }
 
   private void handleGetSubscriberById(RoutingContext routingContext) {
@@ -194,9 +196,7 @@ public class SubscriptionController implements ApiController {
                   routingContext, HttpStatusCode.CREATED, null, subHandler.toJson());
             })
         .onFailure(
-            failure -> {
-              routingContext.fail(failure);
-            });
+                routingContext::fail);
   }
 
   private void handleUpdateSubscription(RoutingContext routingContext) {
