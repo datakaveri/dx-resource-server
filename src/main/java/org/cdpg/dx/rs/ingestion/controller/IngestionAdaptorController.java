@@ -48,8 +48,7 @@ public class IngestionAdaptorController implements ApiController {
     builder
         .operation(GET_ADAPTER_LIST)
         .handler(clientRevocationValidationHandler)
-        .handler(this::handleGetAllAdapterDetails)
-        .failureHandler(this::handleFailure);
+        .handler(this::handleGetAllAdapterDetails);
 
     builder
         .operation(POST_ADAPTER)
@@ -57,8 +56,7 @@ public class IngestionAdaptorController implements ApiController {
         .handler(new GetIdFromBodyHandler())
         .handler(clientRevocationValidationHandler)
         .handler(providerValidationHandler)
-        .handler(this::handleRegisterAdapter)
-        .failureHandler(this::handleFailure);
+        .handler(this::handleRegisterAdapter);
 
     builder
         .operation(GET_ADAPTOR_BY_ID)
@@ -66,8 +64,7 @@ public class IngestionAdaptorController implements ApiController {
         .handler(new GetIdFromPathHandler())
         .handler(clientRevocationValidationHandler)
         .handler(providerValidationHandler)
-        .handler(this::handleGetAdapterDetailsById)
-        .failureHandler(this::handleFailure);
+        .handler(this::handleGetAdapterDetailsById);
 
     builder
         .operation(DELETE_ADAPTER_BY_ID)
@@ -75,16 +72,15 @@ public class IngestionAdaptorController implements ApiController {
         .handler(new GetIdFromBodyHandler())
         .handler(clientRevocationValidationHandler)
         .handler(providerValidationHandler)
-        .handler(this::handleDeleteAdapter)
-        .failureHandler(this::handleFailure);
+        .handler(this::handleDeleteAdapter);
+
     builder
         .operation(POST_INGESTION_ADAPTER_ENTITIES)
         .handler(auditingHandler::handleApiAudit)
         .handler(new GetIdFromBodyHandler())
         .handler(clientRevocationValidationHandler)
         .handler(providerValidationHandler)
-        .handler(this::handlePublishDataFromAdapter)
-        .failureHandler(this::handleFailure);
+        .handler(this::handlePublishDataFromAdapter);
   }
 
   private void handleGetAllAdapterDetails(RoutingContext routingContext) {
@@ -97,8 +93,7 @@ public class IngestionAdaptorController implements ApiController {
             })
         .onFailure(
             err -> {
-              // handle failureHandler
-
+              routingContext.fail(err);
             });
   }
 
@@ -113,11 +108,7 @@ public class IngestionAdaptorController implements ApiController {
               RoutingContextHelper.setResponseSize(routingContext, 0);
               new AuditLogConstructor(routingContext);
             })
-        .onFailure(
-            err -> {
-              // handle failureHandler
-
-            });
+        .onFailure(routingContext::fail);
   }
 
   private void handlePublishDataFromAdapter(RoutingContext routingContext) {
@@ -130,11 +121,7 @@ public class IngestionAdaptorController implements ApiController {
               new AuditLogConstructor(routingContext);
               ResponseBuilder.sendSuccess(routingContext, "Item Published");
             })
-        .onFailure(
-            err -> {
-              // handle failureHandler
-
-            });
+        .onFailure(routingContext::fail);
   }
 
   private void handleDeleteAdapter(RoutingContext routingContext) {
@@ -150,11 +137,7 @@ public class IngestionAdaptorController implements ApiController {
               new AuditLogConstructor(routingContext);
               ResponseBuilder.sendSuccess(routingContext, "Adapter deleted");
             })
-        .onFailure(
-            err -> {
-              // handle failureHandler
-
-            });
+        .onFailure(routingContext::fail);
   }
 
   private void handleRegisterAdapter(RoutingContext routingContext) {
@@ -170,27 +153,6 @@ public class IngestionAdaptorController implements ApiController {
               new AuditLogConstructor(routingContext);
               ResponseBuilder.sendSuccess(routingContext, result.toJson());
             })
-        .onFailure(
-            err -> {
-              // handle failureHandler
-
-            });
-  }
-
-  private void handleFailure(RoutingContext ctx) {
-    Throwable failure = ctx.failure();
-    int statusCode = ctx.statusCode();
-
-    if (statusCode < 400) {
-      // Default to 500 if not set
-      statusCode = 500;
-    }
-
-    String message = failure != null ? failure.getMessage() : "Unknown error occurred";
-
-    ctx.response()
-        .putHeader("Content-Type", "application/json")
-        .setStatusCode(statusCode)
-        .end(new JsonObject().put("error", message).put("status", statusCode).encode());
+        .onFailure(routingContext::fail);
   }
 }

@@ -32,8 +32,7 @@ public class UserManagementController implements ApiController {
     builder
         .operation(RESET_PASSWORD)
         .handler(clientRevocationValidationHandler)
-        .handler(this::handleResetPassword)
-        .failureHandler(this::handleFailure);
+        .handler(this::handleResetPassword);
   }
 
   private void handleResetPassword(RoutingContext routingContext) {
@@ -48,25 +47,6 @@ public class UserManagementController implements ApiController {
               ResponseBuilder.sendSuccess(routingContext, successHandler.toJson());
             })
         .onFailure(
-            failureHandler -> {
-              // handle failure here
-            });
-  }
-
-  private void handleFailure(RoutingContext ctx) {
-    Throwable failure = ctx.failure();
-    int statusCode = ctx.statusCode();
-
-    if (statusCode < 400) {
-      // Default to 500 if not set
-      statusCode = 500;
-    }
-
-    String message = failure != null ? failure.getMessage() : "Unknown error occurred";
-
-    ctx.response()
-        .putHeader("Content-Type", "application/json")
-        .setStatusCode(statusCode)
-        .end(new JsonObject().put("error", message).put("status", statusCode).encode());
+              routingContext::fail);
   }
 }

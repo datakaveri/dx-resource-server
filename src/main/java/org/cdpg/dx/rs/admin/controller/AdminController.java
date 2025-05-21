@@ -53,32 +53,28 @@ public class AdminController implements ApiController {
         .handler(auditingHandler::handleApiAudit)
         .handler(clientRevocationValidationHandler)
         .handler(this::roleAccessValidation)
-        .handler(this::handlerRevokedTokenRequest)
-        .failureHandler(this::handleFailure);
+        .handler(this::handlerRevokedTokenRequest);
     builder
         .operation(POST_RESOURCE_ATTRIBUTE)
         .handler(auditingHandler::handleApiAudit)
         .handler(getIdFromBodyHandler)
         .handler(clientRevocationValidationHandler)
         .handler(this::roleAccessValidation)
-        .handler(this::handleCreateUniqueAttribute)
-        .failureHandler(this::handleFailure);
+        .handler(this::handleCreateUniqueAttribute);
     builder
         .operation(DELETE_RESOURCE_ATTRIBUTE)
         .handler(auditingHandler::handleApiAudit)
         .handler(getIdFromParams)
         .handler(clientRevocationValidationHandler)
         .handler(this::roleAccessValidation)
-        .handler(this::handleDeleteUniqueAttribute)
-        .failureHandler(this::handleFailure);
+        .handler(this::handleDeleteUniqueAttribute);
     builder
         .operation(UPDATE_RESOURCE_ATTRIBUTE)
         .handler(auditingHandler::handleApiAudit)
         .handler(getIdFromBodyHandler)
         .handler(clientRevocationValidationHandler)
         .handler(this::roleAccessValidation)
-        .handler(this::handleUpdateUniqueAttribute)
-        .failureHandler(this::handleFailure);
+        .handler(this::handleUpdateUniqueAttribute);
   }
 
   private void handlerRevokedTokenRequest(RoutingContext routingContext) {
@@ -93,10 +89,7 @@ public class AdminController implements ApiController {
               new AuditLogConstructor(routingContext);
               ResponseBuilder.sendSuccess(routingContext, "Success");
             })
-        .onFailure(
-            failureHandler -> {
-              // handle failure handler
-            });
+        .onFailure(routingContext::fail);
   }
 
   private void handleCreateUniqueAttribute(RoutingContext routingContext) {
@@ -114,7 +107,7 @@ public class AdminController implements ApiController {
             })
         .onFailure(
             failureHandler -> {
-              // handle failure handler
+              routingContext.fail(failureHandler);
             });
   }
 
@@ -131,10 +124,7 @@ public class AdminController implements ApiController {
               new AuditLogConstructor(routingContext);
               ResponseBuilder.sendSuccess(routingContext, "Success");
             })
-        .onFailure(
-            failureHandler -> {
-              // handle failure handler
-            });
+        .onFailure(routingContext::fail);
   }
 
   private void handleDeleteUniqueAttribute(RoutingContext routingContext) {
@@ -148,20 +138,7 @@ public class AdminController implements ApiController {
               new AuditLogConstructor(routingContext);
               ResponseBuilder.sendSuccess(routingContext, "Success");
             })
-        .onFailure(
-            failureHandler -> {
-              // handle failure handler
-            });
-  }
-
-  private void handleFailure(RoutingContext ctx) {
-    int status = ctx.statusCode() >= 400 ? ctx.statusCode() : 500;
-    String message = ctx.failure() != null ? ctx.failure().getMessage() : "Unknown error occurred";
-
-    ctx.response()
-        .putHeader("Content-Type", "application/json")
-        .setStatusCode(status)
-        .end(new JsonObject().put("error", message).put("status", status).encode());
+        .onFailure(routingContext::fail);
   }
 
   public void roleAccessValidation(RoutingContext routingContext) {

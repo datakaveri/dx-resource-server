@@ -22,7 +22,7 @@ import org.cdpg.dx.auditing.helper.AuditLogConstructor;
 import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
 import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
 import org.cdpg.dx.common.HttpStatusCode;
-import org.cdpg.dx.common.FailureHandler;
+import org.cdpg.dx.common.exception.BaseDxException;
 import org.cdpg.dx.common.models.JwtData;
 import org.cdpg.dx.common.response.ResponseBuilder;
 import org.cdpg.dx.rs.apiserver.ApiController;
@@ -40,9 +40,9 @@ public class SubscriptionController implements ApiController {
   private final AuditingHandler auditingHandler;
   private final ClientRevocationValidationHandler clientRevocationValidationHandler;
   private final ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler;
-  private final FailureHandler failureHandler;
 
-  public SubscriptionController(SubscriptionService subscriptionService,
+  public SubscriptionController(
+      SubscriptionService subscriptionService,
       AuditingHandler auditingHandler,
       ClientRevocationValidationHandler clientRevocationValidationHandler,
       ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler) {
@@ -50,7 +50,6 @@ public class SubscriptionController implements ApiController {
     this.auditingHandler = auditingHandler;
     this.clientRevocationValidationHandler = clientRevocationValidationHandler;
     this.resourcePolicyAuthorizationHandler = resourcePolicyAuthorizationHandler;
-    this.failureHandler=new FailureHandler();
   }
 
   private static String getExpiry(Optional<JwtData> jwtData) {
@@ -71,15 +70,13 @@ public class SubscriptionController implements ApiController {
         .handler(auditingHandler::handleApiAudit)
         .handler(clientRevocationValidationHandler)
         .handler(this::roleAccessValidation)
-        .handler(this::handleGetSubscriberById)
-        .failureHandler(failureHandler);
+        .handler(this::handleGetSubscriberById);
 
     builder
         .operation(GET_LIST_OF_SUBSCRIBERS)
         .handler(clientRevocationValidationHandler)
         .handler(this::roleAccessValidation)
-        .handler(this::handleGetListOfSubscribers)
-        .failureHandler(failureHandler);
+        .handler(this::handleGetListOfSubscribers);
 
     builder
         .operation(POST_SUBSCRIPTION)
@@ -88,8 +85,7 @@ public class SubscriptionController implements ApiController {
         .handler(clientRevocationValidationHandler)
         .handler(resourcePolicyAuthorizationHandler)
         .handler(this::roleAccessValidation)
-        .handler(this::handlePostSubscription)
-        .failureHandler(failureHandler);
+        .handler(this::handlePostSubscription);
 
     builder
         .operation(UPDATE_SUBSCRIPTION)
@@ -98,8 +94,7 @@ public class SubscriptionController implements ApiController {
         .handler(clientRevocationValidationHandler)
         .handler(resourcePolicyAuthorizationHandler)
         .handler(this::roleAccessValidation)
-        .handler(this::handleUpdateSubscription)
-        .failureHandler(failureHandler);
+        .handler(this::handleUpdateSubscription);
 
     builder
         .operation(APPEND_SUBSCRIPTION)
@@ -108,16 +103,14 @@ public class SubscriptionController implements ApiController {
         .handler(clientRevocationValidationHandler)
         .handler(resourcePolicyAuthorizationHandler)
         .handler(this::roleAccessValidation)
-        .handler(this::handleAppendSubscription)
-        .failureHandler(failureHandler);
+        .handler(this::handleAppendSubscription);
 
     builder
         .operation(DELETE_SUBSCRIBER_BY_ID)
         .handler(auditingHandler::handleApiAudit)
         .handler(clientRevocationValidationHandler)
         .handler(this::roleAccessValidation)
-        .handler(this::handleDeleteSubscriberById)
-        .failureHandler(failureHandler);
+        .handler(this::handleDeleteSubscriberById);
   }
 
   private void handleGetSubscriberById(RoutingContext routingContext) {
@@ -162,7 +155,6 @@ public class SubscriptionController implements ApiController {
     String instanceId = request.getHeader(HEADER_HOST);
     String subscriptionType = SubsType.STREAMING.type;
 
-    HttpServerResponse response = routingContext.response();
     String entities = requestBody.getJsonArray("entities").getString(0);
     String userId = jwtData.get().sub();
     String role = jwtData.get().role();
@@ -195,15 +187,13 @@ public class SubscriptionController implements ApiController {
               ResponseBuilder.send(
                   routingContext, HttpStatusCode.CREATED, null, subHandler.toJson());
             })
-        .onFailure(
-                routingContext::fail);
+        .onFailure(routingContext::fail);
   }
 
   private void handleUpdateSubscription(RoutingContext routingContext) {
     LOGGER.trace("handleUpdateSubscription() started");
     Optional<JwtData> jwtData = RoutingContextHelper.getJwtData(routingContext);
     HttpServerRequest request = routingContext.request();
-    HttpServerResponse response = routingContext.response();
     String userid = request.getParam(USER_ID);
     String name = request.getParam(NAME);
     String subsId = userid + "/" + name;
@@ -231,15 +221,7 @@ public class SubscriptionController implements ApiController {
           });
     } else {
       LOGGER.error("Fail: Bad request");
-      /*response
-      .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-      .setStatusCode(400)
-      .end(
-              getResponseJson(
-                      INVALID_PARAM_URN.getUrn(),
-                      HttpStatusCode.BAD_REQUEST.getDescription(),
-                      MSG_INVALID_NAME)
-                      .toString());*/
+      routingContext.fail(new BaseDxException(400, "Bad request"));
     }
   }
 
@@ -253,8 +235,6 @@ public class SubscriptionController implements ApiController {
     JsonObject requestJson = routingContext.body().asJsonObject();
     String instanceId = request.getHeader(HEADER_HOST);
     String subscriptionType = SubsType.STREAMING.type;
-
-    HttpServerResponse response = routingContext.response();
 
     String entities = requestJson.getJsonArray("entities").getString(0);
     String userId = jwtData.get().sub();
@@ -296,15 +276,7 @@ public class SubscriptionController implements ApiController {
           });
     } else {
       LOGGER.error("Fail: Bad request");
-      /*response
-      .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-      .setStatusCode(400)
-      .end(
-              getResponseJson(
-                      INVALID_PARAM_URN.getUrn(),
-                      HttpStatusCode.BAD_REQUEST.getDescription(),
-                      MSG_INVALID_NAME)
-                      .toString());*/
+      routingContext.fail(new BaseDxException(400, "Bad request"));
     }
   }
 
@@ -330,23 +302,6 @@ public class SubscriptionController implements ApiController {
             routingContext.fail(subHandler.cause());
           }
         });
-  }
-
-  private void handleFailure(RoutingContext ctx) {
-    Throwable failure = ctx.failure();
-    int statusCode = ctx.statusCode();
-
-    if (statusCode < 400) {
-      // Default to 500 if not set
-      statusCode = 500;
-    }
-
-    String message = failure != null ? failure.getMessage() : "Unknown error occurred";
-
-    ctx.response()
-        .putHeader("Content-Type", "application/json")
-        .setStatusCode(statusCode)
-        .end(new JsonObject().put("error", message).put("status", statusCode).encode());
   }
 
   public void roleAccessValidation(RoutingContext routingContext) {
