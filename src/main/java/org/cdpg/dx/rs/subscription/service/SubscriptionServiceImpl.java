@@ -1,6 +1,5 @@
 package org.cdpg.dx.rs.subscription.service;
 
-import static org.cdpg.dx.common.ErrorCode.*;
 import static org.cdpg.dx.common.ErrorMessage.INTERNAL_SERVER_ERROR;
 import static org.cdpg.dx.common.ErrorMessage.NOT_FOUND_ERROR;
 import static org.cdpg.dx.rs.subscription.util.Constants.*;
@@ -8,7 +7,6 @@ import static org.cdpg.dx.rs.subscription.util.Constants.*;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
-import io.vertx.serviceproxy.ServiceException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +15,9 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.catalogue.service.CatalogueService;
+import org.cdpg.dx.common.exception.DxNotFoundException;
+import org.cdpg.dx.common.exception.DxSubscriptionException;
+import org.cdpg.dx.common.exception.QueueAlreadyExistsException;
 import org.cdpg.dx.databroker.model.RegisterQueueModel;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.databroker.util.PermissionOpType;
@@ -114,7 +115,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
               if (!postgresHandler.equalsIgnoreCase("Not Found")) {
                 LOGGER.error("Queue already exists, conflict");
                 // TODO: change to DXException
-                promise.fail(new ServiceException(ERROR_CONFLICT, QUEUE_ALREADY_EXISTS));
+                promise.fail(new QueueAlreadyExistsException("Queue already exist"));
               } else {
                 dataBrokerService
                     .registerQueue(postSubscriptionModel.getUserId(), queueName, Vhosts.IUDX_PROD)
@@ -175,14 +176,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         })
                     .onFailure(
                         failureHandler -> {
-                          LOGGER.error("failed");
+                          LOGGER.error("failed "+failureHandler);
                           promise.fail(failureHandler);
                         });
               }
             })
         .onFailure(
             failure -> {
-              LOGGER.error("Failed to query postgres service");
+              LOGGER.error("Failed to query postgres service "+failure);
               promise.fail(failure);
             });
 
@@ -197,7 +198,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         Optional.ofNullable(getRoutingKey(entityId, subscriptionMetaDataHandler.catalogueInfo()));
     if (resourceGroup.isEmpty() || routingKey.isEmpty()) {
       return Future.failedFuture(
-          new ServiceException(ERROR_BAD_REQUEST, "Resource group or routing key is missing"));
+          new DxSubscriptionException("Resource group or routing key is missing"));
     }
     return dataBrokerService.queueBinding(
         resourceGroup.get(), queueName, routingKey.get(), Vhosts.IUDX_PROD);
@@ -214,8 +215,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
               LOGGER.debug("selectQueryHandler {}", selectQueryHandler);
               if (selectQueryHandler.isEmpty()) {
                 return Future.failedFuture(
-                    new ServiceException(
-                        ERROR_BAD_REQUEST, "Subscription not found for [queue,entity]"));
+                    new DxSubscriptionException("Subscription not found for [queue,entity]"));
               }
               return subscriptionServiceDAO.updateSubscriptionExpiryByQueueNameAndEntityId(
                   queueName, entityId, expiry);
@@ -251,8 +251,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                   Optional.ofNullable(getRoutingKey(entityId, catalogueResult));
               if (resourceGroup.isEmpty() || routingKey.isEmpty()) {
                 return Future.failedFuture(
-                    new ServiceException(
-                        ERROR_BAD_REQUEST, "Resource group or routing key is missing"));
+                    new DxSubscriptionException("Resource group or routing key is missing"));
               }
               return dataBrokerService
                   .queueBinding(
@@ -371,7 +370,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         .collect(Collectors.toList());
                 promise.complete(subscriberDetails);
               } else {
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+                promise.fail(new DxSubscriptionException(INTERNAL_SERVER_ERROR));
               }
             });
     return promise.future();
@@ -385,7 +384,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             entityResult -> {
               if (entityResult.succeeded()) {
                 if (entityResult.result().equalsIgnoreCase("Not Found")) {
-                  promise.fail(new ServiceException(ERROR_NOT_FOUND, NOT_FOUND_ERROR));
+                  promise.fail(new DxNotFoundException(NOT_FOUND_ERROR));
                 } else {
                   promise.complete(entityResult.result());
                 }

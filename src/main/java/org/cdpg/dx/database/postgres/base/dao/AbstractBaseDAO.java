@@ -22,18 +22,18 @@ public abstract class AbstractBaseDAO<T extends BaseEntity<T>> implements BaseDA
   private static final Logger LOGGER = LogManager.getLogger(AbstractBaseDAO.class);
   protected final PostgresService postgresService;
   protected final String tableName;
-  protected final String idFileld;
+  protected final String idField;
   protected final Function<JsonObject, T> fromJson;
 
   public AbstractBaseDAO(
       PostgresService postgresService,
       String tableName,
-      String idFileld,
+      String idField,
       Function<JsonObject, T> fromJson) {
     this.postgresService = postgresService;
     this.tableName = tableName;
     this.fromJson = fromJson;
-    this.idFileld = idFileld;
+    this.idField = idField;
   }
 
   @Override
@@ -47,7 +47,7 @@ public abstract class AbstractBaseDAO<T extends BaseEntity<T>> implements BaseDA
         .compose(
             result -> {
               if (result.getRows().isEmpty()) {
-                return Future.failedFuture("Insert query returned no rows.");
+                return Future.failedFuture(new NoRowFoundException("Insert query returned no rows."));
               }
               return Future.succeededFuture(fromJson.apply(result.getRows().getJsonObject(0)));
             })
@@ -61,7 +61,7 @@ public abstract class AbstractBaseDAO<T extends BaseEntity<T>> implements BaseDA
   @Override
   public Future<T> get(UUID id) {
     Condition condition =
-        new Condition(idFileld, Condition.Operator.EQUALS, List.of(id.toString()));
+        new Condition(idField, Condition.Operator.EQUALS, List.of(id.toString()));
     SelectQuery query = new SelectQuery(tableName, List.of("*"), condition, null, null, null, null);
 
     return postgresService
@@ -69,7 +69,7 @@ public abstract class AbstractBaseDAO<T extends BaseEntity<T>> implements BaseDA
         .compose(
             result -> {
               if (result.getRows().isEmpty()) {
-                return Future.failedFuture("Select query returned no rows id :" + id);
+                return Future.failedFuture(new NoRowFoundException("No row found."));
               }
               return Future.succeededFuture(fromJson.apply(result.getRows().getJsonObject(0)));
             })
@@ -167,7 +167,7 @@ public abstract class AbstractBaseDAO<T extends BaseEntity<T>> implements BaseDA
   @Override
   public Future<Boolean> delete(UUID id) {
     Condition condition =
-        new Condition(idFileld, Condition.Operator.EQUALS, List.of(id.toString()));
+        new Condition(idField, Condition.Operator.EQUALS, List.of(id.toString()));
     DeleteQuery query = new DeleteQuery(tableName, condition, null, null);
 
     return postgresService

@@ -1,15 +1,9 @@
 package org.cdpg.dx.databroker.service;
 
-import static org.cdpg.dx.common.ErrorCode.ERROR_BAD_REQUEST;
-import static org.cdpg.dx.common.ErrorCode.ERROR_INTERNAL_SERVER;
-import static org.cdpg.dx.common.ErrorMessage.INTERNAL_SERVER_ERROR;
-import static org.cdpg.dx.databroker.util.Constants.QUEUE_LIST_ERROR;
-
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.serviceproxy.ServiceException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.LogManager;
@@ -230,7 +224,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
                 promise.complete(resultHandler.result());
               } else {
                 LOGGER.error("failed ::" + resultHandler.cause());
-                promise.fail(new ServiceException(ERROR_BAD_REQUEST, QUEUE_LIST_ERROR));
+                promise.fail(resultHandler.cause());
               }
             });
     return promise.future();
@@ -287,7 +281,7 @@ public class DataBrokerServiceImpl implements DataBrokerService {
         .onFailure(
             publishFailure -> {
               LOGGER.debug("publishMessage failure");
-              promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+              promise.fail(publishFailure);
             });
     return promise.future();
   }

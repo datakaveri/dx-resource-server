@@ -12,6 +12,7 @@ import org.cdpg.dx.rs.latest.util.LatestRedisCommandArgsBuilder;
 import org.cdpg.dx.uniqueattribute.service.UniqueAttributeService;
 
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Default implementation of LatestService that retrieves the latest snapshot or single record

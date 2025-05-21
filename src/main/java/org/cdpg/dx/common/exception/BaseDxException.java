@@ -13,7 +13,7 @@ public class BaseDxException extends ServiceException {
 
     public BaseDxException(int failureCode, String message, Throwable cause) {
         super(failureCode, message);
-        initCause(cause);
+//        initCause(cause);
     }
 
     public BaseDxException(String message) {

@@ -1,15 +1,9 @@
 package org.cdpg.dx.rs.subscription.dao.impl;
-
-import static org.cdpg.dx.common.ErrorCode.ERROR_INTERNAL_SERVER;
-import static org.cdpg.dx.common.ErrorCode.ERROR_NOT_FOUND;
-import static org.cdpg.dx.common.ErrorMessage.INTERNAL_SERVER_ERROR;
-import static org.cdpg.dx.common.ErrorMessage.NOT_FOUND_ERROR;
 import static org.cdpg.dx.rs.subscription.util.Constants.SUBSCRIPTION_TABLE;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
-import io.vertx.serviceproxy.ServiceException;
 import java.util.List;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
@@ -51,8 +45,7 @@ public class SubscriptionServiceDAOImpl extends AbstractBaseDAO<SubscriptionDTO>
                   promise.complete(entityId.orElse("Not Found"));
                 }
               } else {
-                LOGGER.info("Empty response from database. EntityId not found");
-                promise.fail(new ServiceException(ERROR_NOT_FOUND, NOT_FOUND_ERROR));
+                promise.fail(pgHandler.cause());
               }
             });
     return promise.future();
@@ -74,7 +67,7 @@ public class SubscriptionServiceDAOImpl extends AbstractBaseDAO<SubscriptionDTO>
                 JsonArray result = pgHandler.result().getRows();
                 promise.complete(result);
               } else {
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+                promise.fail(pgHandler.cause());
               }
             });
     return promise.future();
@@ -96,7 +89,7 @@ public class SubscriptionServiceDAOImpl extends AbstractBaseDAO<SubscriptionDTO>
                 promise.complete();
               } else {
                 LOGGER.error("fail :: {}", pgHandler.cause().getMessage());
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+                promise.fail(pgHandler.cause());
               }
             });
     return promise.future();
@@ -115,7 +108,7 @@ public class SubscriptionServiceDAOImpl extends AbstractBaseDAO<SubscriptionDTO>
                 JsonArray result = pgHandler.result().getRows();
                 promise.complete(result);
               } else {
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+                promise.fail(pgHandler.cause());
               }
             });
     return promise.future();
@@ -155,7 +148,7 @@ public class SubscriptionServiceDAOImpl extends AbstractBaseDAO<SubscriptionDTO>
                 promise.complete();
               } else {
                 LOGGER.error("failed to update expiry");
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+                promise.fail(pgHandler.cause());
               }
             });
 
@@ -180,7 +173,7 @@ public class SubscriptionServiceDAOImpl extends AbstractBaseDAO<SubscriptionDTO>
                 promise.complete();
               } else {
                 LOGGER.error("failed to insert subs data");
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+                promise.fail(pgHandler.cause());
               }
             });
 
