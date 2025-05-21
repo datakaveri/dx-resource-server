@@ -2,7 +2,6 @@ package org.cdpg.dx.rs.ingestion.controller;
 
 import static org.cdpg.dx.util.Constants.*;
 
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -13,18 +12,12 @@ import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.auditing.handler.AuditingHandler;
 import org.cdpg.dx.auditing.helper.AuditLogConstructor;
 import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
-import org.cdpg.dx.catalogue.service.CatalogueService;
 import org.cdpg.dx.common.models.JwtData;
 import org.cdpg.dx.common.response.ResponseBuilder;
-import org.cdpg.dx.databroker.service.DataBrokerService;
-import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.rs.apiserver.ApiController;
 import org.cdpg.dx.rs.authorization.handler.ResourcePolicyAuthorizationHandler;
-import org.cdpg.dx.rs.ingestion.dao.IngestionDAO;
 import org.cdpg.dx.rs.ingestion.service.IngestionService;
-import org.cdpg.dx.rs.ingestion.service.IngestionServiceImpl;
 import org.cdpg.dx.util.RoutingContextHelper;
-import org.cdpg.dx.validations.idhandler.GetIdForIngestionEntityHandler;
 import org.cdpg.dx.validations.idhandler.GetIdFromBodyHandler;
 import org.cdpg.dx.validations.idhandler.GetIdFromPathHandler;
 import org.cdpg.dx.validations.provider.ProviderValidationHandler;
@@ -34,28 +27,20 @@ public class IngestionAdaptorController implements ApiController {
   private final ClientRevocationValidationHandler clientRevocationValidationHandler;
   private final ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler;
   private final IngestionService ingestionService;
-  private final GetIdFromPathHandler getIdFromPathHandler;
-  private final GetIdFromBodyHandler getIdFromBodyHandler;
   private final ProviderValidationHandler providerValidationHandler;
   private final AuditingHandler auditingHandler;
-  private final GetIdForIngestionEntityHandler getIdForIngestionEntityHandler;
 
   public IngestionAdaptorController(
-      Vertx vertx,
-      DataBrokerService dataBrokerService,
-      RevokedService revokedService,
-      CatalogueService catalogueService,
-      IngestionDAO ingestionDAO) {
-    this.clientRevocationValidationHandler = new ClientRevocationValidationHandler(revokedService);
-    this.resourcePolicyAuthorizationHandler =
-        new ResourcePolicyAuthorizationHandler(catalogueService);
-    this.ingestionService =
-        new IngestionServiceImpl(catalogueService, dataBrokerService, ingestionDAO);
-    this.getIdFromPathHandler = new GetIdFromPathHandler();
-    this.getIdFromBodyHandler = new GetIdFromBodyHandler();
-    this.providerValidationHandler = new ProviderValidationHandler(catalogueService);
-    this.auditingHandler = new AuditingHandler(vertx);
-    this.getIdForIngestionEntityHandler = new GetIdForIngestionEntityHandler();
+      IngestionService ingestionService,
+      ClientRevocationValidationHandler clientRevocationValidationHandler,
+      ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler,
+      ProviderValidationHandler providerValidationHandler,
+      AuditingHandler auditingHandler) {
+    this.ingestionService = ingestionService;
+    this.clientRevocationValidationHandler = clientRevocationValidationHandler;
+    this.resourcePolicyAuthorizationHandler = resourcePolicyAuthorizationHandler;
+    this.providerValidationHandler = providerValidationHandler;
+    this.auditingHandler = auditingHandler;
   }
 
   @Override
@@ -69,7 +54,7 @@ public class IngestionAdaptorController implements ApiController {
     builder
         .operation(POST_ADAPTER)
         .handler(auditingHandler::handleApiAudit)
-        .handler(getIdFromBodyHandler)
+        .handler(new GetIdFromBodyHandler())
         .handler(clientRevocationValidationHandler)
         .handler(providerValidationHandler)
         .handler(this::handleRegisterAdapter)
@@ -78,7 +63,7 @@ public class IngestionAdaptorController implements ApiController {
     builder
         .operation(GET_ADAPTOR_BY_ID)
         .handler(auditingHandler::handleApiAudit)
-        .handler(getIdFromPathHandler)
+        .handler(new GetIdFromPathHandler())
         .handler(clientRevocationValidationHandler)
         .handler(providerValidationHandler)
         .handler(this::handleGetAdapterDetailsById)
@@ -87,7 +72,7 @@ public class IngestionAdaptorController implements ApiController {
     builder
         .operation(DELETE_ADAPTER_BY_ID)
         .handler(auditingHandler::handleApiAudit)
-        .handler(getIdFromPathHandler)
+        .handler(new GetIdFromBodyHandler())
         .handler(clientRevocationValidationHandler)
         .handler(providerValidationHandler)
         .handler(this::handleDeleteAdapter)
@@ -95,7 +80,7 @@ public class IngestionAdaptorController implements ApiController {
     builder
         .operation(POST_INGESTION_ADAPTER_ENTITIES)
         .handler(auditingHandler::handleApiAudit)
-        .handler(getIdForIngestionEntityHandler)
+        .handler(new GetIdFromBodyHandler())
         .handler(clientRevocationValidationHandler)
         .handler(providerValidationHandler)
         .handler(this::handlePublishDataFromAdapter)
