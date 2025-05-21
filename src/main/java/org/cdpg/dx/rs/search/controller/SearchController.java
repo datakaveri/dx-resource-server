@@ -16,6 +16,7 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.auditing.handler.AuditingHandler;
+import org.cdpg.dx.auditing.helper.AuditLogConstructor;
 import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
 import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
 import org.cdpg.dx.common.ResponseUrn;
@@ -41,9 +42,8 @@ public class SearchController implements ApiController {
   private final ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler;
   private final AuditingHandler auditingHandler;
 
-  // todo: probably remove getId handler from here could be static in the future
-  private GetIdFromBodyHandler getIdFromBodyHandler;
-  private GetIdFromParams getIdFromParams;
+  GetIdFromBodyHandler getIdFromBodyHandler = new GetIdFromBodyHandler();
+  GetIdFromParams getIdFromParams = new GetIdFromParams();
 
   /** Initializes the search controller with required services and config. */
   public SearchController(
@@ -61,35 +61,35 @@ public class SearchController implements ApiController {
   public void register(RouterBuilder builder) {
     builder
         .operation(GET_SPATIAL_DATA)
+        .handler(auditingHandler::handleApiAudit)
         .handler(getIdFromParams)
         .handler(clientRevocationValidationHandler)
         .handler(resourcePolicyAuthorizationHandler)
-        .handler(ctx -> handleGetQuery(ctx, RequestType.ENTITY))
-        .failureHandler(this::handleFailure);
+        .handler(ctx -> handleGetQuery(ctx, RequestType.ENTITY));
 
     builder
         .operation(TEMPORAL_SEARCH)
+        .handler(auditingHandler::handleApiAudit)
         .handler(getIdFromParams)
         .handler(clientRevocationValidationHandler)
         .handler(resourcePolicyAuthorizationHandler)
-        .handler(ctx -> handleGetQuery(ctx, RequestType.TEMPORAL))
-        .failureHandler(this::handleFailure);
+        .handler(ctx -> handleGetQuery(ctx, RequestType.TEMPORAL));
 
     builder
         .operation(POST_SPATIAL_SEARCH)
+        .handler(auditingHandler::handleApiAudit)
         .handler(getIdFromBodyHandler)
         .handler(clientRevocationValidationHandler)
         .handler(resourcePolicyAuthorizationHandler)
-        .handler(ctx -> handlePostQuery(ctx, RequestType.POST_ENTITIES))
-        .failureHandler(this::handleFailure);
+        .handler(ctx -> handlePostQuery(ctx, RequestType.POST_ENTITIES));
 
     builder
         .operation(POST_TEMPORAL_SEARCH)
+        .handler(auditingHandler::handleApiAudit)
         .handler(getIdFromBodyHandler)
         .handler(clientRevocationValidationHandler)
         .handler(resourcePolicyAuthorizationHandler)
-        .handler(ctx -> handlePostQuery(ctx, RequestType.POST_TEMPORAL))
-        .failureHandler(this::handleFailure);
+        .handler(ctx -> handlePostQuery(ctx, RequestType.POST_TEMPORAL));
 
     LOGGER.info("SearchController deployed and routes registered.");
   }
@@ -123,7 +123,7 @@ public class SearchController implements ApiController {
         .onFailure(
             err -> {
               LOGGER.error("Error processing {} request", type, err);
-              handleFailure(ctx);
+              ctx.fail(err);
             });
   }
 
@@ -154,21 +154,11 @@ public class SearchController implements ApiController {
           .put("offset", raw.getInteger("offset"))
           .put("totalHits", raw.getInteger("totalHits"));
     }
-
+    new AuditLogConstructor(ctx);
     ctx.response()
         .putHeader("Content-Type", "application/json")
         .setStatusCode(200)
         .end(response.encode());
-  }
-
-  private void handleFailure(RoutingContext ctx) {
-    int status = ctx.statusCode() >= 400 ? ctx.statusCode() : 500;
-    String message = ctx.failure() != null ? ctx.failure().getMessage() : "Unknown error occurred";
-
-    ctx.response()
-        .putHeader("Content-Type", "application/json")
-        .setStatusCode(status)
-        .end(new JsonObject().put("error", message).put("status", status).encode());
   }
 
   public void roleAccessValidation(RoutingContext routingContext) {

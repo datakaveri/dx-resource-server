@@ -3,18 +3,17 @@ package org.cdpg.dx.rs.latest.controller;
 import static org.cdpg.dx.util.Constants.*;
 
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.openapi.RouterBuilder;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.auditing.handler.AuditingHandler;
+import org.cdpg.dx.auditing.helper.AuditLogConstructor;
 import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
 import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
-import org.cdpg.dx.common.FailureHandler;
-import org.cdpg.dx.common.ResponseUrn;
 import org.cdpg.dx.common.models.JwtData;
+import org.cdpg.dx.common.response.ResponseBuilder;
 import org.cdpg.dx.rs.apiserver.ApiController;
 import org.cdpg.dx.rs.authorization.handler.ResourcePolicyAuthorizationHandler;
 import org.cdpg.dx.rs.latest.model.LatestData;
@@ -30,8 +29,6 @@ public class LatestController implements ApiController {
   private final ClientRevocationValidationHandler clientRevocationValidationHandler;
   private final ResourcePolicyAuthorizationHandler resourcePolicyAuthorizationHandler;
   private final AuditingHandler auditingHandler;
-  private final FailureHandler failureHandler;
-  // todo: probably remove getId handler from here could be static in the future
   private final GetIdFromPathHandler getIdFromPathHandler = new GetIdFromPathHandler();
 
   /** Initializes the latest controller with required services and config. */
@@ -44,19 +41,18 @@ public class LatestController implements ApiController {
     this.clientRevocationValidationHandler = ClientRevocationValidationHandler;
     this.resourcePolicyAuthorizationHandler = resourcePolicyAuthorizationHandler;
     this.auditingHandler = auditingHandler;
-    this.failureHandler= new FailureHandler();
   }
 
   @Override
   public void register(RouterBuilder builder) {
     builder
         .operation(GET_LATEST_ENTITY_DATA)
+        .handler(auditingHandler::handleApiAudit)
         .handler(getIdFromPathHandler)
         .handler(clientRevocationValidationHandler)
         .handler(resourcePolicyAuthorizationHandler)
         .handler(this::roleAccessValidation)
-        .handler(this::handleLatestSearchQuery)
-        .failureHandler(failureHandler);
+        .handler(this::handleLatestSearchQuery);
 
     LOGGER.debug("Latest Controller deployed and route registered.");
   }
@@ -77,18 +73,10 @@ public class LatestController implements ApiController {
 
   private void sendResponse(RoutingContext ctx, LatestData latestData) {
     if (latestData.getLatestData().isEmpty()) {
-      ctx.response().putHeader(CONTENT_TYPE, APPLICATION_JSON).setStatusCode(204).end();
+      ResponseBuilder.sendNoContent(ctx);
     } else {
-      JsonObject response =
-          new JsonObject()
-              .put(JSON_TYPE, ResponseUrn.SUCCESS_URN.getUrn())
-              .put(JSON_TITLE, ResponseUrn.SUCCESS_URN.getMessage())
-              .put(JSON_RESULTS, latestData.getLatestData());
-
-      ctx.response()
-          .putHeader(CONTENT_TYPE, APPLICATION_JSON)
-          .setStatusCode(200)
-          .end(response.encode());
+      new AuditLogConstructor(ctx);
+      ResponseBuilder.sendSuccess(ctx, latestData.getLatestData());
     }
   }
 

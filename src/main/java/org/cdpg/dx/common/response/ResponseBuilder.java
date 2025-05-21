@@ -32,5 +32,8 @@ public class ResponseBuilder {
     public static <T> void sendSuccess(RoutingContext ctx, T result) {
         send(ctx, HttpStatusCode.SUCCESS, null, result);
     }
+    public static void sendNoContent(RoutingContext ctx) {
+        send(ctx, HttpStatusCode.NO_CONTENT, null, null);
+    }
 }
 
