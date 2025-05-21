@@ -130,7 +130,9 @@ public class SubscriptionController implements ApiController {
               RoutingContextHelper.setResponseSize(routingContext, 0);
               new AuditLogConstructor(routingContext);
               RoutingContextHelper.setId(routingContext, subscriber.entities());
-              ResponseBuilder.sendSuccess(routingContext, subscriber.listString());
+              JsonObject result = new JsonObject();
+              result.put("entities", new JsonArray(subscriber.listString()));
+              ResponseBuilder.sendSuccess(routingContext, result);
             })
         .onFailure(routingContext::fail);
   }
@@ -284,7 +286,6 @@ public class SubscriptionController implements ApiController {
     LOGGER.trace("handleDeleteSubscriberById() started");
     Optional<JwtData> jwtData = RoutingContextHelper.getJwtData(routingContext);
     HttpServerRequest request = routingContext.request();
-    HttpServerResponse response = routingContext.response();
     String userid = request.getParam(USER_ID);
     String name = request.getParam(NAME);
     String subsId = userid + "/" + name;
