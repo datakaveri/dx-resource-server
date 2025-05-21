@@ -3,6 +3,7 @@ package org.cdpg.dx.rs.apiserver;
 import static org.cdpg.dx.common.config.ServiceProxyAddressConstants.*;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,8 +18,14 @@ import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.rs.authorization.handler.ResourcePolicyAuthorizationHandler;
 import org.cdpg.dx.rs.ingestion.controller.IngestionAdaptorController;
 import org.cdpg.dx.rs.ingestion.factory.IngestionControllerFactory;
+import org.cdpg.dx.rs.latest.controller.LatestController;
+import org.cdpg.dx.rs.latest.factory.LatestControllerFactory;
+import org.cdpg.dx.rs.search.controller.SearchController;
+import org.cdpg.dx.rs.search.factory.SearchControllerFactory;
 import org.cdpg.dx.rs.subscription.controller.SubscriptionController;
 import org.cdpg.dx.rs.subscription.factory.SubscriptionControllerFactory;
+import org.cdpg.dx.rs.usermanagement.controller.UserManagementController;
+import org.cdpg.dx.rs.usermanagement.factory.UserManagementControllerFactory;
 import org.cdpg.dx.uniqueattribute.service.UniqueAttributeService;
 import org.cdpg.dx.validations.provider.ProviderValidationHandler;
 
@@ -27,7 +34,7 @@ public class ControllerFactory {
 
   private ControllerFactory() {}
 
-  public static List<ApiController> createControllers(Vertx vertx) {
+  public static List<ApiController> createControllers(Vertx vertx, JsonObject config) {
     // Service proxies
     final PostgresService pgService = PostgresService.createProxy(vertx, POSTGRES_SERVICE_ADDRESS);
     final ElasticsearchService esService =
@@ -51,6 +58,8 @@ public class ControllerFactory {
         new ProviderValidationHandler(catService);
     final AuditingHandler auditingHandler = new AuditingHandler(vertx);
 
+    String tenantPrefix = config.getString("tenantPrefix");
+
     // Controllers
     final IngestionAdaptorController ingestionController =
         IngestionControllerFactory.create(
@@ -71,6 +80,27 @@ public class ControllerFactory {
             policyAuthHandler,
             auditingHandler);
 
-    return List.of(ingestionController, subscriptionController);
+    UserManagementController userManagementController =
+        UserManagementControllerFactory.create(brokerService, revocationHandler);
+
+    LatestController latestController =
+        LatestControllerFactory.create(
+            redisService,
+            uniqueAttrService,
+            revocationHandler,
+            policyAuthHandler,
+            auditingHandler,
+            tenantPrefix);
+
+    SearchController searchController =
+        SearchControllerFactory.create(
+            esService, catService, revocationHandler, policyAuthHandler, auditingHandler, config);
+
+    return List.of(
+        ingestionController,
+        subscriptionController,
+        userManagementController,
+        latestController,
+        searchController);
   }
 }
