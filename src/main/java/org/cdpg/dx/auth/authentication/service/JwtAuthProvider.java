@@ -10,6 +10,7 @@ import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import java.util.Collections;
 import org.cdpg.dx.aaa.service.AAAService;
 import org.cdpg.dx.auth.authentication.client.SecretKeyClient;
+import org.cdpg.dx.common.exception.DxBadRequestException;
 
 public class JwtAuthProvider {
 
@@ -30,7 +31,7 @@ public class JwtAuthProvider {
         .compose(
             cert -> {
               if (cert == null || cert.isEmpty()) {
-                return Future.failedFuture("Public key (certificate) is empty or null");
+                return Future.failedFuture(new DxBadRequestException("Public key (certificate) is empty or null"));
               }
               JWTAuthOptions options =
                   new JWTAuthOptions()

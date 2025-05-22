@@ -10,6 +10,9 @@ public class DxErrorCodes {
     public static final int PG_INVALID_COL_ERROR = 11002;
     public static final int PG_UNIQUE_CONSTRAINT_VIOLATION_ERROR = 11003;
     public static final int NOT_FOUND = 10002;
+    public static final int BAD_REQUEST_ERROR = 10003;
+    public static final int AUTH_ERROR = 10004;
+    public static final int INTERNAL_SERVER_ERROR = 10005;
 
     public static final int SUBS_ERROR = 22000;
     public static final int SUBS_QUEUE_EXISTS = 22001;

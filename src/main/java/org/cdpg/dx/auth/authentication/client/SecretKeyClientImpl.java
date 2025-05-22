@@ -7,6 +7,9 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.exception.DxAuthException;
+import org.cdpg.dx.common.exception.DxBadRequestException;
+import org.cdpg.dx.common.exception.DxInternalServerErrorException;
 
 public class SecretKeyClientImpl implements SecretKeyClient {
   private static final Logger LOGGER = LogManager.getLogger(SecretKeyClientImpl.class);
@@ -46,13 +49,13 @@ public class SecretKeyClientImpl implements SecretKeyClient {
                   return Future.succeededFuture(json.getString("cert"));
                 } else {
                   LOGGER.error("Response does not contain 'cert' field.");
-                  return Future.failedFuture("Response does not contain 'cert' field.");
+                  return Future.failedFuture(new DxAuthException("Response does not contain 'cert' field"));
                 }
               } else {
                 String errorMessage =
                     "Failed to fetch JWT public key, HTTP status: " + response.statusCode();
                 LOGGER.error(errorMessage);
-                return Future.failedFuture(errorMessage);
+                return Future.failedFuture(new DxInternalServerErrorException(errorMessage));
               }
             })
         .recover(

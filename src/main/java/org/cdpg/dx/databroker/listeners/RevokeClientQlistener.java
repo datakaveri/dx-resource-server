@@ -1,6 +1,6 @@
 package org.cdpg.dx.databroker.listeners;
 
-import static org.cdpg.dx.common.ErrorCode.ERROR_INTERNAL_SERVER;
+import static org.cdpg.dx.common.ErrorMessage.BAD_REQUEST_ERROR;
 import static org.cdpg.dx.common.ErrorMessage.INTERNAL_SERVER_ERROR;
 import static org.cdpg.dx.databroker.listeners.util.Constans.TOKEN_INVALID_Q;
 
@@ -10,9 +10,10 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rabbitmq.QueueOptions;
 import io.vertx.rabbitmq.RabbitMQClient;
-import io.vertx.serviceproxy.ServiceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.exception.DxRabbitMqException;
+import org.cdpg.dx.common.exception.DxRabbitMqGeneralException;
 import org.cdpg.dx.revoked.service.RevokedService;
 
 public class RevokeClientQlistener {
@@ -56,16 +57,18 @@ public class RevokeClientQlistener {
                           .onFailure(
                               failureHandler -> {
                                 LOGGER.debug("revoked client message fail");
+                                promise.fail(failureHandler);
                               });
                     } else {
                       LOGGER.error("Empty json received from revoke_token queue");
+                      promise.fail(new DxRabbitMqException(BAD_REQUEST_ERROR));
                     }
                   });
             })
         .onFailure(
             failure -> {
               LOGGER.error("failed ::" + failure.getMessage());
-              promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+              promise.fail(new DxRabbitMqGeneralException(INTERNAL_SERVER_ERROR));
             });
 
     return promise.future();

@@ -44,7 +44,7 @@ public class UniqueAttributeClientImpl implements UniqueAttributeClient {
         .onFailure(
             failure -> {
               LOGGER.error("failed to populate unique attribute from postgres", failure);
-              promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+              promise.fail(failure);
             });
     return promise.future();
   }

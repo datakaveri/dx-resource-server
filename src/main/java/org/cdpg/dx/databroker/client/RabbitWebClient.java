@@ -13,6 +13,7 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.exception.DxRabbitMqException;
 
 public class RabbitWebClient {
     private static final Logger LOGGER = LogManager.getLogger(RabbitWebClient.class);
@@ -44,7 +45,7 @@ public class RabbitWebClient {
                         HttpResponse<Buffer> response = ar.result();
                         promise.complete(response);
                     } else {
-                        promise.fail(ar.cause());
+                        promise.fail(new DxRabbitMqException(ar.cause().getMessage(),ar.cause()));
                     }
                 });
         return promise.future();
@@ -60,7 +61,7 @@ public class RabbitWebClient {
                         HttpResponse<Buffer> response = ar.result();
                         promise.complete(response);
                     } else {
-                        promise.fail(ar.cause());
+                        promise.fail(new DxRabbitMqException(ar.cause().getMessage(),ar.cause()));
                     }
                 });
         return promise.future();

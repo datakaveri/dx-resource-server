@@ -15,7 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.databroker.client.RabbitClient;
 import org.cdpg.dx.databroker.client.RabbitWebClient;
 import org.cdpg.dx.databroker.listeners.RevokeClientQlistener;
-import org.cdpg.dx.databroker.listeners.UniqueAttribQlistener;
+import org.cdpg.dx.databroker.listeners.UniqueAttribQListener;
 import org.cdpg.dx.databroker.service.DataBrokerService;
 import org.cdpg.dx.databroker.service.DataBrokerServiceImpl;
 import org.cdpg.dx.databroker.util.Vhosts;
@@ -125,8 +125,8 @@ public class DataBrokerVerticle extends AbstractVerticle {
         UniqueAttributeService.createProxy(vertx, UNIQUE_ATTRIBUTE_SERVICE_ADDRESS);
     RevokeClientQlistener revokeQlistener =
         new RevokeClientQlistener(iudxInternalRabbitMqClient, revokedService);
-    UniqueAttribQlistener uniqueAttrQlistener =
-        new UniqueAttribQlistener(iudxInternalRabbitMqClient, uniqueAttributeService);
+    UniqueAttribQListener uniqueAttrQlistener =
+        new UniqueAttribQListener(iudxInternalRabbitMqClient, uniqueAttributeService);
 
     revokeQlistener.start();
     uniqueAttrQlistener.start();

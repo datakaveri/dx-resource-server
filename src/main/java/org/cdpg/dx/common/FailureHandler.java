@@ -8,11 +8,11 @@ import org.cdpg.dx.common.response.DxErrorResponse;
 import org.cdpg.dx.common.util.ExceptionHttpStatusMapper;
 import org.cdpg.dx.common.util.ThrowableUtils;
 
-public class FailureHandler implements Handler<RoutingContext> {
+public class FailureHandler {
 
   private static final Logger LOGGER = LogManager.getLogger(FailureHandler.class);
 
-  public void handle(RoutingContext context) {
+  public static void handle(RoutingContext context) {
     LOGGER.trace("FailureHandler.handle() started");
     Throwable failure = context.failure();
     if (failure == null) {

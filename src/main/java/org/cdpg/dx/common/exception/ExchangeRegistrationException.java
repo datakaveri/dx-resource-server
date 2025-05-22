@@ -3,7 +3,7 @@ package org.cdpg.dx.common.exception;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ExchangeRegistrationException extends DxSubscriptionException {
+public class ExchangeRegistrationException extends DxRabbitMqException {
     private static final Logger LOGGER = LogManager.getLogger(ExchangeRegistrationException.class);
 
     public ExchangeRegistrationException(String message) {
