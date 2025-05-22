@@ -1,9 +1,6 @@
 package org.cdpg.dx.common.util;
 
-import org.cdpg.dx.common.exception.BaseDxException;
-import org.cdpg.dx.common.exception.DxBadRequestException;
-import org.cdpg.dx.common.exception.DxRedisException;
-import org.cdpg.dx.common.exception.DxSubscriptionException;
+import org.cdpg.dx.common.exception.*;
 
 public class ThrowableUtils {
 
@@ -12,5 +9,5 @@ public class ThrowableUtils {
     }
 
     public static boolean isSafeToExpose(Throwable throwable) {
-        return throwable instanceof IllegalArgumentException || throwable instanceof DxSubscriptionException || throwable instanceof DxBadRequestException;}
+        return throwable instanceof IllegalArgumentException || throwable instanceof QueueAlreadyExistsException || throwable instanceof DxBadRequestException;}
 }

@@ -21,6 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.auth.authentication.client.SecretKeyClientImpl;
 import org.cdpg.dx.auth.authentication.handler.TokenAuthenticationHandler;
+import org.cdpg.dx.common.FailureHandler;
 import org.cdpg.dx.common.HttpStatusCode;
 
 public class ApiServerVerticle extends AbstractVerticle {
@@ -74,7 +75,7 @@ public class ApiServerVerticle extends AbstractVerticle {
                 configureCorsHandler(routerBuilder);
                 putCommonResponseHeaders();
                 configureErrorHandlers(router);
-
+                configureFailureHandler(router);
                 LOGGER.debug("Starting HTTP server...");
                 HttpServerOptions serverOptions = new HttpServerOptions();
 
@@ -198,7 +199,9 @@ public class ApiServerVerticle extends AbstractVerticle {
       throw new IllegalArgumentException("Keystore and password must be configured for SSL.");
     }
   }
-
+    private void configureFailureHandler(Router router) {
+        router.route().failureHandler(FailureHandler::handle);
+    }
   @Override
   public void stop() {
     if (server != null) {
