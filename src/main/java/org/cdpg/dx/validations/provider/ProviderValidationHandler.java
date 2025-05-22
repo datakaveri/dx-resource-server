@@ -33,9 +33,7 @@ public class ProviderValidationHandler implements Handler<RoutingContext> {
         Optional<JwtData> jwtData = RoutingContextHelper.getJwtData(routingContext);
         roleAccessValidation(jwtData.get())
                 .compose(
-                        roleAccessValidationHandler -> {
-                            return catalogueService.getProviderOwnerId(id);
-                        })
+                        roleAccessValidationHandler -> catalogueService.getProviderOwnerId(id))
                 .compose(
                         providerIdHandler -> {
                             LOGGER.trace("providerOwnerId {}", providerIdHandler);
@@ -52,9 +50,7 @@ public class ProviderValidationHandler implements Handler<RoutingContext> {
                             }
                         })
                 .onFailure(
-                        err -> {
-                            routingContext.fail(new DxBadRequestException(BAD_REQUEST_ERROR));
-                        });
+                        routingContext::fail);
     }
 
     Future<Boolean> validateProviderUser(String providerUserId, JwtData jwtData) {
@@ -97,7 +93,7 @@ public class ProviderValidationHandler implements Handler<RoutingContext> {
             return Future.succeededFuture(true);
         } else {
             LOGGER.error("Client doesn't have access of this api");
-            return Future.failedFuture("Client doesn't have access of this api");
+            return Future.failedFuture(new DxAuthException("Client doesn't have access of this api"));
         }
     }
 }
