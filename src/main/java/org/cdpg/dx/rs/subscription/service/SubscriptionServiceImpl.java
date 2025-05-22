@@ -227,7 +227,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             })
         .onFailure(
             failure -> {
-              LOGGER.error(failure);
+              LOGGER.error("Failed to update subscription {}",failure.getLocalizedMessage());
               promise.fail(failure);
             });
 

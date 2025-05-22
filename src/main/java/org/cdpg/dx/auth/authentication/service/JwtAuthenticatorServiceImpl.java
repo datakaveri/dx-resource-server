@@ -7,6 +7,8 @@ import io.vertx.ext.auth.authentication.TokenCredentials;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.exception.DxAuthException;
+import org.cdpg.dx.common.exception.DxInternalServerErrorException;
 import org.cdpg.dx.common.models.JwtData;
 
 public class JwtAuthenticatorServiceImpl implements TokenAuthenticatorService {
@@ -37,7 +39,7 @@ public class JwtAuthenticatorServiceImpl implements TokenAuthenticatorService {
         .onFailure(
             err -> {
               LOGGER.error("failed to decode/validate jwt token : " + err.getMessage());
-              promise.fail(err.getMessage());
+              promise.fail(new DxAuthException("Failed to decode/validate token: " + err.getMessage()));
             });
 
     return promise.future();

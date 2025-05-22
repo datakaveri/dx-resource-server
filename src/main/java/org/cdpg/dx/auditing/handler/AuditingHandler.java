@@ -58,7 +58,8 @@ public class AuditingHandler {
               .onSuccess(success -> LOGGER.info("Auditing log published successfully"))
               .onFailure(
                   failure ->
-                      LOGGER.error("Failed to publish auditing log: {}", failure.getMessage()));
+                      LOGGER.error("Failed to publish auditing log: {}", failure.getMessage())
+              );
         });
   }
 }

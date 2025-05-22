@@ -1,7 +1,5 @@
 package org.cdpg.dx.revoked.service;
 
-import static org.cdpg.dx.common.ErrorCode.ERROR_BAD_REQUEST;
-import static org.cdpg.dx.common.ErrorCode.ERROR_NOT_FOUND;
 import static org.cdpg.dx.common.ErrorMessage.BAD_REQUEST_ERROR;
 
 import com.google.common.cache.Cache;
@@ -10,10 +8,10 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.serviceproxy.ServiceException;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.exception.DxNotFoundException;
 import org.cdpg.dx.revoked.client.RevokedClient;
 
 public class RevokedServiceImpl implements RevokedService {
@@ -46,7 +44,7 @@ public class RevokedServiceImpl implements RevokedService {
                   promise.complete(revokedCache.getIfPresent(id));
                 } else {
                   LOGGER.info("id :{} not found", id);
-                  promise.fail(new ServiceException(ERROR_NOT_FOUND, BAD_REQUEST_ERROR));
+                  promise.fail(new DxNotFoundException(BAD_REQUEST_ERROR));
                 }
               })
           .onFailure(promise::fail);
@@ -65,7 +63,7 @@ public class RevokedServiceImpl implements RevokedService {
             revokedCache.put(id, jsonObject);
             promise.complete();
         } else {
-            promise.fail(new ServiceException(ERROR_BAD_REQUEST, BAD_REQUEST_ERROR));
+            promise.fail(new DxNotFoundException(BAD_REQUEST_ERROR));
         }
         return promise.future();
     }
@@ -94,7 +92,7 @@ public class RevokedServiceImpl implements RevokedService {
         .onFailure(
             failure -> {
               LOGGER.error("Failed to refresh", failure);
-              promise.fail(new ServiceException(ERROR_BAD_REQUEST, "Failed to refresh"));
+              promise.fail(failure);
             });
     return promise.future();
   }

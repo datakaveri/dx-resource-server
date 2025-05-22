@@ -41,7 +41,7 @@ public class AAAServiceImpl implements AAAService {
         .recover(
             error -> {
               LOGGER.error("Failed to fetch user info: {}", error.getMessage());
-              return Future.failedFuture("Unable to retrieve user information.");
+              return Future.failedFuture(error);
             });
   }
 
@@ -65,7 +65,7 @@ public class AAAServiceImpl implements AAAService {
               } else {
                 String errorMessage = "Empty certificate key received from server";
                 LOGGER.error(errorMessage);
-                return Future.failedFuture(errorMessage);
+                return Future.failedFuture(cert);
               }
             })
         .recover(

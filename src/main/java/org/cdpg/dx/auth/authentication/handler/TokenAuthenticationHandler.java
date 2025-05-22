@@ -11,6 +11,7 @@ import org.cdpg.dx.auth.authentication.client.SecretKeyClient;
 import org.cdpg.dx.auth.authentication.exception.AuthenticationException;
 import org.cdpg.dx.auth.authentication.service.JwtAuthProvider;
 import org.cdpg.dx.auth.authentication.service.JwtAuthenticatorServiceImpl;
+import org.cdpg.dx.common.exception.DxAuthException;
 import org.cdpg.dx.util.RoutingContextHelper;
 
 public class TokenAuthenticationHandler implements AuthenticationHandler {
@@ -55,7 +56,7 @@ public class TokenAuthenticationHandler implements AuthenticationHandler {
             })
         .onFailure(
             err -> {
-              context.fail(401, new AuthenticationException(err.getMessage()));
+              context.fail(new DxAuthException(err.getMessage()));
             });
   }
 }

@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
 import org.cdpg.dx.catalogue.service.CatalogueService;
+import org.cdpg.dx.common.exception.DxAuthException;
 import org.cdpg.dx.common.models.JwtData;
 import org.cdpg.dx.rs.authorization.service.AuthorizationServiceImpl;
 import org.cdpg.dx.util.RoutingContextHelper;
@@ -14,11 +15,9 @@ import org.cdpg.dx.util.RoutingContextHelper;
 public class ResourcePolicyAuthorizationHandler implements Handler<RoutingContext> {
   private static final Logger LOGGER =
       LogManager.getLogger(ResourcePolicyAuthorizationHandler.class);
-  private final CatalogueService catService;
   private final AuthorizationServiceImpl authorizationService;
 
   public ResourcePolicyAuthorizationHandler(CatalogueService catService) {
-    this.catService = catService;
     this.authorizationService = new AuthorizationServiceImpl(catService);
   }
 
@@ -30,7 +29,7 @@ public class ResourcePolicyAuthorizationHandler implements Handler<RoutingContex
 
     if (resourceId == null || jwtData.isEmpty()) {
       LOGGER.error("Resource ID or token is missing in the request");
-      context.fail(new AuthorizationException("Resource ID or token is missing in the request"));
+      context.fail(new DxAuthException("Resource ID or token is missing in the request"));
       return;
     }
     authorizationService

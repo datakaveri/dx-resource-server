@@ -379,7 +379,7 @@ public class RabbitClient {
                           }
                         });
               } else {
-                promise.fail(new DxRabbitMqException( INTERNAL_SERVER_ERROR));
+                promise.fail(new DxRabbitMqGeneralException( INTERNAL_SERVER_ERROR));
               }
             });
     return promise.future();
@@ -469,7 +469,7 @@ public class RabbitClient {
                 } else if (statusCode == HttpStatus.SC_NO_CONTENT) {
                   promise.fail(new ExchangeRegistrationException(EXCHANGE_EXISTS));
                 } else if (statusCode == HttpStatus.SC_BAD_REQUEST) {
-                  promise.fail(new ExchangeRegistrationException( EXCHANGE_EXISTS));
+                  promise.fail(new DxRabbitMqException( EXCHANGE_EXISTS));
                 }
               } else {
                 promise.fail(new DxRabbitMqException(EXCHANGE_CREATE_ERROR));
@@ -524,7 +524,7 @@ public class RabbitClient {
                   promise.fail(new DxRabbitMqException(INTERNAL_SERVER_ERROR));
                 }
               } else {
-                promise.fail(new DxRabbitMqException(INTERNAL_SERVER_ERROR));              }
+                promise.fail(new DxRabbitMqGeneralException(INTERNAL_SERVER_ERROR));              }
             });
     return promise.future();
   }
@@ -627,7 +627,7 @@ public class RabbitClient {
         .onFailure(
             publishFailure -> {
               LOGGER.error("publishMessage failure " + publishFailure);
-              promise.fail(new DxRabbitMqException( INTERNAL_SERVER_ERROR));
+              promise.fail(new DxRabbitMqException(INTERNAL_SERVER_ERROR));
             });
     return promise.future();
   }

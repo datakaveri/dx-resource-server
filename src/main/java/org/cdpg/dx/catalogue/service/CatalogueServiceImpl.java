@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.catalogue.client.CatalogueClient;
+import org.cdpg.dx.common.exception.DxBadRequestException;
 
 public class CatalogueServiceImpl implements CatalogueService {
   private static final Logger LOGGER = LogManager.getLogger(CatalogueServiceImpl.class);
@@ -48,7 +49,7 @@ public class CatalogueServiceImpl implements CatalogueService {
                   promise.complete(catalogueCache.getIfPresent(id));
                 } else {
                   LOGGER.info("id :{} not found in catalogue server", id);
-                  promise.fail(new ServiceException(ERROR_NOT_FOUND, BAD_REQUEST_ERROR));
+                  promise.fail(new DxBadRequestException(BAD_REQUEST_ERROR));
                 }
               })
           .onFailure(promise::fail);
@@ -69,7 +70,7 @@ public class CatalogueServiceImpl implements CatalogueService {
                   promise.complete(providerOwnerCache.getIfPresent(id));
                 } else {
                   LOGGER.info("id :{} not found in catalogue server", id);
-                  promise.fail(new ServiceException(ERROR_NOT_FOUND, BAD_REQUEST_ERROR));
+                    promise.fail(new DxBadRequestException(BAD_REQUEST_ERROR));
                 }
               })
           .onFailure(promise::fail);
@@ -96,7 +97,7 @@ public class CatalogueServiceImpl implements CatalogueService {
         .onFailure(
             failure -> {
               LOGGER.error("Failed to refresh catalogue", failure);
-              promise.fail(new ServiceException(ERROR_BAD_REQUEST, "Failed to refresh catalogue"));
+                promise.fail(failure);
             });
     return promise.future();
   }
@@ -110,7 +111,7 @@ public class CatalogueServiceImpl implements CatalogueService {
             successHandler -> {
               if (successHandler.isEmpty()) {
                 LOGGER.error("id :{} not found in catalogue server", id);
-                promise.fail(new ServiceException(ERROR_NOT_FOUND, BAD_REQUEST_ERROR));
+                  promise.fail(new DxBadRequestException(BAD_REQUEST_ERROR));
               } else {
                 successHandler
                     .get()
@@ -125,8 +126,7 @@ public class CatalogueServiceImpl implements CatalogueService {
         .onFailure(
             failure -> {
               LOGGER.error("Failed to found id catalogue");
-              promise.fail(
-                  new ServiceException(ERROR_BAD_REQUEST, "Failed to search in catalogue"));
+                promise.fail(failure);
             });
     return promise.future();
   }
@@ -144,8 +144,9 @@ public class CatalogueServiceImpl implements CatalogueService {
         .onFailure(
             failure -> {
               LOGGER.error("Failed to provider id details in catalogue {}", id);
+
               promise.fail(
-                  new ServiceException(ERROR_BAD_REQUEST, "Failed to search in catalogue"));
+                 failure);
             });
 
     return promise.future();

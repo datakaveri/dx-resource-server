@@ -33,11 +33,19 @@ public class ExceptionHttpStatusMapper {
         yield HttpStatusCode.CONFLICT;
       }
 
+        case ExchangeRegistrationException e ->{
+          LOGGER.debug("Matched: ExchangeRegistrationException");
+          yield HttpStatusCode.CONFLICT;
+        }
         case DxSubscriptionException e -> {
         LOGGER.debug("Matched: DxSubscriptionException");
         yield HttpStatusCode.BAD_REQUEST;
       }
-      case QueueRegistrationFailedException e -> {
+      case ExchangeNotFoundException e ->{
+        LOGGER.debug("Matched: ExchangeNotFoundException");
+        yield HttpStatusCode.NOT_FOUND;
+      }
+        case QueueRegistrationFailedException e -> {
         LOGGER.debug("Matched: QueueRegistrationFailedException");
         yield HttpStatusCode.BAD_REQUEST;
       }
@@ -52,6 +60,10 @@ public class ExceptionHttpStatusMapper {
       case QueueNotFoundException e -> {
         LOGGER.debug("Matched: QueueNotFoundException");
         yield HttpStatusCode.NOT_FOUND;
+      }
+      case DxRabbitMqGeneralException e -> {
+        LOGGER.debug("Matched: DxRabbitMqGeneralException");
+        yield HttpStatusCode.INTERNAL_SERVER_ERROR;
       }
       case DxRabbitMqException e -> {
         LOGGER.debug("Matched: DxRabbitMqException");
@@ -75,7 +87,22 @@ public class ExceptionHttpStatusMapper {
         LOGGER.debug("Matched: RedisOperationException");
         yield HttpStatusCode.BAD_REQUEST;
       }
-
+      case DxNotFoundException e->{
+        LOGGER.debug("Matched: DxNotFoundException");
+        yield HttpStatusCode.NOT_FOUND;
+      }
+      case DxAuthException e->{
+        LOGGER.debug("Matched: DxAuthException");
+        yield HttpStatusCode.UNAUTHORIZED;
+      }
+      case DxBadRequestException e->{
+        LOGGER.debug("Matched: DxBadRequestException");
+        yield HttpStatusCode.BAD_REQUEST;
+      }
+      case DxInternalServerErrorException e->{
+        LOGGER.debug("Matched: DxInternalServerErrorException");
+        yield HttpStatusCode.INTERNAL_SERVER_ERROR;
+      }
       case BaseDxException e -> {
         LOGGER.debug("Matched: BaseDxException");
         yield HttpStatusCode.BAD_REQUEST;

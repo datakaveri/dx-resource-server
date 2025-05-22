@@ -7,6 +7,9 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.exception.DxAuthException;
+import org.cdpg.dx.common.exception.DxBadRequestException;
+import org.cdpg.dx.common.exception.DxInternalServerErrorException;
 
 /** Client for communicating with the authentication server. */
 public class AAAWebClient implements AAAClient {
@@ -68,11 +71,10 @@ public class AAAWebClient implements AAAClient {
                 if (json != null && json.containsKey("cert")) {
                   return Future.succeededFuture(json.getString("cert"));
                 } else {
-                  return Future.failedFuture("Response does not contain 'cert' field");
+                  return Future.failedFuture(new DxAuthException("Response does not contain 'cert' field"));
                 }
               } else {
-                return Future.failedFuture(
-                    "Failed to fetch JWT public key, HTTP status: " + response.statusCode());
+                return Future.failedFuture(new DxInternalServerErrorException("Failed to fetch certificate"));
               }
             });
   }
@@ -84,7 +86,7 @@ public class AAAWebClient implements AAAClient {
     if (statusCode < 200 || statusCode >= 300) {
       LOGGER.warn(
           "Auth Server request failed - Status: {} - {}", statusCode, response.statusMessage());
-      return Future.failedFuture("Auth Server request failed with status: " + statusCode);
+      return Future.failedFuture(new DxAuthException(response.statusMessage()));
     }
 
     JsonObject responseBody = response.bodyAsJsonObject();
@@ -92,13 +94,13 @@ public class AAAWebClient implements AAAClient {
 
     if (!"urn:dx:as:Success".equals(responseBody.getString("type"))) {
       LOGGER.warn("User not found in Auth.");
-      return Future.failedFuture("User not present in Auth.");
+      return Future.failedFuture(new DxAuthException("User not present in auth"));
     }
 
     JsonObject result = responseBody.getJsonObject("results");
     if (result == null) {
       LOGGER.error("Auth response does not contain 'results' field");
-      return Future.failedFuture("Invalid Auth response: missing 'results'");
+      return Future.failedFuture(new DxBadRequestException("Auth response does not contain 'results' field"));
     }
 
     return Future.succeededFuture(result);

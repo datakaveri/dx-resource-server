@@ -10,6 +10,8 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
+import org.cdpg.dx.common.ResponseUrn;
+import org.cdpg.dx.common.exception.DxAuthException;
 import org.cdpg.dx.common.models.JwtData;
 import org.cdpg.dx.revoked.service.RevokedService;
 import org.cdpg.dx.util.RoutingContextHelper;
@@ -72,7 +74,7 @@ public class ClientRevocationValidationHandler implements Handler<RoutingContext
 
               if (jwtIssuedAt.isBefore(revokedAt)) {
                 LOGGER.warn("Client token was issued before revocation. Denying access.");
-                return Future.failedFuture("Privileges for client are revoked.");
+                return Future.failedFuture(new DxAuthException(ResponseUrn.INVALID_TOKEN_URN.getMessage()));
               }
 
               return Future.succeededFuture();
@@ -96,6 +98,6 @@ public class ClientRevocationValidationHandler implements Handler<RoutingContext
    */
   private void logAndFail(RoutingContext context, String logMessage, String errorMessage) {
     LOGGER.warn(logMessage);
-    context.fail(new AuthorizationException(errorMessage));
+    context.fail(new DxAuthException(errorMessage));
   }
 }

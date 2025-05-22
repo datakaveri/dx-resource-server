@@ -1,6 +1,6 @@
 package org.cdpg.dx.databroker.listeners;
 
-import static org.cdpg.dx.common.ErrorCode.ERROR_INTERNAL_SERVER;
+import static org.cdpg.dx.common.ErrorMessage.BAD_REQUEST_ERROR;
 import static org.cdpg.dx.common.ErrorMessage.INTERNAL_SERVER_ERROR;
 import static org.cdpg.dx.databroker.util.Constants.UNIQUE_ATTR_Q;
 
@@ -10,20 +10,21 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rabbitmq.QueueOptions;
 import io.vertx.rabbitmq.RabbitMQClient;
-import io.vertx.serviceproxy.ServiceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.exception.DxBadRequestException;
+import org.cdpg.dx.common.exception.DxRabbitMqGeneralException;
 import org.cdpg.dx.databroker.listeners.util.BroadcastEventType;
 import org.cdpg.dx.uniqueattribute.service.UniqueAttributeService;
 
-public class UniqueAttribQlistener {
-  private static final Logger LOGGER = LogManager.getLogger(UniqueAttribQlistener.class);
+public class UniqueAttribQListener {
+  private static final Logger LOGGER = LogManager.getLogger(UniqueAttribQListener.class);
   private final QueueOptions options =
       new QueueOptions().setMaxInternalQueueSize(1000).setKeepMostRecent(true);
   private final RabbitMQClient iudxInternalRabbitMqClient;
   private final UniqueAttributeService uniqueAttributeService;
 
-  public UniqueAttribQlistener(
+  public UniqueAttribQListener(
       RabbitMQClient iudxInternalRabbitMqClient, UniqueAttributeService uniqueAttributeService) {
     this.iudxInternalRabbitMqClient = iudxInternalRabbitMqClient;
     this.uniqueAttributeService = uniqueAttributeService;
@@ -47,13 +48,14 @@ public class UniqueAttribQlistener {
                       consumeAndRefreshUniqueCache(body, promise);
                     } else {
                       LOGGER.info("Empty json received from revoke_token queue");
+                      promise.fail(new DxRabbitMqGeneralException(BAD_REQUEST_ERROR));
                     }
                   });
             })
         .onFailure(
             failure -> {
               LOGGER.error("failed to start " + failure.getMessage());
-              promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+              promise.fail(new DxRabbitMqGeneralException(INTERNAL_SERVER_ERROR));
             });
     return promise.future();
   }
@@ -68,6 +70,7 @@ public class UniqueAttribQlistener {
     LOGGER.debug("Broadcast event " + event);
     if (event == null) {
       LOGGER.error("Invalid BroadcastEventType [ null ] ");
+      promise.fail(new DxBadRequestException(BAD_REQUEST_ERROR));
       return;
     }
     if (event.equals(BroadcastEventType.CREATE)) {
@@ -81,7 +84,7 @@ public class UniqueAttribQlistener {
           .onFailure(
               failureHandler -> {
                 LOGGER.debug("unique attrib message published fail");
-                promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+                promise.fail(new DxRabbitMqGeneralException(INTERNAL_SERVER_ERROR));
               });
     }
   }
