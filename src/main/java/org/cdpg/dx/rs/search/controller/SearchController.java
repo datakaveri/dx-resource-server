@@ -21,6 +21,7 @@ import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
 import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
 import org.cdpg.dx.common.ResponseUrn;
 import org.cdpg.dx.common.models.JwtData;
+import org.cdpg.dx.common.response.ResponseBuilder;
 import org.cdpg.dx.rs.apiserver.ApiController;
 import org.cdpg.dx.rs.authorization.handler.ResourcePolicyAuthorizationHandler;
 import org.cdpg.dx.rs.search.model.RequestDTO;
@@ -119,7 +120,9 @@ public class SearchController implements ApiController {
       Future<RequestDTO> dtoFuture, RequestType type, boolean countOnly, RoutingContext ctx) {
     dtoFuture
         .compose(dto -> dispatchQuery(dto, type))
-        .onSuccess(result -> sendResponse(ctx, result, countOnly))
+        .onSuccess(result -> {
+          sendResponse(ctx, result, countOnly);
+        })
         .onFailure(
             err -> {
               LOGGER.error("Error processing {} request", type, err);
@@ -137,6 +140,7 @@ public class SearchController implements ApiController {
   }
 
   private void sendResponse(RoutingContext ctx, ResponseModel responseModel, boolean countOnly) {
+    RoutingContextHelper.setResponseSize(ctx,ctx.response().bytesWritten());
     JsonObject raw = responseModel.getResponse();
     JsonObject response =
         new JsonObject()
@@ -154,11 +158,11 @@ public class SearchController implements ApiController {
           .put("offset", raw.getInteger("offset"))
           .put("totalHits", raw.getInteger("totalHits"));
     }
-    new AuditLogConstructor(ctx);
     ctx.response()
         .putHeader("Content-Type", "application/json")
-        .setStatusCode(200)
-        .end(response.encode());
+        .setStatusCode(200) ;
+    new AuditLogConstructor(ctx);
+    ctx.response().end(response.encode());
   }
 
   public void roleAccessValidation(RoutingContext routingContext) {

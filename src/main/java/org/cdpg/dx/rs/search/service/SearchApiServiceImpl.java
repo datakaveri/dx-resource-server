@@ -7,6 +7,7 @@ import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.catalogue.service.CatalogueService;
+import org.cdpg.dx.common.exception.DxInternalServerErrorException;
 import org.cdpg.dx.database.elastic.model.QueryDecoder;
 import org.cdpg.dx.database.elastic.model.QueryModel;
 import org.cdpg.dx.database.elastic.service.ElasticsearchService;
@@ -73,9 +74,7 @@ public class SearchApiServiceImpl implements SearchApiService {
                     queryModel.getQueries().toElasticsearchQuery());
             return elasticsearchService.search(index, queryModel)
                     .map(results -> {
-                        ResponseModel model = new ResponseModel(results);
-                            model.setSizeParam(params.getSize());
-                            model.setFromParam(params.getPageFrom());
+                        ResponseModel model = new ResponseModel(results,params.getSize(),params.getPageFrom());
                         return model;
                     });
         }
@@ -85,6 +84,8 @@ public class SearchApiServiceImpl implements SearchApiService {
     public Future<RequestDTO> createRequestDto(MultiMap requestParams) {
         LOGGER.debug("Creating RequestDTO from MultiMap");
         String rawId = requestParams.get("id");
+
+        // below is just to pass cases in dev instance eventually will be removed
         String id = normalizeId(rawId);
         String typeStr = requestParams.get("requestType");
         requestParams.remove("requestType");
@@ -97,6 +98,7 @@ public class SearchApiServiceImpl implements SearchApiService {
         LOGGER.debug("Creating RequestDTO from JsonObject");
         JsonArray entities = body.getJsonArray("entities");
         String rawId = entities.getJsonObject(0).getString("id");
+        // below is just to pass cases in dev instance eventually will be removed
         String id = normalizeId(rawId);
         String typeStr = body.getString("requestType");
         body.remove("requestType");
@@ -143,7 +145,8 @@ public class SearchApiServiceImpl implements SearchApiService {
                     filters.setGroupId(id);
                     JsonArray apis = catalogueJson.getJsonArray("iudxResourceAPIs");
                     if (apis == null) {
-                        throw new IllegalStateException("Missing 'iudxResourceAPIs' in catalogue");
+                        LOGGER.error("Missing 'iudxResourceAPIs' in catalogue");
+                        throw new DxInternalServerErrorException("Missing 'iudxResourceAPIs' in catalogue");
                     }
                     filters.setItemFilters(apis.getList());
                     return filters;

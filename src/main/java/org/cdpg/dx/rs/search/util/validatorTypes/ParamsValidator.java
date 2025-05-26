@@ -7,6 +7,8 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.exception.DxBadRequestException;
+import org.cdpg.dx.common.exception.SearchValidationError;
 import org.cdpg.dx.rs.search.model.ApplicableFilters;
 import org.cdpg.dx.rs.search.util.RequestType;
 import org.cdpg.dx.rs.search.util.UnifiedValidators;
@@ -38,7 +40,7 @@ public class ParamsValidator {
         Promise<Boolean> promise = Promise.promise();
         if (!allowedParamsValidator.areParamsAllowed(paramsMap)) {
             LOGGER.error("Invalid Parameter in request.");
-            promise.fail(MSG_BAD_QUERY);
+            promise.fail(new DxBadRequestException("Invalid Parameter in request"));
             return promise.future();
         }
         return validateParams(paramsMap, requestType)
@@ -46,7 +48,7 @@ public class ParamsValidator {
                 .onSuccess(successHandler -> {
                     promise.complete(true);
                 }).onFailure(failureHandler -> {
-                    promise.fail("Invalid multimap parameter");
+                    promise.fail(new DxBadRequestException("Invalid Parameter in request"));
                 });
 
     }
@@ -70,19 +72,19 @@ public class ParamsValidator {
         switch (requestType) {
             case ENTITY, POST_ENTITIES -> {
                 if (commonValidation(multiMap, false)) {
-                    return Future.succeededFuture(commonValidation(multiMap, false));
+                    return Future.succeededFuture(true);
                 } else {
-                    return Future.failedFuture("Parameters not valid for spatial.");
+                    return Future.failedFuture(new SearchValidationError("Parameters not valid for spatial."));
                 }
             }
             case TEMPORAL, POST_TEMPORAL -> {
-                if (commonValidation(multiMap, false)) {
-                    return Future.succeededFuture(commonValidation(multiMap, true));
+                if (commonValidation(multiMap, true)) {
+                    return Future.succeededFuture(true);
                 } else {
-                    return Future.failedFuture("Parameters not valid for temporal.");
+                    return Future.failedFuture(new SearchValidationError("Parameters not valid for temporal."));
                 }
             }
-            default -> Future.failedFuture("Invalid request type");
+            default -> Future.failedFuture(new DxBadRequestException("Invalid request type"));
         }
         return Future.succeededFuture();
     }
@@ -125,7 +127,6 @@ public class ParamsValidator {
         if (attrs != null) {
             isValid &= UnifiedValidators.validateAttributes(attrs);
             LOGGER.debug("Is attrs valid {}", isValid);
-
         }
         if (geoQ != null) {
             isValid &= UnifiedValidators.validateGeoQ(geoQ, false);

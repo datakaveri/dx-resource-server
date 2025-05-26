@@ -16,10 +16,11 @@ public class ResponseModel {
     private Integer count;
     private int limit;
     private int offset;
-    public ResponseModel(List<ElasticsearchResponse> elasticsearchResponses) {
+    public ResponseModel(List<ElasticsearchResponse> elasticsearchResponses,int limit,int offset) {
         this.response=new JsonObject();
         this.response.put("results",elasticsearchResponses);
-
+        this.limit=limit;
+        this.offset=offset;
         this.elasticsearchResponses = getJsonObjectList(Objects.requireNonNullElse(elasticsearchResponses, List.of()));
         this.count = -1; // Indicates it's a search and not a count request
         setResponseJson();
@@ -30,6 +31,10 @@ public class ResponseModel {
         for (ElasticsearchResponse elasticsearchResponse : elasticsearchResponses) {
             jsonObjectList.add(elasticsearchResponse.getSource());
         }
+        response.put("offset", offset);
+        response.put("limit", limit);
+        response.put("totalHits", elasticsearchResponses.size());
+
         return jsonObjectList;
     }
 
@@ -55,7 +60,7 @@ public class ResponseModel {
         if(count!=-1){
             response=new JsonObject().put("totalHits",count);
         }
-        else response = new JsonObject().put("results",elasticsearchResponses);
+        else response = new JsonObject().put("results",elasticsearchResponses).put("limit",limit).put("offset",offset);
     }
 
     public void setFromParam(int from) {

@@ -1,5 +1,9 @@
 package org.cdpg.dx.common.util;
 
+import com.hazelcast.config.properties.ValidationException;
+import io.vertx.ext.web.validation.BodyProcessorException;
+import io.vertx.ext.web.validation.ParameterProcessorException;
+import io.vertx.ext.web.validation.RequestPredicateException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cdpg.dx.common.HttpStatusCode;
@@ -70,7 +74,12 @@ public class ExceptionHttpStatusMapper {
         yield HttpStatusCode.BAD_REQUEST;
       }
 
-      // Redis Exceptions
+      // search exception
+      case SearchValidationError e -> {
+        LOGGER.debug("Matched: SearchValidationError");
+        yield HttpStatusCode.INVALID_PARAM;
+      }
+        // Redis Exceptions
       case RedisKeyNotFoundException e -> {
         LOGGER.debug("Matched: RedisKeyNotFoundException");
         yield HttpStatusCode.NOT_FOUND;
@@ -99,6 +108,22 @@ public class ExceptionHttpStatusMapper {
         LOGGER.debug("Matched: DxBadRequestException");
         yield HttpStatusCode.BAD_REQUEST;
       }
+      case BodyProcessorException e->{
+        LOGGER.debug("Matched: BodyProcessorException");
+        yield HttpStatusCode.BAD_REQUEST;
+      }
+      case ParameterProcessorException e->{
+        LOGGER.debug("Matched: ParameterProcessorException");
+        yield HttpStatusCode.BAD_REQUEST;
+      }case RequestPredicateException e->{
+        LOGGER.debug("Matched: RequestPredicateException");
+        yield HttpStatusCode.BAD_REQUEST;
+      }case ValidationException e->{
+        LOGGER.debug("Matched: ValidationException");
+        yield HttpStatusCode.BAD_REQUEST;
+      }
+
+
       case DxInternalServerErrorException e->{
         LOGGER.debug("Matched: DxInternalServerErrorException");
         yield HttpStatusCode.INTERNAL_SERVER_ERROR;

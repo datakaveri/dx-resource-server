@@ -5,7 +5,6 @@ import io.vertx.ext.web.RoutingContext;
 import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
 import org.cdpg.dx.catalogue.service.CatalogueService;
 import org.cdpg.dx.common.exception.DxAuthException;
 import org.cdpg.dx.common.models.JwtData;

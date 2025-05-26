@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.json.schema.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.exception.SearchValidationError;
 import org.cdpg.dx.rs.search.util.validatorTypes.GeoValidator;
 import org.cdpg.dx.rs.search.util.validatorTypes.TemporalValidator;
 
@@ -44,19 +45,19 @@ public final class UnifiedValidators {
             return true;
         }
         if (attribute.isBlank()) {
-            return false;
+            throw new SearchValidationError("Attribute value cannot be null");
         }
 
         String[] attrs = attribute.split(",");
         if (attrs.length > VALIDATION_MAX_ATTRS) {
             LOGGER.error("Attributes cannot be more than max limit {}",VALIDATION_MAX_ATTRS);
-            return false;
+            throw new SearchValidationError("Attributes cannot be more than max limit");
         }
 
         for (String attr : attrs) {
             if (attr.length() > VALIDATIONS_MAX_ATTR_LENGTH || !ATTRS_VALUE_REGEX.matcher(attr).matches()) {
                 LOGGER.error("Attribute cannot be more than max limit or attribute in invalid format" );
-                return false;
+                throw new SearchValidationError("Attribute cannot be more than max limit or attribute in invalid format");
             }
         }
         return true;
@@ -66,20 +67,19 @@ public final class UnifiedValidators {
         LOGGER.debug("Validating Id");
 
         if (value == null) {
-            return !required;
+            throw new SearchValidationError("Id cannot be null");
         }
         if (value.isBlank()) {
-            return !required;
+            throw new SearchValidationError("Id cannot be blank");
         }
 
         if (value.length() > VALIDATION_ID_MAX_LEN) {
             LOGGER.error("ID exceeds maximum length: {}", VALIDATION_ID_MAX_LEN);
-            return false;
+            throw new SearchValidationError("Id must be in required format");
         }
 
         if (!VALIDATION_ID_PATTERN.matcher(value).matches()) {
-            LOGGER.error("Invalid ID format");
-            return false;
+            throw new SearchValidationError("Id must be in required format");
         }
 
         return true;
@@ -92,7 +92,7 @@ public final class UnifiedValidators {
             return true;
         }
         if (value.isBlank()) {
-            return false;
+            throw new SearchValidationError("limit cannot be blank");
         }
 
         try {
@@ -100,7 +100,7 @@ public final class UnifiedValidators {
             return limit >= 0 && limit <= VALIDATION_PAGINATION_LIMIT_MAX;
         } catch (NumberFormatException e) {
             LOGGER.error("Invalid limit format: {}", value);
-            return false;
+            throw new SearchValidationError("Invalid limit format");
         }
     }
 
@@ -111,7 +111,7 @@ public final class UnifiedValidators {
             return true;
         }
         if (offset.isBlank()) {
-            return false;
+            throw new SearchValidationError("offset cannot be blank");
         }
 
         try {
@@ -119,33 +119,36 @@ public final class UnifiedValidators {
             return offsetValue >= 0 && offsetValue <= VALIDATION_PAGINATION_OFFSET_MAX;
         } catch (NumberFormatException e) {
             LOGGER.error("Invalid offset format: {}", offset);
-            return false;
+            throw new SearchValidationError("Invalid offset format");
         }
     }
 
     public static boolean validateQType(String value) {
-        LOGGER.debug("Validating Q type value {}",value);
+        LOGGER.debug("Validating Q type value {}", value);
         if (value == null || value.isBlank()) {
-            return false;
+            LOGGER.error("Q-type cannot be null or blank");
+            throw new SearchValidationError("Q-type cannot be null or blank");
         }
 
         String[] terms = value.split(";");
         if (terms.length == 0 || terms.length > MAX_QUERY_TERMS) {
-            return false;
+            LOGGER.error("Q-type has invalid number of query terms");
+            throw new SearchValidationError("Q-type has invalid number of query terms");
         }
 
         for (String term : terms) {
-            // RECHECK THIS matcher length can be 3 or 4
             Matcher matcher = QUERY_TERM_PATTERN.matcher(term.trim());
             if (!matcher.matches()) {
-                return false;
+                LOGGER.error("Query term does not match required pattern");
+                throw new SearchValidationError("Query term does not match required pattern");
             }
             String attribute = matcher.group(1);
             String operator = matcher.group(2);
             String queryValue = matcher.group(3).trim();
 
             if (!isValidQueryTerm(attribute, operator, queryValue)) {
-                return false;
+                LOGGER.error("Invalid query term format for term: {}", term);
+                throw new SearchValidationError("Invalid query term format");
             }
         }
         return true;
@@ -153,45 +156,56 @@ public final class UnifiedValidators {
 
     private static boolean isValidQueryTerm(String attribute, String operator, String value) {
         LOGGER.debug("Validating Valid query terms.");
-        // Validate attribute format
         if (!VALIDATION_Q_ATTR_PATTERN.matcher(attribute).matches()) {
-            return false;
+            LOGGER.error("Invalid query attribute format: {}", attribute);
+            throw new SearchValidationError("Invalid query attribute format");
         }
-
-        // Validate operator
         if (!VALID_OPERATORS.contains(operator)) {
-            return false;
+            LOGGER.error("Invalid operator in query: {}", operator);
+            throw new SearchValidationError("Invalid operator in query");
         }
-
-        // Validate value format
         if (!VALIDATION_Q_VALUE_PATTERN.matcher(value).matches()) {
-            return false;
+            LOGGER.error("Invalid query value format: {}", value);
+            throw new SearchValidationError("Invalid query value format");
         }
-
-        // Validate operator-value compatibility
         boolean isNumericValue = isNumeric(value);
         if (!isNumericValue && NUMERIC_OPERATORS.contains(operator)) {
-            return false;  // Can't use numeric operators with non-numeric values
+            LOGGER.error("Non-numeric value '{}' used with numeric operator '{}'", value, operator);
+            throw new SearchValidationError("Non-numeric value used with numeric operator");
         }
-
         return true;
     }
 
-
     public static boolean validateGeoQ(JsonObject geoQ, boolean required) {
-        LOGGER.debug("Validating geoQ {}",geoQ.isEmpty());
+        LOGGER.debug("Validating geoQ: isEmpty = {}", geoQ == null || geoQ.isEmpty());
         if (geoQ == null || geoQ.isEmpty()) {
-            return !required;
+            if (required) {
+                LOGGER.error("Geo query required but not provided");
+                throw new SearchValidationError("Geo query required but not provided");
+            }
+            return true;
         }
-        return geoValidator.validateGeo(geoQ);
+        if (!geoValidator.validateGeo(geoQ)) {
+            LOGGER.error("Geo query validation failed");
+            throw new SearchValidationError("Geo query validation failed");
+        }
+        return true;
     }
 
     public static boolean validateTempQ(JsonObject tempQ, boolean required) {
         LOGGER.debug("Validating tempQ");
         if (tempQ == null || tempQ.isEmpty()) {
-            return !required;
+            if (required) {
+                LOGGER.error("Temporal query required but not provided");
+                throw new SearchValidationError("Temporal query required but not provided");
+            }
+            return true;
         }
-        return temporalValidator.validateTemporalParams(tempQ);
+        if (!temporalValidator.validateTemporalParams(tempQ)) {
+            LOGGER.error("Temporal query validation failed");
+            throw new SearchValidationError("Temporal query validation failed");
+        }
+        return true;
     }
 
     public static boolean validateHeader(String publicKey) {
@@ -200,31 +214,40 @@ public final class UnifiedValidators {
             return true;
         }
         if (publicKey.length() != 44) {
-            LOGGER.error("Invalid public key length");
-            return false;
+            LOGGER.error("Invalid public key length: {}", publicKey.length());
+            throw new SearchValidationError("Public key must be 44 characters");
         }
-        return Pattern.matches(ENCODED_PUBLIC_KEY_REGEX, publicKey);
+        if (!Pattern.matches(ENCODED_PUBLIC_KEY_REGEX, publicKey)) {
+            LOGGER.error("Public key format is invalid: {}", publicKey);
+            throw new SearchValidationError("Public key format is invalid");
+        }
+        return true;
     }
 
     public static boolean validateOptions(String value) {
-       LOGGER.debug("Validating optiosn {}",value);
+        LOGGER.debug("Validating options: {}", value);
         if (value == null) {
             return true;
         }
-        return value.equals("count");
+        if (!value.equals("count")) {
+            LOGGER.error("Invalid value for options: {}", value);
+            throw new SearchValidationError("Invalid value for options parameter");
+        }
+        return true;
     }
 
-    public static boolean validateJsonSchema(JsonObject requestJson,RequestType requestType) {
+    public static boolean validateJsonSchema(JsonObject requestJson, RequestType requestType) {
         LOGGER.debug("Trying to validate JSON schema.");
         SchemaRouter schemaRouter = SchemaRouter.create(Vertx.vertx(), new SchemaRouterOptions());
         SchemaParser schemaParser = SchemaParser.createOpenAPI3SchemaParser(schemaRouter);
-        String jsonSchema = null;
+        String jsonSchema;
         try {
-           jsonSchema = loadJson(requestType.getFilename());
-            Schema schema=schemaParser.parse(new JsonObject(jsonSchema));
+            jsonSchema = loadJson(requestType.getFilename());
+            Schema schema = schemaParser.parse(new JsonObject(jsonSchema));
             schema.validateSync(requestJson);
         } catch (ValidationException | NoSyncValidationException e) {
-            return false;
+            LOGGER.error("JSON Schema validation failed: {}", e.getMessage());
+            throw new SearchValidationError("JSON Schema validation failed: " + e.getMessage());
         }
         return true;
     }

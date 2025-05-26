@@ -4,7 +4,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cdpg.dx.database.elastic.exception.EsQueryException;
+import org.cdpg.dx.common.exception.DxBadRequestException;
 import org.cdpg.dx.database.elastic.util.QueryType;
 
 import java.util.HashMap;
@@ -52,7 +52,7 @@ public class GeoQueryFiltersDecorator implements ElasticsearchQueryDecorator {
 
       if (!isValidCoordinates(
               requestQuery.getString(GEOMETRY), new JsonArray(requestQuery.getString("coordinates")))) {
-        throw new EsQueryException("Coordinate mismatch (Polygon)");
+        throw new DxBadRequestException("Coordinate mismatch (Polygon)");
       }
       Map<String, Object> geoJsonParams = getGeoJson(requestQuery);
       geoJsonParams.put("relation", relation);
@@ -70,7 +70,7 @@ public class GeoQueryFiltersDecorator implements ElasticsearchQueryDecorator {
       geoJsonParams.put(GEO_PROPERTY, "location");
       geoWrapperQuery.setQueryParameters(geoJsonParams);
     } else {
-      throw new EsQueryException("Missing/Invalid geo parameters");
+      throw new DxBadRequestException("Missing/Invalid geo parameters");
     }
     List<QueryModel> queryList = queryFilters.get(QueryType.FILTER);
     queryList.add(geoWrapperQuery);
@@ -103,19 +103,16 @@ public class GeoQueryFiltersDecorator implements ElasticsearchQueryDecorator {
 
   private boolean isValidCoordinates(String geometry, JsonArray coordinates) {
     int length = coordinates.getJsonArray(0).size();
-    if (geometry.equalsIgnoreCase(POLYGON)
-            && !coordinates
-            .getJsonArray(0)
-            .getJsonArray(0)
-            .getDouble(0)
-            .equals(coordinates.getJsonArray(0).getJsonArray(length - 1).getDouble(0))
-            && !coordinates
-            .getJsonArray(0)
-            .getJsonArray(0)
-            .getDouble(1)
-            .equals(coordinates.getJsonArray(0).getJsonArray(length - 1).getDouble(1))) {
-      return false;
-    }
-    return true;
+      return !geometry.equalsIgnoreCase(POLYGON)
+              || coordinates
+              .getJsonArray(0)
+              .getJsonArray(0)
+              .getDouble(0)
+              .equals(coordinates.getJsonArray(0).getJsonArray(length - 1).getDouble(0))
+              || coordinates
+              .getJsonArray(0)
+              .getJsonArray(0)
+              .getDouble(1)
+              .equals(coordinates.getJsonArray(0).getJsonArray(length - 1).getDouble(1));
   }
 }

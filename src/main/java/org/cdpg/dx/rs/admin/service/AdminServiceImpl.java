@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.exception.DxInternalServerErrorException;
 import org.cdpg.dx.common.util.DateTimeHelper;
 import org.cdpg.dx.database.postgres.models.*;
 import org.cdpg.dx.databroker.service.DataBrokerService;
@@ -83,7 +84,7 @@ public class AdminServiceImpl implements AdminService {
         .onFailure(
             failure -> {
               LOGGER.error("Failed to query" + failure);
-              promise.fail(new ServiceException(ERROR_INTERNAL_SERVER, INTERNAL_SERVER_ERROR));
+              promise.fail(new DxInternalServerErrorException(INTERNAL_SERVER_ERROR));
             });
 
     return promise.future();

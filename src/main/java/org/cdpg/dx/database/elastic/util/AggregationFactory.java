@@ -2,6 +2,7 @@ package org.cdpg.dx.database.elastic.util;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
+import org.cdpg.dx.common.exception.DxBadRequestException;
 import org.cdpg.dx.database.elastic.model.QueryModel;
 
 import java.util.Map;
@@ -72,7 +73,7 @@ public class AggregationFactory {
         break;
 
       default:
-        throw new UnsupportedOperationException(
+        throw new DxBadRequestException(
                 "Aggregation type not supported: " + aggregationType);
     }
 
