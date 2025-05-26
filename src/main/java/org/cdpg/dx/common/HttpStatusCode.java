@@ -17,6 +17,8 @@ public enum HttpStatusCode {
 
   // 4xx: Client Error
   BAD_REQUEST(400, "Bad Request", URNConstants.SERVER + "badRequest"),
+
+  INVALID_PARAM(400, "Bad Request", URNConstants.SERVER + "badRequest"),
   UNAUTHORIZED(401, "Not Authorized", URNConstants.SERVER + "notAuthorized"),
   PAYMENT_REQUIRED(402, "Payment Required", URNConstants.SERVER + "paymentRequired"),
   FORBIDDEN(403, "Forbidden", URNConstants.SERVER + "forbidden"),

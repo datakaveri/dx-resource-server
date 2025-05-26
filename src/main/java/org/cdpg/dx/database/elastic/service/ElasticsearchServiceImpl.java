@@ -17,6 +17,8 @@ import io.vertx.core.json.JsonObject;
 import jakarta.json.stream.JsonGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.exception.DxBadRequestException;
+import org.cdpg.dx.common.exception.DxInternalServerErrorException;
 import org.cdpg.dx.database.elastic.ElasticClient;
 import org.cdpg.dx.database.elastic.model.ElasticsearchResponse;
 import org.cdpg.dx.database.elastic.model.QueryModel;
@@ -50,9 +52,9 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
             queryModel.getAggregations().forEach(aggregation -> elasticsearchAggregations.put(aggregation.getAggregationName(), aggregation.toElasticsearchAggregations()));
         }
         QueryModel queries = queryModel.getQueries();
-        LOGGER.info("QUERIES "+queries.toJson());
+        LOGGER.debug("QUERIES "+queries.toJson());
         Query query = queries == null ? null : queries.toElasticsearchQuery();
-        LOGGER.info("QUERY "+query);
+        LOGGER.debug("QUERY "+query);
 
         String size = queryModel.getLimit();
         String from = queryModel.getOffset();
@@ -104,25 +106,37 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         // Execute the count query
         return executeCount(request);
     }
-
     private Future<Integer> executeCount(CountRequest request) {
         Promise<Integer> promise = Promise.promise();
-        LOGGER.info("REQUEST "+request);
-        // Execute the count request asynchronously
+        LOGGER.info("REQUEST {}", request);
+
         asyncClient.count(request).whenComplete((response, error) -> {
             if (error != null) {
-                LOGGER.error("Count operation failed: {}", error.getMessage());
-                promise.fail(error);
+                // Log specific error type for better debugging
+                LOGGER.error("Count operation failed. Error type: {}, Message: {}",
+                        error.getClass().getSimpleName(),
+                        error.getMessage());
+
+                // You might want to handle specific exceptions differently
+                {
+                    LOGGER.error("Elasticsearch cluster is unreachable");
+                    promise.fail(new DxInternalServerErrorException("Elasticsearch cluster is unreachable"));
+                }
             } else {
-                // Return the total count of documents matching the query
-                Integer count = Math.toIntExact(response.count());
-                LOGGER.debug("Total document count: {}", count);
-                promise.complete(count);
+                try {
+                    Integer count = Math.toIntExact(response.count());
+                    LOGGER.debug("Total document count: {}", count);
+                    promise.complete(count);
+                } catch (ArithmeticException e) {
+                    LOGGER.error("Count value too large for Integer conversion");
+                    promise.fail(new DxBadRequestException("Count value too large for Integer conversion"));
+                }
             }
         });
 
         return promise.future();
     }
+
 
     private List<ElasticsearchResponse> convertToElasticSearchResponse(SearchResponse<ObjectNode> response) {
         long totalHits = response.hits().total() != null ? response.hits().total().value() : 0;
@@ -143,7 +157,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
                 mapper.serialize(response, generator);
             } catch (Exception e) {
                 LOGGER.error("Error serializing aggregations: ", e);
-                throw new RuntimeException("Failed to process aggregations", e);
+                throw new DxInternalServerErrorException("Failed to process aggregations", e);
             }
             String result = writer.toString();
 
@@ -158,12 +172,11 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     private Future<SearchResponse<ObjectNode>> executeSearch(SearchRequest request) {
         Promise<SearchResponse<ObjectNode>> promise = Promise.promise();
-        LOGGER.info("QUERY "+request);
         asyncClient.search(request, ObjectNode.class).whenComplete((response, error) -> {
             if (error != null) {
                 LOGGER.error("Search operation failed due to {}: {}", error.getClass().getSimpleName(), error.getMessage(), error);
 
-                promise.fail(error);
+                promise.fail(new DxInternalServerErrorException(error.getMessage(),error));
             } else {
                 promise.complete(response);
             }

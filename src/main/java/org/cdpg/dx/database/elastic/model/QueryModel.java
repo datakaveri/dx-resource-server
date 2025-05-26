@@ -17,6 +17,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cdpg.dx.common.exception.DxBadRequestException;
+import org.cdpg.dx.common.exception.DxInternalServerErrorException;
 import org.cdpg.dx.database.elastic.util.AggregationFactory;
 import org.cdpg.dx.database.elastic.util.AggregationType;
 import org.cdpg.dx.database.elastic.util.BoolOperator;
@@ -107,7 +109,7 @@ public class QueryModel {
         this.filterQueries = subQueries;
         break;
       default:
-        throw new UnsupportedOperationException("Unsupported BoolOperator: " + boolOperator);
+        throw new DxBadRequestException("Unsupported BoolOperator: " + boolOperator);
     }
     this.queryType = QueryType.BOOL; // Explicitly set the query type as BOOL for clarity.
   }
@@ -578,11 +580,11 @@ public class QueryModel {
                   ))._toQuery();
 
         default:
-          throw new UnsupportedOperationException("Query type not supported: " + this.queryType);
+          throw new DxBadRequestException("Query type not supported: " + this.queryType);
       }
     } catch (Exception e) {
       LOGGER.error("Error while creating Elasticsearch Query for QueryModel: {}", this.toJson(), e);
-      throw new RuntimeException("Failed to convert QueryModel to Elasticsearch Query", e);
+      throw new DxInternalServerErrorException("Failed to convert QueryModel to Elasticsearch Query", e);
     }
   }
 
@@ -597,7 +599,7 @@ public class QueryModel {
       LOGGER.error(
               "Aggregation type or parameters missing. Aggregation cannot be created for: "
                       + this.toJson());
-      throw new IllegalArgumentException("Invalid aggregation configuration");
+      throw new DxBadRequestException("Invalid aggregation configuration");
     }
     return AggregationFactory.createAggregation(this);
   }

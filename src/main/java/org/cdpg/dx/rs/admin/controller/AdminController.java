@@ -13,6 +13,7 @@ import org.cdpg.dx.auditing.handler.AuditingHandler;
 import org.cdpg.dx.auditing.helper.AuditLogConstructor;
 import org.cdpg.dx.auth.authorization.exception.AuthorizationException;
 import org.cdpg.dx.auth.authorization.handler.ClientRevocationValidationHandler;
+import org.cdpg.dx.common.exception.DxAuthException;
 import org.cdpg.dx.common.models.JwtData;
 import org.cdpg.dx.common.response.ResponseBuilder;
 import org.cdpg.dx.databroker.service.DataBrokerService;
@@ -146,7 +147,7 @@ public class AdminController implements ApiController {
     if ("admin".equalsIgnoreCase(jwtData.get().role())) {
       routingContext.next();
     } else {
-      routingContext.fail(new AuthorizationException("Role validation failed"));
+      routingContext.fail(new DxAuthException("Role validation failed"));
     }
   }
 }

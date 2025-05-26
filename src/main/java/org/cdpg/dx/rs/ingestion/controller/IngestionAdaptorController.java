@@ -92,9 +92,7 @@ public class IngestionAdaptorController implements ApiController {
               ResponseBuilder.sendSuccess(routingContext, result);
             })
         .onFailure(
-            err -> {
-              routingContext.fail(err);
-            });
+                routingContext::fail);
   }
 
   private void handleGetAdapterDetailsById(RoutingContext routingContext) {

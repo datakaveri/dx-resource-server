@@ -4,7 +4,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cdpg.dx.database.elastic.exception.EsQueryException;
+import org.cdpg.dx.common.exception.DxBadRequestException;
 import org.cdpg.dx.database.elastic.util.QueryType;
 
 import java.util.*;
@@ -36,7 +36,7 @@ public class QueryDecoder {
 
     JsonArray id = jsonQuery.getJsonArray("id");
     if (id == null || id.isEmpty()) {
-      throw new EsQueryException("Missing required field: id");
+      throw new DxBadRequestException("Missing required field: id");
     }
 
     QueryModel idTermsQuery = new QueryModel(QueryType.TERMS);
@@ -69,7 +69,7 @@ public class QueryDecoder {
     }
 
     if (!isValidQuery) {
-      throw new EsQueryException("Invalid search query");
+      throw new DxBadRequestException("Invalid search query");
     }
 
     boolean isTemporalResource = jsonQuery.getJsonArray("applicableFilters").contains("TEMPORAL");
@@ -87,6 +87,8 @@ public class QueryDecoder {
     }
     return q;
   }
+
+
   private String[] getTimeLimitArray(JsonObject jsonQuery, boolean isAsyncQuery) {
     if (isAsyncQuery) {
       return new String[] {};

@@ -2,8 +2,7 @@ package org.cdpg.dx.database.elastic.model;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.cdpg.dx.common.ResponseUrn;
-import org.cdpg.dx.database.elastic.exception.EsQueryException;
+import org.cdpg.dx.common.exception.DxBadRequestException;
 import org.cdpg.dx.database.elastic.util.QueryType;
 
 import java.util.HashMap;
@@ -109,14 +108,12 @@ public class AttributeQueryFiltersDecorator implements ElasticsearchQueryDecorat
                     queryList.add(termQuery);
 
                 } else {
-                    throw new EsQueryException(
-                            ResponseUrn.INVALID_ATTR_PARAM_URN, "invalid attribute operator");
+                    throw new DxBadRequestException("invalid attribute operator");
                 }
-            } catch (EsQueryException e) {
+            } catch (DxBadRequestException e) {
                 throw e;
             } catch (Exception e) {
-                throw new EsQueryException(
-                        ResponseUrn.INVALID_ATTR_PARAM_URN, "exception occured at decoding attributes");
+                throw new DxBadRequestException("exception occured at decoding attributes");
             }
         }
         return queryFilters;

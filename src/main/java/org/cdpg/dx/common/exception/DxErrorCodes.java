@@ -22,6 +22,8 @@ public class DxErrorCodes {
     public static final int SUBS_QUEUE_DELETION_FAILED = 22005;
     public static final int SUBS_EXCHANGE_NOT_FOUND = 22006;
 
+    public static final int SEARCH_ERROR = 33000;
+
     public static final int RABBIT_MQ_ERROR = 44000;
     public static final int RABBIT_MQ_QUEUE_EXISTS = 44001;
     public static final int RABBIT_MQ_QUEUE_REGISTRATION_FAILED = 44002;
