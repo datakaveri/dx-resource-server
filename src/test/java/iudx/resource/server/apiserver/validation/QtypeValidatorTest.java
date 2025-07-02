@@ -86,7 +86,7 @@ public class QtypeValidatorTest {
 
 
   @ParameterizedTest
-  @ValueSource(strings = {"","abcd$","abcdeF**"})
+  @ValueSource(strings = {"","abcd$","abcdeF**","--"})
   @DisplayName("Test isValidValue method : with invalid value")
   public void test_isValidValue_with_invalid_input(String input,VertxTestContext vertxTestContext)
   {
