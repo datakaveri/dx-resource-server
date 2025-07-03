@@ -6,17 +6,18 @@ set -o pipefail
 ZAP_HOST="127.0.0.1"
 ZAP_PORT="8090"
 ZAP_URL="http://${ZAP_HOST}:${ZAP_PORT}"
-ARTIFACT_DIR="<PATH_TO_OUTPUT_DIRECTORY>"                # e.g., /home/iudx/Downloads/zap-artifacts
+ARTIFACT_DIR="<PATH_TO_OUTPUT_DIRECTORY>"         # e.g., /home/iudx/Downloads/zap-artifacts
 REPORT_FILE="zap-report.html"
-ZAP_BIN="<FULL_PATH_TO_DOWNLOADED_ZAP_SH>"               # e.g., /home/iudx/Downloads/ZAP_2.15.0/zap.sh  
+ZAP_BIN="<FULL_PATH_TO_DOWNLOADED_ZAP_SH>"        # e.g., /home/iudx/Downloads/ZAP_2.15.0/zap.sh
 
 # Parse arguments
 MODE="$1"
-COLLECTION="$2"  # Only required for --postman mode
+COLLECTION="$2"  # Required for --postman
+ENV_FILE="$3"      # Optional, only for --postman
 
 if [[ "$MODE" != "--postman" && "$MODE" != "--mvn" ]]; then
   echo "Usage:"
-  echo "  $0 --postman <collection-file>"
+  echo "  $0 --postman <collection-file> <env-file>"
   echo "  $0 --mvn"
   exit 1
 fi
@@ -46,15 +47,28 @@ if [[ "$MODE" == "--postman" ]]; then
     echo "[!] Collection file not found: $COLLECTION"
     exit 1
   fi
+  if [[ ! -f "$ENV_FILE" ]]; then
+    echo "[!] Environment file not found: $ENV_FILE"
+    exit 1
+  fi
   echo "[+] Running Postman collection through ZAP proxy..."
   HTTP_PROXY="http://${ZAP_HOST}:${ZAP_PORT}" \
-  HTTPS_PROXY="http://${ZAP_HOST}:${ZAP_PORT}" \
-  newman run "$COLLECTION" --insecure
+  newman run "$COLLECTION" \
+    -e "$ENV_FILE" \
+    -n 2 \
+    --insecure \
+    -r htmlextra \
+    --reporter-htmlextra-export "${ARTIFACT_DIR}/${REPORT_FILE}" \
+    --reporter-htmlextra-skipSensitiveData
+
 elif [[ "$MODE" == "--mvn" ]]; then
   echo "[+] Running Rest Assured tests (Maven) through ZAP proxy..."
-  MAVEN_OPTS="-Dhttp.proxyHost=$ZAP_HOST -Dhttp.proxyPort=$ZAP_PORT \
-              -Dhttps.proxyHost=$ZAP_HOST -Dhttps.proxyPort=$ZAP_PORT" \
-  mvn clean verify
+  mvn test-compile failsafe:integration-test \
+    -DskipUnitTests=true \
+    -DintTestProxyHost=jenkins-master-priv \
+    -DintTestProxyPort=8090 \
+    -DintTestHost=jenkins-slave1 \
+    -DintTestPort=8080
 fi
 
 # Capture scanned URLs
@@ -75,12 +89,12 @@ for URL in $SITES; do
   zap-cli --zap-url "http://$ZAP_HOST" --port "$ZAP_PORT" active-scan "$URL" --recursive
 done
 
-# Generate and move HTML report
-echo "[+] Generating ZAP HTML report..."
-zap-cli --zap-url "http://$ZAP_HOST" --port "$ZAP_PORT" report -o "$REPORT_FILE" -f html
-
-echo "[+] Moving report to artifacts directory..."
-mkdir -p "$ARTIFACT_DIR"
-mv "$REPORT_FILE" "$ARTIFACT_DIR/"
+# Generate ZAP HTML report (only if not already created by newman htmlextra)
+if [[ "$MODE" == "--mvn" ]]; then
+  echo "[+] Generating ZAP HTML report..."
+  zap-cli --zap-url "http://$ZAP_HOST" --port "$ZAP_PORT" report -o "$REPORT_FILE" -f html
+  mkdir -p "$ARTIFACT_DIR"
+  mv "$REPORT_FILE" "$ARTIFACT_DIR/"
+fi
 
 echo "[✅] ZAP security testing completed successfully. Report available at $ARTIFACT_DIR/$REPORT_FILE"
