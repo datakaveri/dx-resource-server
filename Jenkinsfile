@@ -118,7 +118,7 @@ pipeline {
         }
         node('built-in') {
           script{
-            sh 'bash zap-test.sh'
+            sh 'bash /home/ubuntu/ZAP_2.16.1/zap-test.sh'
             publishHTML(target: [
               allowMissing: false,
               alwaysLinkToLastBuild: true,
