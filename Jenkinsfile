@@ -121,12 +121,8 @@ pipeline {
           }
         }
 
-        node('slave1') {
-          script{
-            sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
-            sh 'mvn test-compile failsafe:integration-test -DskipUnitTests=true -DintTestProxyHost=jenkins-master-priv -DintTestProxyPort=8090 -DintTestHost=jenkins-slave1 -DintTestPort=8080'
-          }
-        }
+        sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
+        sh 'mvn test-compile failsafe:integration-test -DskipUnitTests=true -DintTestProxyHost=jenkins-master-priv -DintTestProxyPort=8090 -DintTestHost=jenkins-slave1 -DintTestPort=8080'
 
         node('built-in') {
           script{
@@ -153,12 +149,10 @@ pipeline {
           error "Test failure. Stopping pipeline execution!"
         }
         cleanup{
-          node('slave1') {
             script{
               sh 'sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java'
               sh 'docker compose -f docker-compose.test.yml down --remove-orphans'
             }
-          } 
         }
       }
     }
