@@ -111,25 +111,36 @@ pipeline {
     stage('Integration Tests and OWASP ZAP pen test'){
       steps{
         script{
-            sh 'mkdir -p configs'
-            sh 'scp /home/ubuntu/configs/rs-config-test.json ./configs/config-test.json'
-            sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
-            sh 'mvn test-compile failsafe:integration-test -DskipUnitTests=true -DintTestProxyHost=jenkins-master-priv -DintTestProxyPort=8090 -DintTestHost=jenkins-slave1 -DintTestPort=8080'
+          sh 'mkdir -p configs'
+          sh 'scp /home/ubuntu/configs/rs-config-test.json ./configs/config-test.json'
         }
+
         node('built-in') {
           script{
-            sh 'bash /home/ubuntu/ZAP_2.16.1/zap-test.sh --mvn'
+            sh 'bash /home/ubuntu/ZAP_2.16.1/start-zap.sh'
+          }
+        }
+
+        node('slave1') {
+          script{
+            sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
+            sh 'mvn test-compile failsafe:integration-test -DskipUnitTests=true -DintTestProxyHost=jenkins-master-priv -DintTestProxyPort=8090 -DintTestHost=jenkins-slave1 -DintTestPort=8080'
+          }
+        }
+
+        node('built-in') {
+          script{
+            sh 'bash /home/ubuntu/ZAP_2.16.1/post-zap.sh --mvn'
             publishHTML(target: [
               allowMissing: false,
               alwaysLinkToLastBuild: true,
               keepAll: true,
-              reportDir: 'zap-report',
-              reportFiles: 'index.html',
+              reportDir: '/var/lib/jenkins/iudx/rs/zap-artifacts',
+              reportFiles: 'zap-report.html',
               reportName: 'OWASP ZAP Report'
             ])
           }
         }
-
       }
       post{
         always{
@@ -142,9 +153,11 @@ pipeline {
           error "Test failure. Stopping pipeline execution!"
         }
         cleanup{
-          script{
-            sh 'sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java'
-            sh 'docker compose -f docker-compose.test.yml down --remove-orphans'
+          node('slave1') {
+            script{
+              sh 'sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java'
+              sh 'docker compose -f docker-compose.test.yml down --remove-orphans'
+            }
           } 
         }
       }
