@@ -149,10 +149,10 @@ pipeline {
           error "Test failure. Stopping pipeline execution!"
         }
         cleanup{
-            script{
-              sh 'sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java'
-              sh 'docker compose -f docker-compose.test.yml down --remove-orphans'
-            }
+          script{
+            sh 'sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java'
+            sh 'docker compose -f docker-compose.test.yml down --remove-orphans'
+          }
         }
       }
     }
