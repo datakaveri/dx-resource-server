@@ -118,6 +118,7 @@ pipeline {
         script{
             sh 'mkdir -p configs'
             sh 'scp /home/ubuntu/configs/rs-config-test.json ./configs/config-test.json'
+            sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
         }
         node('built-in') {
           script{
