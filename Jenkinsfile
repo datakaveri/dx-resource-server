@@ -118,9 +118,6 @@ pipeline {
         script{
             sh 'mkdir -p configs'
             sh 'scp /home/ubuntu/configs/rs-config-test.json ./configs/config-test.json'
-        }
-        node('built-in') {
-          script{
             sh 'bash /home/ubuntu/ZAP_2.16.1/post-zap.sh --mvn'
             publishHTML(target: [
               allowMissing: false,
@@ -130,8 +127,7 @@ pipeline {
               reportFiles: 'zap-report.html',
               reportName: 'OWASP ZAP Report'
             ])
-          }
-        }
+         }
       }
       post{
         always{
