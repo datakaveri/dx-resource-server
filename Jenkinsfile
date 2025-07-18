@@ -112,22 +112,22 @@ pipeline {
       steps{
         node('built-in') {
           script{
-            startZap ([host: '0.0.0.0', port: 8090, zapHome: '/var/lib/jenkins/tools/com.cloudbees.jenkins.plugins.customtools.CustomTool/OWASP_ZAP/ZAP_2.11.0'])
-            sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
+            sh 'bash /Jenkins/resources/start-zap.sh'
           }
         }
         script{
             sh 'mkdir -p configs'
             sh 'scp /home/ubuntu/configs/rs-config-test.json ./configs/config-test.json'
-            sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
-            sh 'mvn test-compile failsafe:integration-test -DskipUnitTests=true -DintTestProxyHost=jenkins-master-priv -DintTestProxyPort=8090 -DintTestHost=jenkins-slave1 -DintTestPort=8080'
-        }
-        node('built-in') {
-          script{
-            runZapAttack()
-            }
-        }
-
+            sh 'bash /Jenkins/resources/post-zap.sh --mvn'
+            publishHTML(target: [
+              allowMissing: false,
+              alwaysLinkToLastBuild: true,
+              keepAll: true,
+              reportDir: '/var/lib/jenkins/iudx/rs/zap-artifacts',
+              reportFiles: 'zap-report.html',
+              reportName: 'OWASP ZAP Report'
+            ])
+         }
       }
       post{
         always{
@@ -135,11 +135,6 @@ pipeline {
              thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
              tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
              )
-          node('built-in') {
-            script{
-              archiveZap failHighAlerts: 1, failMediumAlerts: 1, failLowAlerts: 1
-            }
-          }
         }
         failure{
           error "Test failure. Stopping pipeline execution!"
@@ -148,7 +143,7 @@ pipeline {
           script{
             sh 'sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java'
             sh 'docker compose -f docker-compose.test.yml down --remove-orphans'
-          } 
+          }
         }
       }
     }
