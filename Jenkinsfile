@@ -112,13 +112,13 @@ pipeline {
       steps{
         node('built-in') {
           script{
-            sh 'bash /Jenkins/resources/start-zap.sh'
+            sh 'bash Jenkins/resources/start-zap.sh'
           }
         }
         script{
             sh 'mkdir -p configs'
             sh 'scp /home/ubuntu/configs/rs-config-test.json ./configs/config-test.json'
-            sh 'bash /Jenkins/resources/post-zap.sh --mvn'
+            sh 'bash Jenkins/resources/post-zap.sh --mvn'
             publishHTML(target: [
               allowMissing: false,
               alwaysLinkToLastBuild: true,
