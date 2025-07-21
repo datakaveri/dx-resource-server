@@ -112,13 +112,13 @@ pipeline {
       steps{
         node('built-in') {
           script{
-            sh 'bash /var/lib/jenkins/workspace/iudx RS (PR) pipeline@script/dca9f0e4a27c2386b6c7334490ce80ec78d1fc6307fad13190e33f8facb0cb13/Jenkins/resources/start-zap.sh'
+            sh """bash "${WORKSPACE}/Jenkins/resources/start-zap.sh" """
           }
         }
         script{
             sh 'mkdir -p configs'
             sh 'scp /home/ubuntu/configs/rs-config-test.json ./configs/config-test.json'
-            sh 'bash /var/lib/jenkins/workspace/iudx RS (PR) pipeline@script/dca9f0e4a27c2386b6c7334490ce80ec78d1fc6307fad13190e33f8facb0cb13/Jenkins/resources/start-zap.sh --mvn'
+            sh """bash "${WORKSPACE}/Jenkins/resources/post-zap.sh" --mvn"""
             publishHTML(target: [
               allowMissing: false,
               alwaysLinkToLastBuild: true,
