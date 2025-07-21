@@ -2,7 +2,7 @@
 
 set -e
 
-ZAP_HOST="0.0.0.0"
+ZAP_HOST="10.139.0.10"
 ZAP_PORT="8090"
 ARTIFACT_DIR="/var/lib/jenkins/iudx/rs/zap-artifacts"
 REPORT_FILE="zap-report.html"
