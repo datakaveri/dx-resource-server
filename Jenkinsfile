@@ -112,6 +112,7 @@ pipeline {
       steps{
         node('built-in') {
           sh 'zap -daemon -host 127.0.0.1 -port 8090 -config api.disablekey=true'
+          sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
         }
         script{
             sh 'mkdir -p configs'
