@@ -111,7 +111,7 @@ pipeline {
     stage('Integration Tests and OWASP ZAP pen test'){
       steps{
         node('built-in') {
-          sh 'zap -daemon -host 127.0.0.1 -port 8090 -config api.disablekey=true'
+          sh 'nohup zap -daemon -host 127.0.0.1 -port 8090 -config api.disablekey=true > zap.log 2>&1 &'
         }
         script{
             sh 'mkdir -p configs'
