@@ -112,7 +112,9 @@ pipeline {
       steps{
         node('built-in') {
           script{
-            zap -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=true
+            sh '''
+              nohup zap -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=true > zap.log 2>&1 &
+            '''
             sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
           }
         }
