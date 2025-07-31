@@ -52,7 +52,7 @@ if [[ "$MODE" == "--mvn" ]]; then
   sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
   mvn test-compile failsafe:integration-test \
     -DskipUnitTests=true \
-    -DintTestProxyHost=jenkins-master-priv \
+    -DintTestProxyHost=127.0.0.1 \
     -DintTestProxyPort=8090 \
     -DintTestHost=jenkins-slave1 \
     -DintTestPort=8080
