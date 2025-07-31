@@ -2,7 +2,7 @@
 
 set -e
 
-ZAP_HOST="127.0.0.1"
+ZAP_HOST="10.139.0.10"
 ZAP_PORT="8090"
 ARTIFACT_DIR="/var/lib/jenkins/iudx/rs/zap-artifacts"
 REPORT_FILE="zap-report.html"
@@ -22,7 +22,7 @@ if [[ "$MODE" != "--postman" && "$MODE" != "--mvn" ]]; then
 fi
 
 echo "[+] Creating new ZAP session..."
-zap-cli --api-key "" --zap-url "http://${ZAP_HOST}:${ZAP_PORT}" session new
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" session new
 
 # For Postman mode
 if [[ "$MODE" == "--postman" ]]; then
@@ -52,7 +52,7 @@ if [[ "$MODE" == "--mvn" ]]; then
   sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
   mvn test-compile failsafe:integration-test \
     -DskipUnitTests=true \
-    -DintTestProxyHost=127.0.0.1 \
+    -DintTestProxyHost=jenkins-master-priv \
     -DintTestProxyPort=8090 \
     -DintTestHost=jenkins-slave1 \
     -DintTestPort=8080
@@ -60,14 +60,14 @@ fi
 
 # Spider and scan ONLY the resource server API
 echo "[+] Running ZAP spider and active scan on ${TARGET_API}..."
-zap-cli --api-key "" --zap-url "http://${ZAP_HOST}:${ZAP_PORT}" spider "$TARGET_API"
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" spider "$TARGET_API"
 
-zap-cli --api-key "" --zap-url "http://${ZAP_HOST}:${ZAP_PORT}" active-scan "$TARGET_API" --recursive
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" active-scan "$TARGET_API" --recursive
 
 # Generate report (if mvn)
 if [[ "$MODE" == "--mvn" ]]; then
   echo "[+] Generating ZAP HTML report..."
-  zap-cli --api-key "" --zap-url "http://${ZAP_HOST}:${ZAP_PORT}" report -o "$REPORT_FILE" -f html
+  zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" report -o "$REPORT_FILE" -f html
   mkdir -p "$ARTIFACT_DIR"
   mv "$REPORT_FILE" "$ARTIFACT_DIR/"
 fi
