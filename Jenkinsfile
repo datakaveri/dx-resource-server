@@ -40,20 +40,20 @@ pipeline {
         jacoco classPattern: 'target/classes', execPattern: 'target/jacoco.exec', sourcePattern: 'src/main/java', exclusionPattern:'iudx/resource/server/apiserver/ApiServerVerticle.class,**/*VertxEBProxy.class,**/Constants.class,**/*VertxProxyHandler.class,**/*Verticle.class,iudx/resource/server/database/archives/DatabaseService.class,iudx/resource/server/database/async/AsyncService.class,iudx/resource/server/database/latest/LatestDataService.class,iudx/resource/server/deploy/*.class,iudx/resource/server/database/postgres/PostgresService.class,iudx/resource/server/apiserver/ManagementRestApi.class,iudx/resource/server/apiserver/AdminRestApi.class,iudx/resource/server/apiserver/AsyncRestApi.class,iudx/resource/server/callback/CallbackService.class,**/JwtDataConverter.class,**/EncryptionService.class,**/EsResponseFormatter.class,**/AbstractEsSearchResponseFormatter.class'
       }
       post{
-      always {
-        recordIssues(
-          enabledForFailure: true,
-          skipBlames: true,
-          qualityGates: [[threshold:100, type: 'TOTAL', unstable: false]],
-          tool: checkStyle(pattern: 'target/checkstyle-result.xml')
-        )
-        recordIssues(
-          enabledForFailure: true,
-          skipBlames: true,
-          qualityGates: [[threshold:100, type: 'TOTAL', unstable: false]],
-          tool: pmdParser(pattern: 'target/pmd.xml')
-        )
-      }
+        always {
+          recordIssues(
+            enabledForFailure: true,
+            skipBlames: true,
+            qualityGates: [[threshold:100, type: 'TOTAL', unstable: false]],
+            tool: checkStyle(pattern: 'target/checkstyle-result.xml')
+          )
+          recordIssues(
+            enabledForFailure: true,
+            skipBlames: true,
+            qualityGates: [[threshold:100, type: 'TOTAL', unstable: false]],
+            tool: pmdParser(pattern: 'target/pmd.xml')
+          )
+        }
         failure{
           script{
             sh 'docker compose -f docker-compose.test.yml down --remove-orphans'
@@ -112,43 +112,46 @@ pipeline {
       steps{
         node('built-in') {
           script{
-            sh '''
-              nohup zap -daemon -host 127.0.0.1 -port 8090 -config api.disablekey=true > zap.log 2>&1 &
+            sh '''#!/bin/bash
+              nohup zap -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=true > zap.log 2>&1 &
               echo "[*] Waiting for ZAP to become ready..."
               for i in {1..12}; do
-                if curl --silent --fail http://127.0.0.1:8090/JSON/core/view/version/ > /dev/null; then
+                if curl --silent --fail http://0.0.0.0:8090/JSON/core/view/version/ > /dev/null; then
                   echo "[+] ZAP is ready!"
-                  exit 0
+                  break
                 fi
                 echo "[*] Attempt $i: ZAP not yet ready, sleeping 5s..."
                 sleep 5
               done
-              echo "[!] ZAP did not start within expected time. Failing."
-              exit 1
+
+              if ! curl --silent --fail http://0.0.0.0:8090/JSON/core/view/version/ > /dev/null; then
+                echo "[!] ZAP did not start within expected time. Failing."
+                exit 1
+              fi
             '''
-            sh 'curl http://127.0.0.1:8090/JSON/pscan/action/disableScanners/?ids=10096'
+            sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
           }
         }
         script{
-            sh 'mkdir -p configs'
-            sh 'scp /home/ubuntu/configs/rs-config-test.json ./configs/config-test.json'
-            sh 'bash Jenkins/resources/post-zap.sh --mvn'
-            publishHTML(target: [
-              allowMissing: false,
-              alwaysLinkToLastBuild: true,
-              keepAll: true,
-              reportDir: '/var/lib/jenkins/iudx/rs/zap-artifacts',
-              reportFiles: 'zap-report.html',
-              reportName: 'OWASP ZAP Report'
-            ])
-         }
+          sh 'mkdir -p configs'
+          sh 'scp /home/ubuntu/configs/rs-config-test.json ./configs/config-test.json'
+          sh 'bash Jenkins/resources/post-zap.sh --mvn'
+          publishHTML(target: [
+            allowMissing: false,
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportDir: '/var/lib/jenkins/iudx/rs/zap-artifacts',
+            reportFiles: 'zap-report.html',
+            reportName: 'OWASP ZAP Report'
+          ])
+        }
       }
       post{
         always{
-           xunit (
-             thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
-             tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
-             )
+          xunit (
+            thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
+            tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
+          )
         }
         failure{
           error "Test failure. Stopping pipeline execution!"
@@ -203,16 +206,16 @@ pipeline {
         }
         stage('Integration test on swarm deployment') {
           steps {
-              script{
-                sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
-                sh 'mvn test-compile failsafe:integration-test -DskipUnitTests=true -DintTestDepl=true'
-              }
+            script{
+              sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
+              sh 'mvn test-compile failsafe:integration-test -DskipUnitTests=true -DintTestDepl=true'
+            }
           }
           post{
             always{
-             script{
+              script{
                 sh 'sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java'
-             }
+              }
              xunit (
                thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
                tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
@@ -225,3 +228,14 @@ pipeline {
         }
       }
     }
+  }
+  post{
+    failure{
+      script{
+        if (env.GIT_BRANCH == 'origin/master')
+        emailext recipientProviders: [buildUser(), developers()], to: '$RS_RECIPIENTS, $DEFAULT_RECIPIENTS', subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!', body: '''$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS:
+Check console output at $BUILD_URL to view the results.'''
+      }
+    }
+  }
+}
