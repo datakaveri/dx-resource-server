@@ -111,31 +111,25 @@ pipeline {
     stage('Integration Tests and OWASP ZAP pen test'){
       steps{
         node('built-in') {
-          script {
-            // Start ZAP manually in the background
-            sh '''
-              echo "[+] Starting ZAP manually..."
-              nohup zap -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=true > zap.log 2>&1 &
-            '''
-          }
-
-          // Wait for ZAP to become ready
-          timeout(time: 2, unit: 'MINUTES') {
-            waitUntil {
-              script {
-                def result = sh (
-                  script: "curl -s http://0.0.0.0:8090/JSON/core/view/version/",
-                  returnStatus: true
-                )
-                return (result == 0)
-              }
-            }
-          }
-
-          // Disable unwanted scanners
-          sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
-
           script{
+            sh '''
+              nohup zap -daemon -host 127.0.0.1 -port 8090 -config api.disablekey=true > zap.log 2>&1 &
+              echo "[*] Waiting for ZAP to become ready..."
+              for i in {1..12}; do
+                if curl --silent --fail http://127.0.0.1:8090/JSON/core/view/version/ > /dev/null; then
+                  echo "[+] ZAP is ready!"
+                  exit 0
+                fi
+                echo "[*] Attempt $i: ZAP not yet ready, sleeping 5s..."
+                sleep 5
+              done
+              echo "[!] ZAP did not start within expected time. Failing."
+              exit 1
+            '''
+            sh 'curl http://127.0.0.1:8090/JSON/pscan/action/disableScanners/?ids=10096'
+          }
+        }
+        script{
             sh 'mkdir -p configs'
             sh 'scp /home/ubuntu/configs/rs-config-test.json ./configs/config-test.json'
             sh 'bash Jenkins/resources/post-zap.sh --mvn'
@@ -147,15 +141,14 @@ pipeline {
               reportFiles: 'zap-report.html',
               reportName: 'OWASP ZAP Report'
             ])
-          }
-        }
+         }
       }
       post{
         always{
-          xunit (
-            thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
-            tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
-          )
+           xunit (
+             thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
+             tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
+             )
         }
         failure{
           error "Test failure. Stopping pipeline execution!"
@@ -210,20 +203,20 @@ pipeline {
         }
         stage('Integration test on swarm deployment') {
           steps {
-            script{
-              sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
-              sh 'mvn test-compile failsafe:integration-test -DskipUnitTests=true -DintTestDepl=true'
-            }
+              script{
+                sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
+                sh 'mvn test-compile failsafe:integration-test -DskipUnitTests=true -DintTestDepl=true'
+              }
           }
           post{
             always{
-              script{
+             script{
                 sh 'sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java'
-              }
-              xunit (
-                thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
-                tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
-              )
+             }
+             xunit (
+               thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
+               tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
+               )
             }
             failure{
               error "Test failure. Stopping pipeline execution!"
@@ -232,14 +225,3 @@ pipeline {
         }
       }
     }
-  }
-  post{
-    failure{
-      script{
-        if (env.GIT_BRANCH == 'origin/master')
-        emailext recipientProviders: [buildUser(), developers()], to: '$RS_RECIPIENTS, $DEFAULT_RECIPIENTS', subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!', body: '''$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS:
-Check console output at $BUILD_URL to view the results.'''
-      }
-    }
-  }
-}
