@@ -22,7 +22,7 @@ if [[ "$MODE" != "--postman" && "$MODE" != "--mvn" ]]; then
 fi
 
 echo "[+] Creating new ZAP session..."
-zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" session new
+zap-cli --api-key "" --zap-url "http://${ZAP_HOST}:${ZAP_PORT}" session new
 
 # For Postman mode
 if [[ "$MODE" == "--postman" ]]; then
@@ -60,14 +60,14 @@ fi
 
 # Spider and scan ONLY the resource server API
 echo "[+] Running ZAP spider and active scan on ${TARGET_API}..."
-zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" spider "$TARGET_API"
+zap-cli --api-key "" --zap-url "http://${ZAP_HOST}:${ZAP_PORT}" spider "$TARGET_API"
 
-zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" active-scan "$TARGET_API" --recursive
+zap-cli --api-key "" --zap-url "http://${ZAP_HOST}:${ZAP_PORT}" active-scan "$TARGET_API" --recursive
 
 # Generate report (if mvn)
 if [[ "$MODE" == "--mvn" ]]; then
   echo "[+] Generating ZAP HTML report..."
-  zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" report -o "$REPORT_FILE" -f html
+  zap-cli --api-key "" --zap-url "http://${ZAP_HOST}:${ZAP_PORT}" report -o "$REPORT_FILE" -f html
   mkdir -p "$ARTIFACT_DIR"
   mv "$REPORT_FILE" "$ARTIFACT_DIR/"
 fi
