@@ -112,23 +112,8 @@ pipeline {
       steps{
         node('built-in') {
           script{
-            echo '[+] Starting ZAP manually on master node...'
-
-            // Start ZAP in background
-            sh '''
-              nohup zap -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=true > zap.log 2>&1 &
-            '''
-
-            // Wait until ZAP is responsive
-            timeout(time: 2, unit: 'MINUTES') {
-              waitUntil {
-                script {
-                  return sh(script: "curl -s http://0.0.0.0:8090/JSON/core/view/version/", returnStatus: true) == 0
-                }
-              }
-            }
-
-            // Disable specific scanner
+            startZap ([host: '0.0.0.0', port: 8090, zapHome: '/var/lib/jenkins/tools/com.cloudbees.jenkins.plugins.customtools.CustomTool/OWASP_ZAP/ZAP_2.11.0'])
+            zap -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=true
             sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
           }
         }
