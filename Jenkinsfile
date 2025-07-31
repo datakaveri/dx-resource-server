@@ -111,12 +111,31 @@ pipeline {
     stage('Integration Tests and OWASP ZAP pen test'){
       steps{
         node('built-in') {
-          script{
-            startZap ([host: '0.0.0.0', port: 8090, zapHome: '/var/lib/jenkins/tools/com.cloudbees.jenkins.plugins.customtools.CustomTool/OWASP_ZAP/ZAP_2.11.0'])
-            sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
+          script {
+            // Start ZAP manually in the background
+            sh '''
+              echo "[+] Starting ZAP manually..."
+              nohup zap -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=true > zap.log 2>&1 &
+            '''
           }
-        }
-        script{
+
+          // Wait for ZAP to become ready
+          timeout(time: 2, unit: 'MINUTES') {
+            waitUntil {
+              script {
+                def result = sh (
+                  script: "curl -s http://0.0.0.0:8090/JSON/core/view/version/",
+                  returnStatus: true
+                )
+                return (result == 0)
+              }
+            }
+          }
+
+          // Disable unwanted scanners
+          sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
+
+          script{
             sh 'mkdir -p configs'
             sh 'scp /home/ubuntu/configs/rs-config-test.json ./configs/config-test.json'
             sh 'bash Jenkins/resources/post-zap.sh --mvn'
@@ -128,14 +147,15 @@ pipeline {
               reportFiles: 'zap-report.html',
               reportName: 'OWASP ZAP Report'
             ])
-         }
+          }
+        }
       }
       post{
         always{
-           xunit (
-             thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
-             tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
-             )
+          xunit (
+            thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
+            tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
+          )
         }
         failure{
           error "Test failure. Stopping pipeline execution!"
@@ -190,20 +210,20 @@ pipeline {
         }
         stage('Integration test on swarm deployment') {
           steps {
-              script{
-                sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
-                sh 'mvn test-compile failsafe:integration-test -DskipUnitTests=true -DintTestDepl=true'
-              }
+            script{
+              sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
+              sh 'mvn test-compile failsafe:integration-test -DskipUnitTests=true -DintTestDepl=true'
+            }
           }
           post{
             always{
-             script{
+              script{
                 sh 'sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java'
-             }
-             xunit (
-               thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
-               tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
-               )
+              }
+              xunit (
+                thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
+                tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
+              )
             }
             failure{
               error "Test failure. Stopping pipeline execution!"
