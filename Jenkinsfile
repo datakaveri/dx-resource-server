@@ -118,11 +118,11 @@ pipeline {
             timeout(time: 2, unit: 'MINUTES') {
               waitUntil {
                 script {
-                  return sh(script: "curl -s http://0.0.0.0:8090/JSON/core/view/version/ > /dev/null", returnStatus: true) == 0
+                  return sh(script: "curl -s http://127.0.0.1:8090/JSON/core/view/version/ > /dev/null", returnStatus: true) == 0
                 }
              }
           }
-            sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
+            sh 'curl http://127.0.0.1:8090/JSON/pscan/action/disableScanners/?ids=10096'
           }
         }
         script{
