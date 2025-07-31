@@ -112,6 +112,17 @@ pipeline {
       steps{
         node('built-in') {
           sh 'nohup zap -daemon -host 127.0.0.1 -port 8090 -config api.disablekey=true > zap.log 2>&1 &'
+
+          echo 'Waiting for ZAP to start...'
+          timeout(time: 1, unit: 'MINUTES') {
+            waitUntil {
+              script {
+                return sh(script: "curl -s http://127.0.0.1:8090", returnStatus: true) == 0
+              }
+            }
+          }
+          echo '✅ ZAP is up and running!'
+
         }
         script{
             sh 'mkdir -p configs'
