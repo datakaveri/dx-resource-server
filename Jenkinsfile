@@ -113,7 +113,7 @@ pipeline {
         node('built-in') {
           script{
             sh '''
-              nohup /home/ubuntu/ZAP_2.16.1/zap.sh -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=true > zap.log 2>&1 &
+              zap -daemon -host 127.0.0.1 -port 8090 -config api.disablekey=true
             '''
             timeout(time: 2, unit: 'MINUTES') {
               waitUntil {
