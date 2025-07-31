@@ -1,233 +1,75 @@
-pipeline {
+#!/bin/bash
 
-  environment {
-    devRegistry = 'ghcr.io/datakaveri/rs-dev'
-    deplRegistry = 'ghcr.io/datakaveri/rs-depl'
-    testRegistry = 'ghcr.io/datakaveri/rs-test:latest'
-    registryUri = 'https://ghcr.io'
-    registryCredential = 'datakaveri-ghcr'
-    GIT_HASH = GIT_COMMIT.take(7)
-  }
+set -e
 
-  agent { 
-    node {
-      label 'slave1' 
-    }
-  }
+ZAP_HOST="10.139.0.10"
+ZAP_PORT="8090"
+ARTIFACT_DIR="/var/lib/jenkins/iudx/rs/zap-artifacts"
+REPORT_FILE="zap-report.html"
+TARGET_API="https://rs.iudx.io/apis"
 
-  stages {
-    
-    stage('Build images') {
-      steps{
-        script {
-          echo 'Pulled - ' + env.GIT_BRANCH
-          devImage = docker.build( devRegistry, "-f ./docker/dev.dockerfile .")
-          deplImage = docker.build( deplRegistry, "-f ./docker/depl.dockerfile .")
-          testImage = docker.build( testRegistry, "-f ./docker/test.dockerfile .")
-        }
-      }
-    }
+# Parse args
+MODE="$1"
+COLLECTION="$2"
+ENV_FILE="$3"
 
-    stage('Unit Tests and Code Coverage Test'){
-      steps{
-        script{
-          sh 'docker compose -f docker-compose.test.yml up test'
-        }
-        xunit (
-          thresholds: [ skipped(failureThreshold: '40'), failed(failureThreshold: '0') ],
-          tools: [ JUnit(pattern: 'target/surefire-reports/*.xml') ]
-        )
-        jacoco classPattern: 'target/classes', execPattern: 'target/jacoco.exec', sourcePattern: 'src/main/java', exclusionPattern:'iudx/resource/server/apiserver/ApiServerVerticle.class,**/*VertxEBProxy.class,**/Constants.class,**/*VertxProxyHandler.class,**/*Verticle.class,iudx/resource/server/database/archives/DatabaseService.class,iudx/resource/server/database/async/AsyncService.class,iudx/resource/server/database/latest/LatestDataService.class,iudx/resource/server/deploy/*.class,iudx/resource/server/database/postgres/PostgresService.class,iudx/resource/server/apiserver/ManagementRestApi.class,iudx/resource/server/apiserver/AdminRestApi.class,iudx/resource/server/apiserver/AsyncRestApi.class,iudx/resource/server/callback/CallbackService.class,**/JwtDataConverter.class,**/EncryptionService.class,**/EsResponseFormatter.class,**/AbstractEsSearchResponseFormatter.class'
-      }
-      post{
-      always {
-        recordIssues(
-          enabledForFailure: true,
-          skipBlames: true,
-          qualityGates: [[threshold:100, type: 'TOTAL', unstable: false]],
-          tool: checkStyle(pattern: 'target/checkstyle-result.xml')
-        )
-        recordIssues(
-          enabledForFailure: true,
-          skipBlames: true,
-          qualityGates: [[threshold:100, type: 'TOTAL', unstable: false]],
-          tool: pmdParser(pattern: 'target/pmd.xml')
-        )
-      }
-        failure{
-          script{
-            sh 'docker compose -f docker-compose.test.yml down --remove-orphans'
-          }
-          error "Test failure. Stopping pipeline execution!"
-        }
-        cleanup{
-          script{
-            sh 'sudo rm -rf target/'
-          }
-        }        
-      }
-    }
+# Show usage if invalid
+if [[ "$MODE" != "--postman" && "$MODE" != "--mvn" ]]; then
+  echo "Usage:"
+  echo "  $0 --postman <collection-file> <env-file>"
+  echo "  $0 --mvn"
+  exit 1
+fi
 
-    stage('Start Resource-Server for Performance and Integration Testing'){
-      steps{
-        script{
-          sh 'scp Jmeter/ResourceServer.jmx jenkins@jenkins-master:/var/lib/jenkins/iudx/rs/Jmeter/'
-          sh 'docker compose -f docker-compose.test.yml up -d perfTest'
-          sh 'sleep 60'
-        }
-      }
-      post{
-        failure{
-          script{
-            sh 'docker compose -f docker-compose.test.yml down --remove-orphans'
-          }
-        }
-      }
-    }
-    
-    stage('Jmeter Performance Test'){
-      steps{
-        script{
-          env.puneToken = sh(returnStdout: true, script: 'python3 Jenkins/resources/get-token.py --pune').trim()
-          env.suratToken = sh(returnStdout: true, script: 'python3 Jenkins/resources/get-token.py --surat').trim()
-        }
-        node('built-in') {
-          script{
-            sh 'rm -rf /var/lib/jenkins/iudx/rs/Jmeter/report ; mkdir -p /var/lib/jenkins/iudx/rs/Jmeter/report'
-            sh "set +x;/var/lib/jenkins/apache-jmeter/bin/jmeter.sh -n -t /var/lib/jenkins/iudx/rs/Jmeter/ResourceServer.jmx -l /var/lib/jenkins/iudx/rs/Jmeter/report/JmeterTest.jtl -e -o /var/lib/jenkins/iudx/rs/Jmeter/report/ -Jhost=jenkins-slave1 -Jport=8080 -Jprotocol=http -JpuneToken=$env.puneToken -JsuratToken=$env.suratToken"
-          }
-          perfReport filterRegex: '', showTrendGraphs: true, sourceDataFiles: '/var/lib/jenkins/iudx/rs/Jmeter/report/*.jtl'     
-        }
-      }
-      post{
-        failure{
-          script{
-            sh 'docker compose -f docker-compose.test.yml  down --remove-orphans'
-          }
-        }
-      }
-    }
+echo "[+] Creating new ZAP session..."
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" session new
 
-    stage('Integration Tests and OWASP ZAP pen test'){
-      steps{
-        node('built-in') {
-          sh 'nohup zap -daemon -host 127.0.0.1 -port 8090 -config api.disablekey=true > zap.log 2>&1 &'
+# For Postman mode
+if [[ "$MODE" == "--postman" ]]; then
+  if [[ ! -f "$COLLECTION" ]]; then
+    echo "[!] Collection file not found: $COLLECTION"
+    exit 1
+  fi
+  if [[ ! -f "$ENV_FILE" ]]; then
+    echo "[!] Environment file not found: $ENV_FILE"
+    exit 1
+  fi
 
-          echo 'Waiting for ZAP to start...'
-          timeout(time: 1, unit: 'MINUTES') {
-            waitUntil {
-              script {
-                return sh(script: "curl -s http://127.0.0.1:8090", returnStatus: true) == 0
-              }
-            }
-          }
-          echo '✅ ZAP is up and running!'
+  echo "[+] Running Postman collection through ZAP proxy..."
+  HTTP_PROXY="http://${ZAP_HOST}:${ZAP_PORT}" \
+  newman run "$COLLECTION" \
+    -e "$ENV_FILE" \
+    -n 2 \
+    --insecure \
+    -r htmlextra \
+    --reporter-htmlextra-export "${ARTIFACT_DIR}/${REPORT_FILE}" \
+    --reporter-htmlextra-skipSensitiveData
+fi
 
-        }
-        script{
-            sh 'mkdir -p configs'
-            sh 'scp /home/ubuntu/configs/rs-config-test.json ./configs/config-test.json'
-            sh 'bash Jenkins/resources/post-zap.sh --mvn'
-            publishHTML(target: [
-              allowMissing: false,
-              alwaysLinkToLastBuild: true,
-              keepAll: true,
-              reportDir: '/var/lib/jenkins/iudx/rs/zap-artifacts',
-              reportFiles: 'zap-report.html',
-              reportName: 'OWASP ZAP Report'
-            ])
-         }
-      }
-      post{
-        always{
-           xunit (
-             thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
-             tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
-             )
-        }
-        failure{
-          error "Test failure. Stopping pipeline execution!"
-        }
-        cleanup{
-          script{
-            sh 'sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java'
-            sh 'docker compose -f docker-compose.test.yml down --remove-orphans'
-          }
-        }
-      }
-    }
+# For Maven mode
+if [[ "$MODE" == "--mvn" ]]; then
+  echo "[+] Running Maven integration tests through ZAP proxy..."
+  sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
+  mvn test-compile failsafe:integration-test \
+    -DskipUnitTests=true \
+    -DintTestProxyHost=jenkins-master-priv \
+    -DintTestProxyPort=8090 \
+    -DintTestHost=jenkins-slave1 \
+    -DintTestPort=8080
+fi
 
-    stage('Continuous Deployment') {
-      when {
-        allOf {
-          anyOf {
-            changeset "docker/**"
-            changeset "docs/**"
-            changeset "pom.xml"
-            changeset "src/main/**"
-            triggeredBy cause: 'UserIdCause'
-          }
-          expression {
-            return env.GIT_BRANCH == 'origin/master';
-          }
-        }
-      }
-      stages {
-        stage('Push Images') {
-          steps {
-            script {
-              docker.withRegistry( registryUri, registryCredential ) {
-                devImage.push("5.6.0-alpha-${env.GIT_HASH}")
-                deplImage.push("5.6.0-alpha-${env.GIT_HASH}")
-              }
-            }
-          }
-        }
-        stage('Docker Swarm deployment') {
-          steps {
-            script {
-              sh "ssh azureuser@docker-swarm 'docker service update rs_rs --image ghcr.io/datakaveri/rs-depl:5.6.0-alpha-${env.GIT_HASH}'"
-              sh 'sleep 60'
-            }
-          }
-          post{
-            failure{
-              error "Failed to deploy image in Docker Swarm"
-            }
-          }          
-        }
-        stage('Integration test on swarm deployment') {
-          steps {
-              script{
-                sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
-                sh 'mvn test-compile failsafe:integration-test -DskipUnitTests=true -DintTestDepl=true'
-              }
-          }
-          post{
-            always{
-             script{
-                sh 'sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java'
-             }
-             xunit (
-               thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
-               tools: [ JUnit(pattern: 'target/failsafe-reports/*.xml') ]
-               )
-            }
-            failure{
-              error "Test failure. Stopping pipeline execution!"
-            }
-          }
-        }
-      }
-    }
-  }
-  post{
-    failure{
-      script{
-        if (env.GIT_BRANCH == 'origin/master')
-        emailext recipientProviders: [buildUser(), developers()], to: '$RS_RECIPIENTS, $DEFAULT_RECIPIENTS', subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!', body: '''$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS:
-Check console output at $BUILD_URL to view the results.'''
-      }
-    }
-  }
-}
+# Spider and scan ONLY the resource server API
+echo "[+] Running ZAP spider and active scan on ${TARGET_API}..."
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" spider "$TARGET_API"
+
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" active-scan "$TARGET_API" --recursive
+
+# Generate report (if mvn)
+if [[ "$MODE" == "--mvn" ]]; then
+  echo "[+] Generating ZAP HTML report..."
+  zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" report -o "$REPORT_FILE" -f html
+  mkdir -p "$ARTIFACT_DIR"
+  mv "$REPORT_FILE" "$ARTIFACT_DIR/"
+fi
+
+echo "[✅] ZAP scan/report completed. Report path: $ARTIFACT_DIR/$REPORT_FILE"
