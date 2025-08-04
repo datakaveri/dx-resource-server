@@ -113,16 +113,16 @@ pipeline {
         node('built-in') {
           script{
             sh '''
-              nohup zap -daemon -host 127.0.0.1 -port 8090 -config api.disablekey=true > zap.log 2>&1 &
+              nohup zap -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=true > zap.log 2>&1 &
             '''
-            timeout(time: 2, unit: 'MINUTES') {
+            timeout(time: 5, unit: 'MINUTES') {
               waitUntil {
                 script {
-                  return sh(script: "curl -s http://127.0.0.1:8090/JSON/core/view/version/ > /dev/null", returnStatus: true) == 0
+                  return sh(script: "curl -s http://0.0.0.0:8090/JSON/core/view/version/ > /dev/null", returnStatus: true) == 0
                 }
              }
           }
-            sh 'curl http://127.0.0.1:8090/JSON/pscan/action/disableScanners/?ids=10096'
+            sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
           }
         }
         script{
