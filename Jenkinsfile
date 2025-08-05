@@ -112,7 +112,7 @@ pipeline {
       steps{
         node('built-in') {
           script{
-            sh 'bash Jenkins/resources/start-zap.sh'
+            sh './Jenkins/resources/start-zap.sh'
         }
       }
         script{
