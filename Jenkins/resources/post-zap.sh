@@ -2,7 +2,7 @@
 
 set -e
 
-ZAP_HOST="jenkins-master-priv"
+ZAP_HOST="10.139.0.10"
 ZAP_PORT="8090"
 ARTIFACT_DIR="/var/lib/jenkins/iudx/rs/zap-artifacts"
 REPORT_FILE="zap-report.html"
@@ -49,7 +49,7 @@ fi
 # For Maven mode
 if [[ "$MODE" == "--mvn" ]]; then
   echo "[+] Running Maven integration tests through ZAP proxy..."
-  sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
+  sh 'sudo update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java'
   mvn test-compile failsafe:integration-test \
     -DskipUnitTests=true \
     -DintTestProxyHost=jenkins-master-priv \

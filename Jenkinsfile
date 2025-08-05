@@ -112,34 +112,10 @@ pipeline {
       steps{
         node('built-in') {
           script{
-            sh '''
-  ZAP_BIN="/home/ubuntu/ZAP_2.16.1/zap.sh"
-  ZAP_HOST="10.139.0.10"
-  ZAP_PORT="8090"
-  ZAP_URL="http://${ZAP_HOST}:${ZAP_PORT}"
-
-  echo "[*] Checking if ZAP is already running..."
-  if ! nc -z "$ZAP_HOST" "$ZAP_PORT"; then
-    echo "[*] Starting ZAP in daemon mode..."
-    nohup "$ZAP_BIN" -daemon \
-      -host "$ZAP_HOST" \
-      -port "$ZAP_PORT" \
-      -config api.disablekey=true \
-      -config api.addrs.addr.name=.* \
-      -config api.addrs.addr.regex=true > zap.log 2>&1 &
-  else
-    echo "[*] ZAP already running at $ZAP_URL"
-  fi
-
-  echo "[*] Waiting for ZAP to become ready..."
-  until curl -s "${ZAP_URL}/JSON/core/view/version/" > /dev/null; do
-    sleep 2
-  done
-
-  echo "[✅] ZAP is ready and listening at $ZAP_URL"
-'''
+            startZap ([host: '0.0.0.0', port: 8090, zapHome: '/var/lib/jenkins/tools/com.cloudbees.jenkins.plugins.customtools.CustomTool/OWASP_ZAP/ZAP_2.11.0'])
+            sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
+          }
         }
-      }
         script{
             sh 'mkdir -p configs'
             sh 'scp /home/ubuntu/configs/rs-config-test.json ./configs/config-test.json'
