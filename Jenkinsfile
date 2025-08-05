@@ -114,7 +114,7 @@ pipeline {
           script{
             sh '''
   ZAP_BIN="/home/ubuntu/ZAP_2.16.1/zap.sh"
-  ZAP_HOST="0.0.0.0"
+  ZAP_HOST="10.139.0.10"
   ZAP_PORT="8090"
   ZAP_URL="http://${ZAP_HOST}:${ZAP_PORT}"
 
