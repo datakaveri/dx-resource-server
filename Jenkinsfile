@@ -114,6 +114,14 @@ pipeline {
           script{
             sh '''
               nohup "/home/ubuntu/ZAP_2.16.1/zap.sh" -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=true > zap.log 2>&1 &
+              for i in {1..30}; do
+                if curl -s http://127.0.0.1:8090/JSON/core/view/version/ > /dev/null; then
+                  echo "ZAP is up!"
+                  break
+                fi
+                echo "Waiting for ZAP to start..."
+                sleep 2
+              done
             '''
             sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
           }
