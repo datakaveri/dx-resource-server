@@ -117,7 +117,11 @@
       "dbUser": "",
       "dbPassword": "",
       "filePath": "/home/kailash/Downloads/",
-      "bucketName": ""
+      "bucketName": "",
+      "clientRegion": "",
+      "endPoint": "",
+      "accessKey": "",
+      "accessSecret": ""
     },
     {
       "id": "iudx.resource.server.encryption.EncryptionVerticle",
