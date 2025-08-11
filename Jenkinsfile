@@ -122,6 +122,10 @@ pipeline {
                 echo "Waiting for ZAP to start..."
                 sleep 2
               done
+              if ! curl -s http://127.0.0.1:8090/JSON/core/view/version/ > /dev/null; then
+                echo "ERROR: ZAP did not start in time" >&2
+                exit 1
+              fi
             '''
             sh 'curl http://127.0.0.1:8090/JSON/pscan/action/disableScanners/?ids=10096'
           }
