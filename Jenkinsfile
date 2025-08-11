@@ -123,7 +123,7 @@ pipeline {
                 sleep 2
               done
             '''
-            sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
+            sh 'curl http://127.0.0.1:8090/JSON/pscan/action/disableScanners/?ids=10096'
           }
         }
         script{
