@@ -2,7 +2,6 @@ package iudx.resource.server.database.async;
 
 import static iudx.resource.server.common.Constants.*;
 
-import com.amazonaws.regions.Regions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
@@ -29,7 +28,6 @@ public class AsyncVerticle extends AbstractVerticle {
   private ElasticClient client;
   private PostgresService pgService;
   private S3FileOpsHelper fileOpsHelper;
-  private Regions clientRegion;
   private String databaseIp;
   private String user;
   private String password;
@@ -40,6 +38,10 @@ public class AsyncVerticle extends AbstractVerticle {
   private CacheService cacheService;
   private MessageConsumer<JsonObject> consumer;
   private String tenantPrefix;
+  private String clientRegion;
+  private String endPoint;
+  private String accessKey;
+  private String accessSecret;
 
   /**
    * This method is used to start the Verticle. It deploys a verticle in a cluster, registers the
@@ -56,14 +58,17 @@ public class AsyncVerticle extends AbstractVerticle {
     user = config().getString("dbUser");
     password = config().getString("dbPassword");
     filePath = config().getString("filePath");
-    clientRegion = Regions.AP_SOUTH_1;
+    clientRegion = config().getString("clientRegion");
     bucketName = config().getString("bucketName");
     tenantPrefix = config().getString("tenantPrefix");
-
+    endPoint = config().getString("endPoint", null);
+    accessKey = config().getString("accessKey", null);
+    accessSecret = config().getString("accessSecret", null);
     pgService = PostgresService.createProxy(vertx, PG_SERVICE_ADDRESS);
     cacheService = CacheService.createProxy(vertx, CACHE_SERVICE_ADDRESS);
     client = new ElasticClient(databaseIp, databasePort, user, password);
-    fileOpsHelper = new S3FileOpsHelper(clientRegion, bucketName);
+    fileOpsHelper =
+        new S3FileOpsHelper(endPoint, clientRegion, accessKey, accessSecret, bucketName);
 
     binder = new ServiceBinder(vertx);
     asyncService =
