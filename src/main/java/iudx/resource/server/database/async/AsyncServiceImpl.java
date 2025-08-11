@@ -39,7 +39,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -242,7 +241,7 @@ public class AsyncServiceImpl implements AsyncService {
     String objectId = record.getJsonObject(0).getString(OBJECT_ID);
     String expiry = LocalDateTime.now().plusDays(1).toString();
     long fileSize = record.getJsonObject(0).getLong(SIZE_KEY);
-    long urlExpiry = ZonedDateTime.now().toEpochSecond() * 1000 + TimeUnit.DAYS.toMillis(1);
+    long urlExpiry = ZonedDateTime.now().plusDays(1).toInstant().toEpochMilli();
     URL s3Url = s3FileOpsHelper.generatePreSignedUrl(urlExpiry, objectId);
 
     StringBuilder queryStringBuilder =

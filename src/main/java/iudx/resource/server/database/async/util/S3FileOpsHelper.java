@@ -1,146 +1,156 @@
 package iudx.resource.server.database.async.util;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.HttpMethod;
-import com.amazonaws.SdkClientException;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.retry.RetryPolicy;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
-import com.amazonaws.services.s3.transfer.Upload;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
+import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.Date;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 public class S3FileOpsHelper {
 
   private static final Logger LOGGER = LogManager.getLogger(S3FileOpsHelper.class);
-  static FileInputStream fileInputStream;
-  private final Regions clientRegion;
+
+  private final String endpoint;
+  private final String region;
+  private final String accessKey;
+  private final String secretKey;
   private final String bucketName;
 
-  public S3FileOpsHelper(Regions clientRegion, String bucketName) {
-    this.clientRegion = clientRegion;
+  // KEEP YOUR ORIGINAL CONSTRUCTOR (values come from config)
+  public S3FileOpsHelper(
+      String endpoint, String region, String accessKey, String secretKey, String bucketName) {
+    this.endpoint = endpoint;
+    this.region = region;
+    this.accessKey = accessKey;
+    this.secretKey = secretKey;
     this.bucketName = bucketName;
   }
 
-  private ClientConfiguration getClientConfiguration() {
-    ClientConfiguration clientConfiguration = new ClientConfiguration();
-    clientConfiguration.setRetryPolicy(new RetryPolicy(null, null, 3, false));
-    return clientConfiguration;
+  private S3Client buildS3Client() {
+    S3ClientBuilder builder =
+        S3Client.builder()
+            .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())
+            .region(Region.of(region));
+
+    if (accessKey != null && !accessKey.isEmpty() && secretKey != null && !secretKey.isEmpty()) {
+      builder.credentialsProvider(
+          StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)));
+    } else {
+      builder.credentialsProvider(DefaultCredentialsProvider.create());
+    }
+
+    if (endpoint != null && !endpoint.isEmpty()) {
+      builder.endpointOverride(URI.create(endpoint));
+    }
+
+    return builder.build();
   }
 
+  private S3Presigner buildPresigner() {
+    S3Presigner.Builder builder = S3Presigner.builder().region(Region.of(region));
+
+    if (accessKey != null && !accessKey.isEmpty() && secretKey != null && !secretKey.isEmpty()) {
+      builder.credentialsProvider(
+          StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)));
+    } else {
+      builder.credentialsProvider(DefaultCredentialsProvider.create());
+    }
+
+    if (endpoint != null && !endpoint.isEmpty()) {
+      builder.endpointOverride(URI.create(endpoint));
+    }
+
+    // enable path style (helps MinIO)
+    builder.serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build());
+
+    return builder.build();
+  }
+
+  /**
+   * Upload file and return JSON with s3_url, expiry (local datetime string) and object_id. This
+   * matches your old behaviour (expiry = now + 1 day).
+   */
   public void s3Upload(File file, String objectKey, Handler<AsyncResult<JsonObject>> handler) {
+    try (S3Client s3Client = buildS3Client()) {
 
-    DefaultAWSCredentialsProviderChain credentialProviderChain =
-        new DefaultAWSCredentialsProviderChain();
-
-    try (FileInputStream fileInputStream = new FileInputStream(file)) {
-      AmazonS3 s3Client =
-          AmazonS3ClientBuilder.standard()
-              .withRegion(clientRegion)
-              .withCredentials(credentialProviderChain)
-              .withClientConfiguration(getClientConfiguration())
+      PutObjectRequest putRequest =
+          PutObjectRequest.builder()
+              .bucket(bucketName)
+              .key(objectKey)
+              .contentDisposition("attachment; filename=" + file.getName())
               .build();
 
-      TransferManager tm = TransferManagerBuilder.standard().withS3Client(s3Client).build();
-      ObjectMetadata objectMetadata = new ObjectMetadata();
-      objectMetadata.setContentDisposition("attachment; filename=" + file.getName());
-      objectMetadata.setContentLength(file.length());
-      // TransferManager processes all transfers asynchronously,
-      // so this call returns immediately.
-      Upload upload = tm.upload(bucketName, objectKey, fileInputStream, objectMetadata);
-      LOGGER.info("Object upload started");
-      // upload.addProgressListener(uploadProgressListener);
-      upload.waitForCompletion();
-
+      s3Client.putObject(putRequest, RequestBody.fromFile(file));
       LOGGER.info("Object upload complete");
-      ZonedDateTime zdt = ZonedDateTime.now();
-      zdt = zdt.plusDays(1);
-      Long expiry = zdt.toEpochSecond() * 1000;
+
+      // keep the old behaviour: expiry = now + 1 day (as earlier code did)
+      ZonedDateTime zdt = ZonedDateTime.now().plusDays(1);
+      long expiryEpochMillis = zdt.toEpochSecond() * 1000L;
+
+      // call presign with the same long you used previously (epoch millis).
+      URL presigned = generatePreSignedUrl(expiryEpochMillis, objectKey);
+
       JsonObject result =
           new JsonObject()
-              .put("s3_url", generatePreSignedUrl(expiry, objectKey))
+              .put("s3_url", presigned == null ? null : presigned.toString())
               .put("expiry", zdt.toLocalDateTime().toString())
               .put("object_id", objectKey);
+
       handler.handle(Future.succeededFuture(result));
-    } catch (AmazonServiceException e) {
-      // The call was transmitted successfully, but Amazon S3 couldn't process
-      // it, so it returned an error response.
-      LOGGER.error(e);
-      LOGGER.error(e.getErrorCode());
-      LOGGER.error(e.getErrorMessage());
-      LOGGER.error(e.getErrorType());
+
+    } catch (S3Exception e) {
+      LOGGER.error("S3 upload error", e);
       handler.handle(Future.failedFuture(e));
-    } catch (AmazonClientException e) {
-      LOGGER.error(e);
-      LOGGER.error(e.getCause());
+    } catch (Exception e) {
+      LOGGER.error("Unexpected error during S3 upload", e);
       handler.handle(Future.failedFuture(e));
-    } catch (InterruptedException e) {
-      LOGGER.error(e);
-      handler.handle(Future.failedFuture(e));
-    } catch (FileNotFoundException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-      handler.handle(Future.failedFuture(e));
-    } catch (IOException e) {
-      LOGGER.error("unable to access file");
-      LOGGER.error(e);
     }
   }
 
-  public URL generatePreSignedUrl(long expiryTimeMillis, String objectKey) {
+  public URL generatePreSignedUrl(long expiryValue, String objectKey) {
+    long now = System.currentTimeMillis();
+    long durationMillis = expiryValue - now; // convert absolute expiry time to duration
 
-    URL url = null;
-    DefaultAWSCredentialsProviderChain credentialProviderChain =
-        new DefaultAWSCredentialsProviderChain();
+    // Clamp to AWS allowed range [1 second .. 7 days]
+    long minMillis = 1000L;
+    long maxMillis = Duration.ofDays(7).toMillis();
+    if (durationMillis < minMillis) durationMillis = minMillis;
+    else if (durationMillis > maxMillis) durationMillis = maxMillis;
 
-    try {
+    try (S3Presigner presigner = buildPresigner()) {
+      GetObjectRequest getRequest =
+          GetObjectRequest.builder().bucket(bucketName).key(objectKey).build();
 
-      // Set the presigned URL to expire after one hour.
-      LOGGER.debug("expiry : " + expiryTimeMillis);
-      Date expiration = new Date();
-      expiration.setTime(expiryTimeMillis);
-
-      // Generate the presigned URL.
-      LOGGER.debug("Generating pre-signed URL.");
-
-      GeneratePresignedUrlRequest generatePresignedUrlRequest =
-          new GeneratePresignedUrlRequest(bucketName, objectKey)
-              .withMethod(HttpMethod.GET)
-              .withExpiration(expiration);
-      AmazonS3 s3Client =
-          AmazonS3ClientBuilder.standard()
-              .withRegion(clientRegion)
-              .withCredentials(credentialProviderChain)
+      GetObjectPresignRequest presignRequest =
+          GetObjectPresignRequest.builder()
+              .getObjectRequest(getRequest)
+              .signatureDuration(Duration.ofMillis(durationMillis))
               .build();
 
-      url = s3Client.generatePresignedUrl(generatePresignedUrlRequest);
+      return presigner.presignGetObject(presignRequest).url();
 
-      LOGGER.debug("Pre-Signed URL: " + url.toString());
-
-    } catch (AmazonServiceException e) {
-      LOGGER.error(e);
-    } catch (SdkClientException e) {
-      LOGGER.error(e);
+    } catch (Exception e) {
+      LOGGER.error("Presigned URL generation failed", e);
+      return null;
     }
-    return url;
   }
 }
