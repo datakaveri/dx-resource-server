@@ -112,22 +112,8 @@ pipeline {
       steps{
         node('built-in') {
           script{
-            sh '''
-              nohup "/home/ubuntu/ZAP_2.16.1/zap.sh" -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=true > zap.log 2>&1 &
-              for i in {1..30}; do
-                if curl -s http://127.0.0.1:8090/JSON/core/view/version/ > /dev/null; then
-                  echo "ZAP is up!"
-                  break
-                fi
-                echo "Waiting for ZAP to start..."
-                sleep 2
-              done
-              if ! curl -s http://127.0.0.1:8090/JSON/core/view/version/ > /dev/null; then
-                echo "ERROR: ZAP did not start in time" >&2
-                exit 1
-              fi
-            '''
-            sh 'curl http://127.0.0.1:8090/JSON/pscan/action/disableScanners/?ids=10096'
+            sh '/home/ubuntu/ZAP_2.16.1/start-zap.sh'
+            sh 'curl http://0.0.0.0:8090/JSON/pscan/action/disableScanners/?ids=10096'
           }
         }
         script{
