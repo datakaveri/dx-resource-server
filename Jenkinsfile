@@ -112,9 +112,25 @@ pipeline {
       steps{
         node('built-in') {
           script{
-            sh 'whoami'
-            sh '/home/ubuntu/ZAP_2.16.1/start-zap.sh'
-            sh "curl http://${env.ZAP_HOST}:8090/JSON/pscan/action/disableScanners/?ids=10096"
+            sh """
+              echo '[*] Starting ZAP in Docker...'
+              docker run --name zap-daemon -u zap -d \
+                -p 8090:8090 \
+                owasp/zap2docker-stable \
+                zap.sh -daemon \
+                  -host 0.0.0.0 \
+                  -port 8090 \
+                  -config api.disablekey=true \
+                  -config api.addrs.addr.name=.* \
+                  -config api.addrs.addr.regex=true
+
+              echo '[*] Waiting for ZAP to be ready...'
+              until curl -s http://localhost:8090/JSON/core/view/version/ > /dev/null; do
+                sleep 2
+              done
+              echo '[✅] ZAP is ready at http://localhost:8090'
+            """
+            sh "curl http://localhost:8090/JSON/pscan/action/disableScanners/?ids=10096"
           }
         }
         script{
@@ -145,6 +161,7 @@ pipeline {
           script{
             sh 'sudo update-alternatives --set java /usr/lib/jvm/java-11-openjdk-amd64/bin/java'
             sh 'docker compose -f docker-compose.test.yml down --remove-orphans'
+            sh 'docker stop zap-daemon || true && docker rm zap-daemon || true'
           }
         }
       }
