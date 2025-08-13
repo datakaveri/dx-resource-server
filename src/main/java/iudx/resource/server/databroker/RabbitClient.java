@@ -876,7 +876,7 @@ public class RabbitClient {
    * @return response which is a Future object of promise of Json type
    */
   Future<JsonObject> createUserIfNotExist(String userid, String vhost) {
-    LOGGER.trace("Info : RabbitClient#createUserIfNotPresent() started");
+    LOGGER.debug("Info : RabbitClient#createUserIfNotPresent() started");
     Promise<JsonObject> promise = Promise.promise();
 
     String password = randomPassword.get();
@@ -888,6 +888,7 @@ public class RabbitClient {
         .onComplete(
             reply -> {
               if (reply.succeeded()) {
+                LOGGER.debug("status {}", reply.result().statusCode());
                 /* Check if user not found */
                 if (reply.result().statusCode() == HttpStatus.SC_NOT_FOUND) {
                   LOGGER.debug("Success : User not found. creating user");
@@ -922,6 +923,10 @@ public class RabbitClient {
                       getResponseJson(SUCCESS_CODE, DATABASE_READ_SUCCESS, DATABASE_READ_SUCCESS));
                   response.put(VHOST_PERMISSIONS, vhost);
                   promise.complete(response);
+                } else {
+                  LOGGER.error("Error : Error in user creation. Cause : " + reply.cause());
+                  response.mergeIn(
+                      getResponseJson(INTERNAL_ERROR_CODE, ERROR, "Error : Something went wrong"));
                 }
 
               } else {
