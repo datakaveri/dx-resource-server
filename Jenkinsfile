@@ -113,6 +113,8 @@ pipeline {
         node('built-in') {
           script{
             sh """
+              echo '[*] Cleaning up old ZAP container if exists...'
+              docker stop zap-daemon || true && docker rm zap-daemon || true
               echo '[*] Starting ZAP in Docker...'
               docker run --name zap-daemon -u zap -d \
                 -p 8090:8090 \
