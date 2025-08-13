@@ -116,7 +116,7 @@ pipeline {
               echo '[*] Starting ZAP in Docker...'
               docker run --name zap-daemon -u zap -d \
                 -p 8090:8090 \
-                owasp/zap2docker-stable \
+                ghcr.io/zaproxy/zaproxy:stable \
                 zap.sh -daemon \
                   -host 0.0.0.0 \
                   -port 8090 \
