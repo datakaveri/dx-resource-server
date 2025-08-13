@@ -112,6 +112,7 @@ pipeline {
       steps{
         node('built-in') {
           script{
+            sh 'whoami'
             sh '/home/ubuntu/ZAP_2.16.1/start-zap.sh'
             sh "curl http://${env.ZAP_HOST}:8090/JSON/pscan/action/disableScanners/?ids=10096"
           }
