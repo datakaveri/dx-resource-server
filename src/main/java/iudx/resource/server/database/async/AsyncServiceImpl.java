@@ -155,7 +155,7 @@ public class AsyncServiceImpl implements AsyncService {
                       })
                   .onFailure(
                       statusHandler -> {
-                        LOGGER.error("");
+                        LOGGER.error(statusHandler.getCause());
                       });
             });
 
@@ -338,6 +338,7 @@ public class AsyncServiceImpl implements AsyncService {
 
                   } else {
                     LOGGER.error("File upload to S3 failed for fileName : {}", file.getName());
+                    LOGGER.error("S3 upload failure cause : ", s3UploadHandler.cause());
                     StringBuilder updateFailQuery =
                         new StringBuilder(
                             UPDATE_STATUS_SQL
@@ -348,6 +349,7 @@ public class AsyncServiceImpl implements AsyncService {
                 });
           } else {
             LOGGER.error("Scroll API operation failed for searchId : " + searchId);
+            LOGGER.error("Scroll API failure cause : ", scrollHandler.cause());
             StringBuilder updateFailQuery =
                 new StringBuilder(
                     UPDATE_STATUS_SQL
