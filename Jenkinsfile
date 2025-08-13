@@ -113,7 +113,7 @@ pipeline {
         node('built-in') {
           script{
             sh '/home/ubuntu/ZAP_2.16.1/start-zap.sh'
-            sh 'curl http://10.139.0.10:8090/JSON/pscan/action/disableScanners/?ids=10096'
+            sh 'curl http://${env.ZAP_HOST}:8090/JSON/pscan/action/disableScanners/?ids=10096'
           }
         }
         script{
