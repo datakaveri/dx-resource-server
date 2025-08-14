@@ -116,7 +116,7 @@ pipeline {
               echo '[*] Cleaning up old ZAP container if exists...'
               docker stop zap-daemon || true && docker rm zap-daemon || true
               echo '[*] Starting ZAP in Docker...'
-              docker run --name zap-daemon -u zap -d \
+              docker run --name zap-daemon --network host -u zap -d \
                 -p 8090:8090 \
                 ghcr.io/zaproxy/zaproxy:stable \
                 zap.sh -daemon \
