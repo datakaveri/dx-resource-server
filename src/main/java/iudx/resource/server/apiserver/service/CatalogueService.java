@@ -122,20 +122,22 @@ public class CatalogueService {
             itemCacheRequest.put("key", id);
             Future<JsonObject> itemFilters = cacheService.get(itemCacheRequest);
             List<String> filters = new ArrayList<String>();
-            CompositeFuture.all(List.of(groupFilter, itemFilters))
+            CompositeFuture.any(List.of(groupFilter, itemFilters))
                 .onComplete(
                     ar -> {
                       if (ar.failed()) {
                         promise.fail("no filters available for : " + id);
                         return;
                       }
-                      if (groupFilter.result().containsKey("iudxResourceAPIs")) {
+                      if (groupFilter.result() != null
+                          && groupFilter.result().containsKey("iudxResourceAPIs")) {
                         filters.addAll(
                             toList(groupFilter.result().getJsonArray("iudxResourceAPIs")));
                         promise.complete(filters);
                       }
 
-                      if (itemFilters.result().containsKey("iudxResourceAPIs")) {
+                      if (itemFilters.result() != null
+                          && itemFilters.result().containsKey("iudxResourceAPIs")) {
                         filters.addAll(
                             toList(itemFilters.result().getJsonArray("iudxResourceAPIs")));
                         promise.complete(filters);
