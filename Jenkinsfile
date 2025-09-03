@@ -56,7 +56,12 @@ pipeline {
         stage('Unit Tests and Code Coverage Test'){
           steps{
             script{
-              sh 'docker compose -f docker-compose.test.yml up test'
+              sh 'cp ./iudx-pmd-ruleset.xml ./secrets/all-verticles-configs/iudx-pmd-ruleset.xml'
+              sh 'cp ./google_checks.xml ./secrets/all-verticles-configs/google_checks.xml'
+              sh 'cp /home/ubuntu/configs/rs-config-test.json ./secrets/all-verticles-configs/config-test.json'
+              sh 'cp /home/ubuntu/configs/keystore.jks ./secrets/all-verticles-configs/keystore.jks'
+              sh 'mvn clean test checkstyle:checkstyle pmd:pmd'
+
             }
             xunit (
               thresholds: [ skipped(failureThreshold: '40'), failed(failureThreshold: '0') ],
