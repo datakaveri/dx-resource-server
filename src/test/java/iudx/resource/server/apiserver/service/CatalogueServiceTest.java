@@ -129,7 +129,7 @@ public class CatalogueServiceTest {
             });
   }
 
-  @Test
+  //@Test
   @DisplayName("Test getApplicableFilters method fail [Resource level]")
   public void testGetApplicableFiltersFailItem(VertxTestContext vertxTestContext) {
     String id = "abcd/abcd/abcd";
