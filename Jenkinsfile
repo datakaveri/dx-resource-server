@@ -238,7 +238,7 @@ pipeline {
   post{
     failure{
       script{
-        if (env.GIT_BRANCH == 'origin/main') {
+        if (env.GIT_BRANCH == 'origin/master') {
           emailext recipientProviders: [buildUser(), developers()], to: '$AS_RECIPIENTS, $DEFAULT_RECIPIENTS',
             subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!',
             body: '''$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS:
