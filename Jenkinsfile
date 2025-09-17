@@ -130,7 +130,7 @@ pipeline {
               until curl -s http://localhost:8090/JSON/core/view/version/ > /dev/null; do
                 sleep 2
               done
-              echo '[✅] ZAP is ready at http://localhost:8090'
+              echo 'ZAP is ready at http://localhost:8090'
             """
             sh "curl http://localhost:8090/JSON/pscan/action/disableScanners/?ids=10096"
           }
