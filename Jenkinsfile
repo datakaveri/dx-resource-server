@@ -120,19 +120,19 @@ pipeline {
                 -p 8090:8090 \
                 ghcr.io/zaproxy/zaproxy:stable \
                 zap.sh -daemon \
-                  -host 0.0.0.0 \
+                  -host 127.0.0.1 \
                   -port 8090 \
                   -config api.disablekey=true \
                   -config api.addrs.addr.name=.* \
                   -config api.addrs.addr.regex=true
 
               echo '[*] Waiting for ZAP to be ready...'
-              until curl -s http://localhost:8090/JSON/core/view/version/ > /dev/null; do
+              until curl -s http://127.0.0.1:8090/JSON/core/view/version/ > /dev/null; do
                 sleep 2
               done
-              echo 'ZAP is ready at http://localhost:8090'
+              echo 'ZAP is ready at http://127.0.0.1:8090'
             """
-            sh "curl http://localhost:8090/JSON/pscan/action/disableScanners/?ids=10096"
+            sh "curl http://127.0.0.1:8090/JSON/pscan/action/disableScanners/?ids=10096"
           }
         }
         script{
