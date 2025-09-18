@@ -26,7 +26,7 @@ zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" session new
 
 echo "[+] Creating ZAP context and restricting scope..."
 zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" context new rs-context
-zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" context include --name rs-context "https://rs.iudx.io.*"
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" context include --name rs-context --url "https://rs.iudx.io.*"
 
 echo "[+] Limiting spider depth to 2..."
 curl "http://${ZAP_HOST}:${ZAP_PORT}/JSON/spider/action/setOptionMaxDepth/?Integer=2"
