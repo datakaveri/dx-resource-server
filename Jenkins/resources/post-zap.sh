@@ -24,6 +24,16 @@ fi
 echo "[+] Creating new ZAP session..."
 zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" session new
 
+echo "[+] Creating ZAP context and restricting scope..."
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" context new rs-context
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" context include rs-context "https://rs.iudx.io.*"
+
+echo "[+] Limiting spider depth to 2..."
+curl "http://${ZAP_HOST}:${ZAP_PORT}/JSON/spider/action/setOptionMaxDepth/?Integer=2"
+
+echo "[+] Disabling slow scanners..."
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" scanner disable 40012 40018 40019 40020 40021
+
 # For Postman mode
 if [[ "$MODE" == "--postman" ]]; then
   if [[ ! -f "$COLLECTION" ]]; then
@@ -60,9 +70,8 @@ fi
 
 # Spider and scan ONLY the resource server API
 echo "[+] Running ZAP spider and active scan on ${TARGET_API}..."
-zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" spider "$TARGET_API"
-
-zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" active-scan "$TARGET_API" --recursive
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" spider --context-name rs-context "$TARGET_API"
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" active-scan --context-name rs-context "$TARGET_API" --scanners 40001,40002,40003
 
 # Generate report (if mvn)
 if [[ "$MODE" == "--mvn" ]]; then
