@@ -60,9 +60,16 @@ fi
 
 # Spider and scan ONLY the resource server API
 echo "[+] Running ZAP spider and active scan on ${TARGET_API}..."
-zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" spider "$TARGET_API" --max-depth 2 --context-name Default
+# Set spider depth to 2
+curl "http://${ZAP_HOST}:${ZAP_PORT}/JSON/spider/action/setOptionMaxDepth/?Integer=2"
 
-zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" active-scan "$TARGET_API" --recursive --policy "Light"
+# Run spider
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" spider "$TARGET_API"
+
+# Run active scan with light policy
+curl "http://${ZAP_HOST}:${ZAP_PORT}/JSON/ascan/action/setScanPolicy/?scanPolicyName=Light"
+zap-cli --zap-url "http://${ZAP_HOST}" --port "$ZAP_PORT" active-scan "$TARGET_API"
+
 
 # Generate report (if mvn)
 if [[ "$MODE" == "--mvn" ]]; then
